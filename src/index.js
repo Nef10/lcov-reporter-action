@@ -17,6 +17,10 @@ async function main() {
 		return
 	}
 
+
+
+
+
 	const baseRaw =
 		baseFile && (await fs.readFile(baseFile, "utf-8").catch(err => null))
 	if (baseFile && !baseRaw) {
