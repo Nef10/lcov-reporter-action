@@ -5958,8 +5958,8 @@ lib$1.source = source;
 
 // Parse lcov string into lcov data
 function parse$1(data) {
-	return new Promise(function(resolve, reject) {
-		lib$1(data, function(err, res) {
+	return new Promise(function (resolve, reject) {
+		lib$1(data, function (err, res) {
 			if (err) {
 				reject(err);
 				return
@@ -5982,11 +5982,11 @@ function percentage(lcov) {
 }
 
 function tag(name) {
-	return function(...children) {
+	return function (...children) {
 		const props =
 			typeof children[0] === "object"
 				? Object.keys(children[0])
-						.map(key => ` ${key}='${children[0][key]}'`)
+						.map((key) => ` ${key}='${children[0][key]}'`)
 						.join("")
 				: "";
 
@@ -6006,7 +6006,7 @@ const table = tag("table");
 const tbody = tag("tbody");
 const a = tag("a");
 
-const fragment = function(...children) {
+const fragment = function (...children) {
 	return children.join("")
 };
 
@@ -6035,7 +6035,7 @@ function tabulate(lcov, options) {
 			(acc, key) => [
 				...acc,
 				toFolder(key),
-				...folders[key].map(file => toRow(file, key !== "", options)),
+				...folders[key].map((file) => toRow(file, key !== "", options)),
 			],
 			[],
 		);
@@ -6055,7 +6055,7 @@ function getStatement(file) {
 	const { branches, functions, lines } = file;
 
 	return [branches, functions, lines].reduce(
-		function(acc, curr) {
+		function (acc, curr) {
 			if (!curr) {
 				return acc
 			}
@@ -6104,17 +6104,17 @@ function percentage$1(item) {
 
 function uncovered(file, options) {
 	const branches = (file.branches ? file.branches.details : [])
-		.filter(branch => branch.taken === 0)
-		.map(branch => branch.line);
+		.filter((branch) => branch.taken === 0)
+		.map((branch) => branch.line);
 
 	const lines = (file.lines ? file.lines.details : [])
-		.filter(line => line.hit === 0)
-		.map(line => line.line);
+		.filter((line) => line.hit === 0)
+		.map((line) => line.line);
 
 	const all = ranges([...branches, ...lines]);
 
 	return all
-		.map(function(range) {
+		.map(function (range) {
 			const fragment =
 				range.start === range.end
 					? `L${range.start}`
@@ -6136,7 +6136,7 @@ function ranges(linenos) {
 
 	let last = null;
 
-	linenos.sort().forEach(function(lineno) {
+	linenos.sort().forEach(function (lineno) {
 		if (last === null) {
 			last = { start: lineno, end: lineno };
 			return
@@ -6205,14 +6205,14 @@ async function main() {
 
 	const octokit = github_1(token);
 
-	const raw = await fs.promises.readFile(lcovFile, "utf-8").catch(err => null);
+	const raw = await fs.promises.readFile(lcovFile, "utf-8").catch((err) => null);
 	if (!raw) {
 		console.log(`No coverage report found at '${lcovFile}', exiting...`);
 		return
 	}
 
 	const baseRaw =
-		baseFile && (await fs.promises.readFile(baseFile, "utf-8").catch(err => null));
+		baseFile && (await fs.promises.readFile(baseFile, "utf-8").catch((err) => null));
 	if (baseFile && !baseRaw) {
 		console.log(`No coverage report found at '${baseFile}', ignoring...`);
 	}
@@ -6243,7 +6243,7 @@ async function main() {
 	});
 }
 
-main().catch(function(err) {
+main().catch(function (err) {
 	console.log(err);
 	core$1.setFailed(err.message);
 });
