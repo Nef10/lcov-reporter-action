@@ -1,6 +1,6 @@
 import { promises as fs } from "fs"
 import core from "@actions/core"
-import { GitHub, context } from "@actions/github"
+import { github, context } from "@actions/github"
 
 import { parse } from "./lcov"
 import { diff } from "./comment"
@@ -10,6 +10,8 @@ async function main() {
 	const lcovFile = core.getInput("lcov-file") || "./coverage/lcov.info"
 	const baseFile = core.getInput("lcov-base")
 	const pr_number = core.getInput("pr_number")
+
+	const octokit = github.getOctokit(token)
 
 	const raw = await fs.readFile(lcovFile, "utf-8").catch(err => null)
 	if (!raw) {
@@ -23,7 +25,7 @@ async function main() {
 		console.log(`No coverage report found at '${baseFile}', ignoring...`)
 	}
 
-	const pull_request = await new GitHub(token).pulls.get({
+	const pull_request = await octokit.pulls.get({
 		owner: context.repo.owner,
 		repo: context.repo.repo,
 		pull_number: pr_number,
@@ -41,7 +43,7 @@ async function main() {
 	const baselcov = baseRaw && (await parse(baseRaw))
 	const body = diff(lcov, baselcov, options)
 
-	await new GitHub(token).issues.createComment({
+	await new octokit.issues.createComment({
 		repo: context.repo.repo,
 		owner: context.repo.owner,
 		issue_number: pr_number,
