@@ -34,6 +34,7 @@ jobs:
       - name: Fail if files changed
         run: |
           if [[ `git status --porcelain` ]]; then
+            git status --porcelain
             exit 1
           else
             exit 0
