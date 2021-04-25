@@ -31,7 +31,7 @@ async function main() {
 
 	const options = {
 		repository: context.payload.repository.full_name,
-		prefix: `${process.env.GITHUB_WORKSPACE}/`,
+		prefix: `${process.env.GITHUB_WORKSPACE}//`,
 		commit: pull_request.head.sha,
 		head: pull_request.head.ref,
 		base: pull_request.base.ref,
