@@ -1,6 +1,6 @@
 import { promises as fs } from "fs"
 import core from "@actions/core"
-import { github, context } from "@actions/github"
+import { getOctokit, context } from "@actions/github"
 
 import { parse } from "./lcov"
 import { diff } from "./comment"
@@ -11,7 +11,7 @@ async function main() {
 	const baseFile = core.getInput("lcov-base")
 	const pr_number = core.getInput("pr_number")
 
-	const octokit = github.getOctokit(token)
+	const octokit = getOctokit(token)
 
 	const raw = await fs.readFile(lcovFile, "utf-8").catch(err => null)
 	if (!raw) {
