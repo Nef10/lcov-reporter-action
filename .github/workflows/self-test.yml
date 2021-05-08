@@ -28,7 +28,7 @@ jobs:
                repo: context.repo.repo,
                comment_id: lastComment.id
             });
-            console.log(comment);
+            var fs = require('fs').promises;
             const expectedTemplate = await fs.readFile("test-resources/comment.html", "utf-8");
             const expected = expectedTemplate.replace("XXX", "${{github.event.pull_request.head.ref }}")
               .replace("YYY", "${{github.event.pull_request.base.ref }}")
