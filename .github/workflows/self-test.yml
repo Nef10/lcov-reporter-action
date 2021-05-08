@@ -59,17 +59,6 @@ jobs:
               .replace("YYY", "${{github.event.pull_request.base.ref }}")
               .replace(/ZZZ/g, "${{github.event.pull_request.head.sha }}");
             const got = await fs.readFile("test-no-branch.html", "utf-8");
-            console.log(expected.trim() == got.trim())
-            console.log(expected)
-            console.log(got)
-
-            let diff= "";
-            expected.split('').forEach(function(val, i){
-              if (val != got.charAt(i))
-                diff += val ;
-            });
-            console.log(diff);
-
             if (expected.trim() != got.trim()) {
               throw 'Strings are not equal';
             }
