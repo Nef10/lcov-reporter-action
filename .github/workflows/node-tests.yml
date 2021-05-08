@@ -29,8 +29,8 @@ jobs:
         with:
           node-version: 16
       - run: npm install
-      - run: npm run build
       - run: npm run format
+      - run: npm run build
       - name: Fail if files changed
         run: |
           if [[ `git status --porcelain` ]]; then

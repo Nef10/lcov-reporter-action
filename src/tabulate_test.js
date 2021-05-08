@@ -227,7 +227,7 @@ test("tabulate should generate a correct table", function () {
 				td("N/A"),
 				td()
 			),
-			tr(td({ colspan: 6 }, b("src"))),
+			tr(td({ colspan: 5 }, b("src"))),
 			tr(
 				td(
 					"&nbsp; &nbsp;",
@@ -250,7 +250,7 @@ test("tabulate should generate a correct table", function () {
 					)
 				)
 			),
-			tr(td({ colspan: 6 }, b("src/bar"))),
+			tr(td({ colspan: 5 }, b("src/bar"))),
 			tr(
 				td(
 					"&nbsp; &nbsp;",

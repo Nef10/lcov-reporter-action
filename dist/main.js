@@ -6056,7 +6056,7 @@ function tabulate(lcov, options) {
 		.reduce(
 			(acc, key) => [
 				...acc,
-				toFolder(key),
+				toFolder(key, options),
 				...folders[key].map((file) => toRow(file, key !== "", options)),
 			],
 			[]
@@ -6065,12 +6065,12 @@ function tabulate(lcov, options) {
 	return table(tbody(head, ...rows));
 }
 
-function toFolder(path) {
+function toFolder(path, options) {
 	if (path === "") {
 		return "";
 	}
 
-	return tr(td({ colspan: 6 }, b(path)));
+	return tr(td({ colspan: options.hide_branch_coverage ? 5 : 6 }, b(path)));
 }
 
 function getStatement(file) {
