@@ -37,6 +37,13 @@ jobs:
             console.log(expected == got)
             console.log(expected)
             console.log(got)
+
+            let diff= "";
+            expected.split('').forEach(function(val, i){
+              if (val != got.charAt(i))
+                diff += val ;
+            });
+            console.log(diff);
   hide-branch-coverage:
     runs-on: ubuntu-latest
     steps:
