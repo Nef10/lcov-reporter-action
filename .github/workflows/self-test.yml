@@ -24,6 +24,17 @@ jobs:
           lcov-file: test-resources/lcov.info
           pr-number: ${{ github.event.pull_request.number }}
           output-file: test.html
+      - name: 'Compare Output'
+        uses: actions/github-script@v3.1.0
+        with:
+          script: |
+            var fs = require('fs');
+            const expectedTemplate = await fs.readFile("test-resources/comment.html", "utf-8");
+            const expected = expectedTemplate.replace("XXX", ${{github.event.pull_request.head.ref }}).replace("YYY", ${{github.event.pull_request.base.ref }});
+            const got = await fs.readFile("test.html", "utf-8");
+            console.log(expected == got)
+            console.log(expected)
+            console.log(got)
   hide-branch-coverage:
     runs-on: ubuntu-latest
     steps:
