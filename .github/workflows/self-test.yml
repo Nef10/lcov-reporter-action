@@ -33,7 +33,7 @@ jobs:
             const expected = expectedTemplate.replace("XXX", "${{github.event.pull_request.head.ref }}")
               .replace("YYY", "${{github.event.pull_request.base.ref }}")
               .replace(/ZZZ/g, "${{github.event.pull_request.head.sha }}");
-            const got = comment.body
+            const got = comment.data.body
 
             console.log(expected.trim() == got.trim())
             console.log(expected)
