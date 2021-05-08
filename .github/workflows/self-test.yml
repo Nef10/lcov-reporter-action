@@ -34,7 +34,7 @@ jobs:
               .replace("YYY", "${{github.event.pull_request.base.ref }}")
               .replace(/ZZZ/g, "${{github.event.pull_request.head.sha }}");
             const got = await fs.readFile("test.html", "utf-8");
-            console.log(expected == got)
+            console.log(expected.trim() == got.trim())
             console.log(expected)
             console.log(got)
 
