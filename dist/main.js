@@ -1,51 +1,63 @@
 'use strict';
 
-var fs = require('fs');
-var os = require('os');
-var path = require('path');
-var http = require('http');
-var https = require('https');
+var require$$0 = require('fs');
+var require$$1 = require('os');
+var require$$4 = require('path');
+var http$1 = require('http');
+var require$$3$1 = require('https');
 require('net');
-var tls = require('tls');
-var events = require('events');
+var require$$1$1 = require('tls');
+var require$$4$1 = require('events');
 require('assert');
-var util = require('util');
+var require$$6 = require('util');
 var Stream = require('stream');
 var Url = require('url');
 var zlib = require('zlib');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
-var fs__default = /*#__PURE__*/_interopDefaultLegacy(fs);
-var os__default = /*#__PURE__*/_interopDefaultLegacy(os);
-var path__default = /*#__PURE__*/_interopDefaultLegacy(path);
-var http__default = /*#__PURE__*/_interopDefaultLegacy(http);
-var https__default = /*#__PURE__*/_interopDefaultLegacy(https);
-var tls__default = /*#__PURE__*/_interopDefaultLegacy(tls);
-var events__default = /*#__PURE__*/_interopDefaultLegacy(events);
-var util__default = /*#__PURE__*/_interopDefaultLegacy(util);
+var require$$0__default = /*#__PURE__*/_interopDefaultLegacy(require$$0);
+var require$$1__default = /*#__PURE__*/_interopDefaultLegacy(require$$1);
+var require$$4__default = /*#__PURE__*/_interopDefaultLegacy(require$$4);
+var http__default = /*#__PURE__*/_interopDefaultLegacy(http$1);
+var require$$3__default = /*#__PURE__*/_interopDefaultLegacy(require$$3$1);
+var require$$1__default$1 = /*#__PURE__*/_interopDefaultLegacy(require$$1$1);
+var require$$4__default$1 = /*#__PURE__*/_interopDefaultLegacy(require$$4$1);
+var require$$6__default = /*#__PURE__*/_interopDefaultLegacy(require$$6);
 var Stream__default = /*#__PURE__*/_interopDefaultLegacy(Stream);
 var Url__default = /*#__PURE__*/_interopDefaultLegacy(Url);
 var zlib__default = /*#__PURE__*/_interopDefaultLegacy(zlib);
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
-function unwrapExports (x) {
+function getDefaultExportFromCjs (x) {
 	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
 }
 
-function createCommonjsModule(fn, module) {
-	return module = { exports: {} }, fn(module, module.exports), module.exports;
+function getAugmentedNamespace(n) {
+	if (n.__esModule) return n;
+	var a = Object.defineProperty({}, '__esModule', {value: true});
+	Object.keys(n).forEach(function (k) {
+		var d = Object.getOwnPropertyDescriptor(n, k);
+		Object.defineProperty(a, k, d.get ? d : {
+			enumerable: true,
+			get: function () {
+				return n[k];
+			}
+		});
+	});
+	return a;
 }
 
-function getCjsExportFromNamespace (n) {
-	return n && n['default'] || n;
-}
+var core$1 = {};
 
-var utils$2 = createCommonjsModule(function (module, exports) {
+var command = {};
+
+var utils$2 = {};
+
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(utils$2, "__esModule", { value: true });
 /**
  * Sanitizes an input into a string so it can be passed into issueCommand safely
  * @param input input to sanitize into a string
@@ -59,24 +71,18 @@ function toCommandValue(input) {
     }
     return JSON.stringify(input);
 }
-exports.toCommandValue = toCommandValue;
-//# sourceMappingURL=utils.js.map
-});
+utils$2.toCommandValue = toCommandValue;
 
-unwrapExports(utils$2);
-utils$2.toCommandValue;
-
-var command = createCommonjsModule(function (module, exports) {
-var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+var __importStar$4 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
     if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
     result["default"] = mod;
     return result;
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-const os = __importStar(os__default['default']);
-
+Object.defineProperty(command, "__esModule", { value: true });
+const os$1 = __importStar$4(require$$1__default['default']);
+const utils_1$2 = utils$2;
 /**
  * Commands
  *
@@ -87,15 +93,15 @@ const os = __importStar(os__default['default']);
  *   ::warning::This is the message
  *   ::set-env name=MY_VAR::some value
  */
-function issueCommand(command, properties, message) {
+function issueCommand$1(command, properties, message) {
     const cmd = new Command(command, properties, message);
-    process.stdout.write(cmd.toString() + os.EOL);
+    process.stdout.write(cmd.toString() + os$1.EOL);
 }
-exports.issueCommand = issueCommand;
+command.issueCommand = issueCommand$1;
 function issue(name, message = '') {
-    issueCommand(name, {}, message);
+    issueCommand$1(name, {}, message);
 }
-exports.issue = issue;
+command.issue = issue;
 const CMD_STRING = '::';
 class Command {
     constructor(command, properties, message) {
@@ -131,61 +137,51 @@ class Command {
     }
 }
 function escapeData(s) {
-    return utils$2.toCommandValue(s)
+    return utils_1$2.toCommandValue(s)
         .replace(/%/g, '%25')
         .replace(/\r/g, '%0D')
         .replace(/\n/g, '%0A');
 }
 function escapeProperty(s) {
-    return utils$2.toCommandValue(s)
+    return utils_1$2.toCommandValue(s)
         .replace(/%/g, '%25')
         .replace(/\r/g, '%0D')
         .replace(/\n/g, '%0A')
         .replace(/:/g, '%3A')
         .replace(/,/g, '%2C');
 }
-//# sourceMappingURL=command.js.map
-});
 
-unwrapExports(command);
-command.issueCommand;
-command.issue;
+var fileCommand = {};
 
-var fileCommand = createCommonjsModule(function (module, exports) {
 // For internal use, subject to change.
-var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+var __importStar$3 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
     if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
     result["default"] = mod;
     return result;
 };
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(fileCommand, "__esModule", { value: true });
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const fs = __importStar(fs__default['default']);
-const os = __importStar(os__default['default']);
-
+const fs$1 = __importStar$3(require$$0__default['default']);
+const os = __importStar$3(require$$1__default['default']);
+const utils_1$1 = utils$2;
 function issueCommand(command, message) {
     const filePath = process.env[`GITHUB_${command}`];
     if (!filePath) {
         throw new Error(`Unable to find environment variable for file command ${command}`);
     }
-    if (!fs.existsSync(filePath)) {
+    if (!fs$1.existsSync(filePath)) {
         throw new Error(`Missing file at path: ${filePath}`);
     }
-    fs.appendFileSync(filePath, `${utils$2.toCommandValue(message)}${os.EOL}`, {
+    fs$1.appendFileSync(filePath, `${utils_1$1.toCommandValue(message)}${os.EOL}`, {
         encoding: 'utf8'
     });
 }
-exports.issueCommand = issueCommand;
-//# sourceMappingURL=file-command.js.map
-});
+fileCommand.issueCommand = issueCommand;
 
-unwrapExports(fileCommand);
-fileCommand.issueCommand;
-
-var core = createCommonjsModule(function (module, exports) {
+(function (exports) {
 var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -203,11 +199,11 @@ var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-
-
-
-const os = __importStar(os__default['default']);
-const path = __importStar(path__default['default']);
+const command_1 = command;
+const file_command_1 = fileCommand;
+const utils_1 = utils$2;
+const os = __importStar(require$$1__default['default']);
+const path = __importStar(require$$4__default['default']);
 /**
  * The code to exit an action
  */
@@ -232,16 +228,16 @@ var ExitCode;
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function exportVariable(name, val) {
-    const convertedVal = utils$2.toCommandValue(val);
+    const convertedVal = utils_1.toCommandValue(val);
     process.env[name] = convertedVal;
     const filePath = process.env['GITHUB_ENV'] || '';
     if (filePath) {
         const delimiter = '_GitHubActionsFileCommandDelimeter_';
         const commandValue = `${name}<<${delimiter}${os.EOL}${convertedVal}${os.EOL}${delimiter}`;
-        fileCommand.issueCommand('ENV', commandValue);
+        file_command_1.issueCommand('ENV', commandValue);
     }
     else {
-        command.issueCommand('set-env', { name }, convertedVal);
+        command_1.issueCommand('set-env', { name }, convertedVal);
     }
 }
 exports.exportVariable = exportVariable;
@@ -250,7 +246,7 @@ exports.exportVariable = exportVariable;
  * @param secret value of the secret
  */
 function setSecret(secret) {
-    command.issueCommand('add-mask', {}, secret);
+    command_1.issueCommand('add-mask', {}, secret);
 }
 exports.setSecret = setSecret;
 /**
@@ -260,10 +256,10 @@ exports.setSecret = setSecret;
 function addPath(inputPath) {
     const filePath = process.env['GITHUB_PATH'] || '';
     if (filePath) {
-        fileCommand.issueCommand('PATH', inputPath);
+        file_command_1.issueCommand('PATH', inputPath);
     }
     else {
-        command.issueCommand('add-path', {}, inputPath);
+        command_1.issueCommand('add-path', {}, inputPath);
     }
     process.env['PATH'] = `${inputPath}${path.delimiter}${process.env['PATH']}`;
 }
@@ -292,7 +288,7 @@ exports.getInput = getInput;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function setOutput(name, value) {
     process.stdout.write(os.EOL);
-    command.issueCommand('set-output', { name }, value);
+    command_1.issueCommand('set-output', { name }, value);
 }
 exports.setOutput = setOutput;
 /**
@@ -301,7 +297,7 @@ exports.setOutput = setOutput;
  *
  */
 function setCommandEcho(enabled) {
-    command.issue('echo', enabled ? 'on' : 'off');
+    command_1.issue('echo', enabled ? 'on' : 'off');
 }
 exports.setCommandEcho = setCommandEcho;
 //-----------------------------------------------------------------------
@@ -332,7 +328,7 @@ exports.isDebug = isDebug;
  * @param message debug message
  */
 function debug(message) {
-    command.issueCommand('debug', {}, message);
+    command_1.issueCommand('debug', {}, message);
 }
 exports.debug = debug;
 /**
@@ -340,7 +336,7 @@ exports.debug = debug;
  * @param message error issue message. Errors will be converted to string via toString()
  */
 function error(message) {
-    command.issue('error', message instanceof Error ? message.toString() : message);
+    command_1.issue('error', message instanceof Error ? message.toString() : message);
 }
 exports.error = error;
 /**
@@ -348,7 +344,7 @@ exports.error = error;
  * @param message warning issue message. Errors will be converted to string via toString()
  */
 function warning(message) {
-    command.issue('warning', message instanceof Error ? message.toString() : message);
+    command_1.issue('warning', message instanceof Error ? message.toString() : message);
 }
 exports.warning = warning;
 /**
@@ -367,14 +363,14 @@ exports.info = info;
  * @param name The name of the output group
  */
 function startGroup(name) {
-    command.issue('group', name);
+    command_1.issue('group', name);
 }
 exports.startGroup = startGroup;
 /**
  * End an output group.
  */
 function endGroup() {
-    command.issue('endgroup');
+    command_1.issue('endgroup');
 }
 exports.endGroup = endGroup;
 /**
@@ -410,7 +406,7 @@ exports.group = group;
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function saveState(name, value) {
-    command.issueCommand('save-state', { name }, value);
+    command_1.issueCommand('save-state', { name }, value);
 }
 exports.saveState = saveState;
 /**
@@ -424,46 +420,31 @@ function getState(name) {
 }
 exports.getState = getState;
 //# sourceMappingURL=core.js.map
-});
+}(core$1));
 
-var core$1 = unwrapExports(core);
-core.ExitCode;
-core.exportVariable;
-core.setSecret;
-core.addPath;
-core.getInput;
-core.setOutput;
-core.setCommandEcho;
-core.setFailed;
-core.isDebug;
-core.debug;
-core.error;
-core.warning;
-core.info;
-core.startGroup;
-core.endGroup;
-core.group;
-core.saveState;
-core.getState;
+var core = /*@__PURE__*/getDefaultExportFromCjs(core$1);
 
-var context = createCommonjsModule(function (module, exports) {
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Context = void 0;
+var github = {};
 
+var context$1 = {};
 
-class Context {
+Object.defineProperty(context$1, "__esModule", { value: true });
+context$1.Context = void 0;
+const fs_1 = require$$0__default['default'];
+const os_1 = require$$1__default['default'];
+class Context$2 {
     /**
      * Hydrate the context from the environment
      */
     constructor() {
         this.payload = {};
         if (process.env.GITHUB_EVENT_PATH) {
-            if (fs__default['default'].existsSync(process.env.GITHUB_EVENT_PATH)) {
-                this.payload = JSON.parse(fs__default['default'].readFileSync(process.env.GITHUB_EVENT_PATH, { encoding: 'utf8' }));
+            if (fs_1.existsSync(process.env.GITHUB_EVENT_PATH)) {
+                this.payload = JSON.parse(fs_1.readFileSync(process.env.GITHUB_EVENT_PATH, { encoding: 'utf8' }));
             }
             else {
                 const path = process.env.GITHUB_EVENT_PATH;
-                process.stdout.write(`GITHUB_EVENT_PATH ${path} does not exist${os__default['default'].EOL}`);
+                process.stdout.write(`GITHUB_EVENT_PATH ${path} does not exist${os_1.EOL}`);
             }
         }
         this.eventName = process.env.GITHUB_EVENT_NAME;
@@ -494,15 +475,17 @@ class Context {
         throw new Error("context.repo requires a GITHUB_REPOSITORY environment variable like 'owner/repo'");
     }
 }
-exports.Context = Context;
-//# sourceMappingURL=context.js.map
-});
+context$1.Context = Context$2;
 
-unwrapExports(context);
-context.Context;
+var utils$1 = {};
 
-var proxy = createCommonjsModule(function (module, exports) {
-Object.defineProperty(exports, "__esModule", { value: true });
+var utils = {};
+
+var httpClient$1 = {};
+
+var proxy = {};
+
+Object.defineProperty(proxy, "__esModule", { value: true });
 function getProxyUrl(reqUrl) {
     let usingSsl = reqUrl.protocol === 'https:';
     let proxyUrl;
@@ -521,7 +504,7 @@ function getProxyUrl(reqUrl) {
     }
     return proxyUrl;
 }
-exports.getProxyUrl = getProxyUrl;
+proxy.getProxyUrl = getProxyUrl;
 function checkBypass(reqUrl) {
     if (!reqUrl.hostname) {
         return false;
@@ -557,28 +540,32 @@ function checkBypass(reqUrl) {
     }
     return false;
 }
-exports.checkBypass = checkBypass;
-});
+proxy.checkBypass = checkBypass;
 
-unwrapExports(proxy);
-proxy.getProxyUrl;
-proxy.checkBypass;
+var tunnel$1 = {};
 
-var httpOverHttp_1 = httpOverHttp;
-var httpsOverHttp_1 = httpsOverHttp;
-var httpOverHttps_1 = httpOverHttps;
-var httpsOverHttps_1 = httpsOverHttps;
+var tls = require$$1__default$1['default'];
+var http = http__default['default'];
+var https = require$$3__default['default'];
+var events = require$$4__default$1['default'];
+var util = require$$6__default['default'];
+
+
+tunnel$1.httpOverHttp = httpOverHttp;
+tunnel$1.httpsOverHttp = httpsOverHttp;
+tunnel$1.httpOverHttps = httpOverHttps;
+tunnel$1.httpsOverHttps = httpsOverHttps;
 
 
 function httpOverHttp(options) {
   var agent = new TunnelingAgent(options);
-  agent.request = http__default['default'].request;
+  agent.request = http.request;
   return agent;
 }
 
 function httpsOverHttp(options) {
   var agent = new TunnelingAgent(options);
-  agent.request = http__default['default'].request;
+  agent.request = http.request;
   agent.createSocket = createSecureSocket;
   agent.defaultPort = 443;
   return agent;
@@ -586,13 +573,13 @@ function httpsOverHttp(options) {
 
 function httpOverHttps(options) {
   var agent = new TunnelingAgent(options);
-  agent.request = https__default['default'].request;
+  agent.request = https.request;
   return agent;
 }
 
 function httpsOverHttps(options) {
   var agent = new TunnelingAgent(options);
-  agent.request = https__default['default'].request;
+  agent.request = https.request;
   agent.createSocket = createSecureSocket;
   agent.defaultPort = 443;
   return agent;
@@ -603,7 +590,7 @@ function TunnelingAgent(options) {
   var self = this;
   self.options = options || {};
   self.proxyOptions = self.options.proxy || {};
-  self.maxSockets = self.options.maxSockets || http__default['default'].Agent.defaultMaxSockets;
+  self.maxSockets = self.options.maxSockets || http.Agent.defaultMaxSockets;
   self.requests = [];
   self.sockets = [];
 
@@ -623,7 +610,7 @@ function TunnelingAgent(options) {
     self.removeSocket(socket);
   });
 }
-util__default['default'].inherits(TunnelingAgent, events__default['default'].EventEmitter);
+util.inherits(TunnelingAgent, events.EventEmitter);
 
 TunnelingAgent.prototype.addRequest = function addRequest(req, host, port, localAddress) {
   var self = this;
@@ -767,7 +754,7 @@ function createSecureSocket(options, cb) {
     });
 
     // 0 is dummy port for v0.6
-    var secureSocket = tls__default['default'].connect(0, tlsOptions);
+    var secureSocket = tls.connect(0, tlsOptions);
     self.sockets[self.sockets.indexOf(socket)] = secureSocket;
     cb(secureSocket);
   });
@@ -816,23 +803,15 @@ if (process.env.NODE_DEBUG && /\btunnel\b/.test(process.env.NODE_DEBUG)) {
 } else {
   debug = function() {};
 }
-var debug_1 = debug; // for test
-
-var tunnel$1 = {
-	httpOverHttp: httpOverHttp_1,
-	httpsOverHttp: httpsOverHttp_1,
-	httpOverHttps: httpOverHttps_1,
-	httpsOverHttps: httpsOverHttps_1,
-	debug: debug_1
-};
+tunnel$1.debug = debug; // for test
 
 var tunnel = tunnel$1;
 
-var httpClient = createCommonjsModule(function (module, exports) {
+(function (exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
-
-
-
+const http = http__default['default'];
+const https = require$$3__default['default'];
+const pm = proxy;
 let tunnel$1;
 var HttpCodes;
 (function (HttpCodes) {
@@ -878,7 +857,7 @@ var MediaTypes;
  * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
  */
 function getProxyUrl(serverUrl) {
-    let proxyUrl = proxy.getProxyUrl(new URL(serverUrl));
+    let proxyUrl = pm.getProxyUrl(new URL(serverUrl));
     return proxyUrl ? proxyUrl.href : '';
 }
 exports.getProxyUrl = getProxyUrl;
@@ -1191,7 +1170,7 @@ class HttpClient {
         const info = {};
         info.parsedUrl = requestUrl;
         const usingSsl = info.parsedUrl.protocol === 'https:';
-        info.httpModule = usingSsl ? https__default['default'] : http__default['default'];
+        info.httpModule = usingSsl ? https : http;
         const defaultPort = usingSsl ? 443 : 80;
         info.options = {};
         info.options.host = info.parsedUrl.hostname;
@@ -1231,7 +1210,7 @@ class HttpClient {
     }
     _getAgent(parsedUrl) {
         let agent;
-        let proxyUrl = proxy.getProxyUrl(parsedUrl);
+        let proxyUrl = pm.getProxyUrl(parsedUrl);
         let useProxy = proxyUrl && proxyUrl.hostname;
         if (this._keepAlive && useProxy) {
             agent = this._proxyAgent;
@@ -1246,7 +1225,7 @@ class HttpClient {
         const usingSsl = parsedUrl.protocol === 'https:';
         let maxSockets = 100;
         if (!!this.requestOptions) {
-            maxSockets = this.requestOptions.maxSockets || http__default['default'].globalAgent.maxSockets;
+            maxSockets = this.requestOptions.maxSockets || http.globalAgent.maxSockets;
         }
         if (useProxy) {
             // If using proxy, need tunnel
@@ -1278,12 +1257,12 @@ class HttpClient {
         // if reusing agent across request and tunneling agent isn't assigned create a new agent
         if (this._keepAlive && !agent) {
             const options = { keepAlive: this._keepAlive, maxSockets: maxSockets };
-            agent = usingSsl ? new https__default['default'].Agent(options) : new http__default['default'].Agent(options);
+            agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
             this._agent = agent;
         }
         // if not using private agent and tunnel agent isn't setup then use global agent
         if (!agent) {
-            agent = usingSsl ? https__default['default'].globalAgent : http__default['default'].globalAgent;
+            agent = usingSsl ? https.globalAgent : http.globalAgent;
         }
         if (usingSsl && this._ignoreSslError) {
             // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
@@ -1365,41 +1344,30 @@ class HttpClient {
     }
 }
 exports.HttpClient = HttpClient;
-});
+}(httpClient$1));
 
-unwrapExports(httpClient);
-httpClient.HttpCodes;
-httpClient.Headers;
-httpClient.MediaTypes;
-httpClient.getProxyUrl;
-httpClient.HttpClientError;
-httpClient.HttpClientResponse;
-httpClient.isHttps;
-httpClient.HttpClient;
-
-var utils$1 = createCommonjsModule(function (module, exports) {
-var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+var __createBinding$2 = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
 }));
-var __setModuleDefault = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
+var __setModuleDefault$2 = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
     Object.defineProperty(o, "default", { enumerable: true, value: v });
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+var __importStar$2 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) __createBinding$2(result, mod, k);
+    __setModuleDefault$2(result, mod);
     return result;
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getApiBaseUrl = exports.getProxyAgent = exports.getAuthString = void 0;
-const httpClient$1 = __importStar(httpClient);
+Object.defineProperty(utils, "__esModule", { value: true });
+utils.getApiBaseUrl = utils.getProxyAgent = utils.getAuthString = void 0;
+const httpClient = __importStar$2(httpClient$1);
 function getAuthString(token, options) {
     if (!token && !options.auth) {
         throw new Error('Parameter token or opts.auth is required');
@@ -1409,27 +1377,22 @@ function getAuthString(token, options) {
     }
     return typeof options.auth === 'string' ? options.auth : `token ${token}`;
 }
-exports.getAuthString = getAuthString;
+utils.getAuthString = getAuthString;
 function getProxyAgent(destinationUrl) {
-    const hc = new httpClient$1.HttpClient();
+    const hc = new httpClient.HttpClient();
     return hc.getAgent(destinationUrl);
 }
-exports.getProxyAgent = getProxyAgent;
+utils.getProxyAgent = getProxyAgent;
 function getApiBaseUrl() {
     return process.env['GITHUB_API_URL'] || 'https://api.github.com';
 }
-exports.getApiBaseUrl = getApiBaseUrl;
-//# sourceMappingURL=utils.js.map
-});
+utils.getApiBaseUrl = getApiBaseUrl;
 
-unwrapExports(utils$1);
-utils$1.getApiBaseUrl;
-utils$1.getProxyAgent;
-utils$1.getAuthString;
+var distNode$9 = {};
 
-var distNode$9 = createCommonjsModule(function (module, exports) {
+var distNode$8 = {};
 
-Object.defineProperty(exports, '__esModule', { value: true });
+Object.defineProperty(distNode$8, '__esModule', { value: true });
 
 function getUserAgent() {
   if (typeof navigator === "object" && "userAgent" in navigator) {
@@ -1443,16 +1406,13 @@ function getUserAgent() {
   return "<environment undetectable>";
 }
 
-exports.getUserAgent = getUserAgent;
-//# sourceMappingURL=index.js.map
-});
+distNode$8.getUserAgent = getUserAgent;
 
-unwrapExports(distNode$9);
-distNode$9.getUserAgent;
+var beforeAfterHook$1 = {exports: {}};
 
-var register_1 = register;
+var register_1 = register$1;
 
-function register(state, name, method, options) {
+function register$1(state, name, method, options) {
   if (typeof method !== "function") {
     throw new Error("method for before hook must be a function");
   }
@@ -1463,7 +1423,7 @@ function register(state, name, method, options) {
 
   if (Array.isArray(name)) {
     return name.reverse().reduce(function (callback, name) {
-      return register.bind(null, state, name, callback, options);
+      return register$1.bind(null, state, name, callback, options);
     }, method)();
   }
 
@@ -1478,9 +1438,9 @@ function register(state, name, method, options) {
   });
 }
 
-var add = addHook;
+var add = addHook$1;
 
-function addHook(state, kind, name, hook) {
+function addHook$1(state, kind, name, hook) {
   var orig = hook;
   if (!state.registry[name]) {
     state.registry[name] = [];
@@ -1525,9 +1485,9 @@ function addHook(state, kind, name, hook) {
   });
 }
 
-var remove = removeHook;
+var remove = removeHook$1;
 
-function removeHook(state, name, method) {
+function removeHook$1(state, name, method) {
   if (!state.registry[name]) {
     return;
   }
@@ -1545,18 +1505,22 @@ function removeHook(state, name, method) {
   state.registry[name].splice(index, 1);
 }
 
+var register = register_1;
+var addHook = add;
+var removeHook = remove;
+
 // bind with array of arguments: https://stackoverflow.com/a/21792913
 var bind = Function.bind;
 var bindable = bind.bind(bind);
 
 function bindApi (hook, state, name) {
-  var removeHookRef = bindable(remove, null).apply(null, name ? [state, name] : [state]);
+  var removeHookRef = bindable(removeHook, null).apply(null, name ? [state, name] : [state]);
   hook.api = { remove: removeHookRef };
   hook.remove = removeHookRef
 
   ;['before', 'error', 'after', 'wrap'].forEach(function (kind) {
     var args = name ? [state, kind, name] : [state, kind];
-    hook[kind] = hook.api[kind] = bindable(add, null).apply(null, args);
+    hook[kind] = hook.api[kind] = bindable(addHook, null).apply(null, args);
   });
 }
 
@@ -1565,7 +1529,7 @@ function HookSingular () {
   var singularHookState = {
     registry: {}
   };
-  var singularHook = register_1.bind(null, singularHookState, singularHookName);
+  var singularHook = register.bind(null, singularHookState, singularHookName);
   bindApi(singularHook, singularHookState, singularHookName);
   return singularHook
 }
@@ -1575,7 +1539,7 @@ function HookCollection () {
     registry: {}
   };
 
-  var hook = register_1.bind(null, state);
+  var hook = register.bind(null, state);
   bindApi(hook, state);
 
   return hook
@@ -1593,14 +1557,19 @@ function Hook () {
 Hook.Singular = HookSingular.bind();
 Hook.Collection = HookCollection.bind();
 
-var beforeAfterHook = Hook;
+beforeAfterHook$1.exports = Hook;
 // expose constructors as a named property for TypeScript
-var Hook_1 = Hook;
-var Singular = Hook.Singular;
-var Collection = Hook.Collection;
-beforeAfterHook.Hook = Hook_1;
-beforeAfterHook.Singular = Singular;
-beforeAfterHook.Collection = Collection;
+beforeAfterHook$1.exports.Hook = Hook;
+beforeAfterHook$1.exports.Singular = Hook.Singular;
+beforeAfterHook$1.exports.Collection = Hook.Collection;
+
+var distNode$7 = {};
+
+var distNode$6 = {};
+
+var isPlainObject$3 = {};
+
+Object.defineProperty(isPlainObject$3, '__esModule', { value: true });
 
 /*!
  * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
@@ -1613,7 +1582,7 @@ function isObject(o) {
   return Object.prototype.toString.call(o) === '[object Object]';
 }
 
-function isPlainObject$1(o) {
+function isPlainObject$2(o) {
   var ctor,prot;
 
   if (isObject(o) === false) return false;
@@ -1635,19 +1604,12 @@ function isPlainObject$1(o) {
   return true;
 }
 
-var isPlainObject$2 = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	isPlainObject: isPlainObject$1
-});
+isPlainObject$3.isPlainObject = isPlainObject$2;
 
-var isPlainObject = getCjsExportFromNamespace(isPlainObject$2);
+Object.defineProperty(distNode$6, '__esModule', { value: true });
 
-var distNode$8 = createCommonjsModule(function (module, exports) {
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-
-
+var isPlainObject$1 = isPlainObject$3;
+var universalUserAgent$3 = distNode$8;
 
 function lowercaseKeys(object) {
   if (!object) {
@@ -1663,7 +1625,7 @@ function lowercaseKeys(object) {
 function mergeDeep(defaults, options) {
   const result = Object.assign({}, defaults);
   Object.keys(options).forEach(key => {
-    if (isPlainObject.isPlainObject(options[key])) {
+    if (isPlainObject$1.isPlainObject(options[key])) {
       if (!(key in defaults)) Object.assign(result, {
         [key]: options[key]
       });else result[key] = mergeDeep(defaults[key], options[key]);
@@ -1921,7 +1883,7 @@ function expand(template, context) {
   });
 }
 
-function parse(options) {
+function parse$2(options) {
   // https://fetch.spec.whatwg.org/#methods
   let method = options.method.toUpperCase(); // replace :varname with {varname} to make it RFC 6570 compatible
 
@@ -1996,23 +1958,23 @@ function parse(options) {
 }
 
 function endpointWithDefaults(defaults, route, options) {
-  return parse(merge(defaults, route, options));
+  return parse$2(merge(defaults, route, options));
 }
 
-function withDefaults(oldDefaults, newDefaults) {
+function withDefaults$2(oldDefaults, newDefaults) {
   const DEFAULTS = merge(oldDefaults, newDefaults);
   const endpoint = endpointWithDefaults.bind(null, DEFAULTS);
   return Object.assign(endpoint, {
     DEFAULTS,
-    defaults: withDefaults.bind(null, DEFAULTS),
+    defaults: withDefaults$2.bind(null, DEFAULTS),
     merge: merge.bind(null, DEFAULTS),
-    parse
+    parse: parse$2
   });
 }
 
-const VERSION = "6.0.11";
+const VERSION$5 = "6.0.11";
 
-const userAgent = `octokit-endpoint.js/${VERSION} ${distNode$9.getUserAgent()}`; // DEFAULTS has all properties set that EndpointOptions has, except url.
+const userAgent = `octokit-endpoint.js/${VERSION$5} ${universalUserAgent$3.getUserAgent()}`; // DEFAULTS has all properties set that EndpointOptions has, except url.
 // So we use RequestParameters and add method as additional required property.
 
 const DEFAULTS = {
@@ -2028,14 +1990,9 @@ const DEFAULTS = {
   }
 };
 
-const endpoint = withDefaults(null, DEFAULTS);
+const endpoint$1 = withDefaults$2(null, DEFAULTS);
 
-exports.endpoint = endpoint;
-//# sourceMappingURL=index.js.map
-});
-
-unwrapExports(distNode$8);
-distNode$8.endpoint;
+distNode$6.endpoint = endpoint$1;
 
 // Based on https://github.com/tmpvar/jsdom/blob/aa85b2abf07766ff7bf5c1f6daafb3726f2f2db5/lib/jsdom/living/blob.js
 
@@ -3436,7 +3393,7 @@ function fetch(url, opts) {
 		const request = new Request(url, opts);
 		const options = getNodeRequestOptions(request);
 
-		const send = (options.protocol === 'https:' ? https__default['default'] : http__default['default']).request;
+		const send = (options.protocol === 'https:' ? require$$3__default['default'] : http__default['default']).request;
 		const signal = request.signal;
 
 		let response = null;
@@ -3676,9 +3633,13 @@ var lib$1 = /*#__PURE__*/Object.freeze({
 	FetchError: FetchError
 });
 
-var distNode$7 = createCommonjsModule(function (module, exports) {
+var require$$3 = /*@__PURE__*/getAugmentedNamespace(lib$1);
 
-Object.defineProperty(exports, '__esModule', { value: true });
+var distNode$5 = {};
+
+var distNode$4 = {};
+
+Object.defineProperty(distNode$4, '__esModule', { value: true });
 
 class Deprecation extends Error {
   constructor(message) {
@@ -3695,20 +3656,18 @@ class Deprecation extends Error {
 
 }
 
-exports.Deprecation = Deprecation;
-});
+distNode$4.Deprecation = Deprecation;
 
-unwrapExports(distNode$7);
-distNode$7.Deprecation;
+var once$2 = {exports: {}};
 
 // Returns a wrapper function that returns a wrapped callback
 // The wrapper function should do some stuff, and return a
 // presumably different callback function.
 // This makes sure that own properties are retained, so that
 // decorations and such are not lost along the way.
-var wrappy_1 = wrappy;
-function wrappy (fn, cb) {
-  if (fn && cb) return wrappy(fn)(cb)
+var wrappy_1 = wrappy$1;
+function wrappy$1 (fn, cb) {
+  if (fn && cb) return wrappy$1(fn)(cb)
 
   if (typeof fn !== 'function')
     throw new TypeError('need wrapper function')
@@ -3735,13 +3694,14 @@ function wrappy (fn, cb) {
   }
 }
 
-var once_1 = wrappy_1(once);
-var strict = wrappy_1(onceStrict);
+var wrappy = wrappy_1;
+once$2.exports = wrappy(once$1);
+once$2.exports.strict = wrappy(onceStrict);
 
-once.proto = once(function () {
+once$1.proto = once$1(function () {
   Object.defineProperty(Function.prototype, 'once', {
     value: function () {
-      return once(this)
+      return once$1(this)
     },
     configurable: true
   });
@@ -3754,7 +3714,7 @@ once.proto = once(function () {
   });
 });
 
-function once (fn) {
+function once$1 (fn) {
   var f = function () {
     if (f.called) return f.value
     f.called = true;
@@ -3776,16 +3736,13 @@ function onceStrict (fn) {
   f.called = false;
   return f
 }
-once_1.strict = strict;
 
-var distNode$6 = createCommonjsModule(function (module, exports) {
+Object.defineProperty(distNode$5, '__esModule', { value: true });
 
-Object.defineProperty(exports, '__esModule', { value: true });
+function _interopDefault$2 (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
-
-
-var once = _interopDefault(once_1);
+var deprecation = distNode$4;
+var once = _interopDefault$2(once$2.exports);
 
 const logOnce = once(deprecation => console.warn(deprecation));
 /**
@@ -3806,7 +3763,7 @@ class RequestError extends Error {
     this.status = statusCode;
     Object.defineProperty(this, "code", {
       get() {
-        logOnce(new distNode$7.Deprecation("[@octokit/request-error] `error.code` is deprecated, use `error.status`."));
+        logOnce(new deprecation.Deprecation("[@octokit/request-error] `error.code` is deprecated, use `error.status`."));
         return statusCode;
       }
 
@@ -3831,28 +3788,19 @@ class RequestError extends Error {
 
 }
 
-exports.RequestError = RequestError;
-//# sourceMappingURL=index.js.map
-});
+distNode$5.RequestError = RequestError;
 
-unwrapExports(distNode$6);
-distNode$6.RequestError;
+Object.defineProperty(distNode$7, '__esModule', { value: true });
 
-var require$$0 = getCjsExportFromNamespace(lib$1);
+function _interopDefault$1 (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var distNode$5 = createCommonjsModule(function (module, exports) {
+var endpoint = distNode$6;
+var universalUserAgent$2 = distNode$8;
+var isPlainObject = isPlainObject$3;
+var nodeFetch = _interopDefault$1(require$$3);
+var requestError = distNode$5;
 
-Object.defineProperty(exports, '__esModule', { value: true });
-
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
-
-
-
-
-var nodeFetch = _interopDefault(require$$0);
-
-
-const VERSION = "5.4.15";
+const VERSION$4 = "5.4.15";
 
 function getBufferResponse(response) {
   return response.arrayBuffer();
@@ -3892,14 +3840,14 @@ function fetchWrapper(requestOptions) {
         return;
       }
 
-      throw new distNode$6.RequestError(response.statusText, status, {
+      throw new requestError.RequestError(response.statusText, status, {
         headers,
         request: requestOptions
       });
     }
 
     if (status === 304) {
-      throw new distNode$6.RequestError("Not modified", status, {
+      throw new requestError.RequestError("Not modified", status, {
         headers,
         request: requestOptions
       });
@@ -3907,7 +3855,7 @@ function fetchWrapper(requestOptions) {
 
     if (status >= 400) {
       return response.text().then(message => {
-        const error = new distNode$6.RequestError(message, status, {
+        const error = new requestError.RequestError(message, status, {
           headers,
           request: requestOptions
         });
@@ -3944,18 +3892,18 @@ function fetchWrapper(requestOptions) {
       data
     };
   }).catch(error => {
-    if (error instanceof distNode$6.RequestError) {
+    if (error instanceof requestError.RequestError) {
       throw error;
     }
 
-    throw new distNode$6.RequestError(error.message, 500, {
+    throw new requestError.RequestError(error.message, 500, {
       headers,
       request: requestOptions
     });
   });
 }
 
-function withDefaults(oldEndpoint, newDefaults) {
+function withDefaults$1(oldEndpoint, newDefaults) {
   const endpoint = oldEndpoint.defaults(newDefaults);
 
   const newApi = function (route, parameters) {
@@ -3971,38 +3919,33 @@ function withDefaults(oldEndpoint, newDefaults) {
 
     Object.assign(request, {
       endpoint,
-      defaults: withDefaults.bind(null, endpoint)
+      defaults: withDefaults$1.bind(null, endpoint)
     });
     return endpointOptions.request.hook(request, endpointOptions);
   };
 
   return Object.assign(newApi, {
     endpoint,
-    defaults: withDefaults.bind(null, endpoint)
+    defaults: withDefaults$1.bind(null, endpoint)
   });
 }
 
-const request = withDefaults(distNode$8.endpoint, {
+const request$2 = withDefaults$1(endpoint.endpoint, {
   headers: {
-    "user-agent": `octokit-request.js/${VERSION} ${distNode$9.getUserAgent()}`
+    "user-agent": `octokit-request.js/${VERSION$4} ${universalUserAgent$2.getUserAgent()}`
   }
 });
 
-exports.request = request;
-//# sourceMappingURL=index.js.map
-});
+distNode$7.request = request$2;
 
-unwrapExports(distNode$5);
-distNode$5.request;
+var distNode$3 = {};
 
-var distNode$4 = createCommonjsModule(function (module, exports) {
+Object.defineProperty(distNode$3, '__esModule', { value: true });
 
-Object.defineProperty(exports, '__esModule', { value: true });
+var request$1 = distNode$7;
+var universalUserAgent$1 = distNode$8;
 
-
-
-
-const VERSION = "4.6.1";
+const VERSION$3 = "4.6.1";
 
 class GraphqlError extends Error {
   constructor(request, response) {
@@ -4027,7 +3970,7 @@ class GraphqlError extends Error {
 const NON_VARIABLE_OPTIONS = ["method", "baseUrl", "url", "headers", "request", "query", "mediaType"];
 const FORBIDDEN_VARIABLE_OPTIONS = ["query", "method", "url"];
 const GHES_V3_SUFFIX_REGEX = /\/api\/v3\/?$/;
-function graphql(request, query, options) {
+function graphql$1(request, query, options) {
   if (options) {
     if (typeof query === "string" && "query" in options) {
       return Promise.reject(new Error(`[@octokit/graphql] "query" cannot be used as variable name`));
@@ -4081,22 +4024,22 @@ function graphql(request, query, options) {
   });
 }
 
-function withDefaults(request$1, newDefaults) {
-  const newRequest = request$1.defaults(newDefaults);
+function withDefaults(request$1$1, newDefaults) {
+  const newRequest = request$1$1.defaults(newDefaults);
 
   const newApi = (query, options) => {
-    return graphql(newRequest, query, options);
+    return graphql$1(newRequest, query, options);
   };
 
   return Object.assign(newApi, {
     defaults: withDefaults.bind(null, newRequest),
-    endpoint: distNode$5.request.endpoint
+    endpoint: request$1.request.endpoint
   });
 }
 
-const graphql$1 = withDefaults(distNode$5.request, {
+const graphql$1$1 = withDefaults(request$1.request, {
   headers: {
-    "user-agent": `octokit-graphql.js/${VERSION} ${distNode$9.getUserAgent()}`
+    "user-agent": `octokit-graphql.js/${VERSION$3} ${universalUserAgent$1.getUserAgent()}`
   },
   method: "POST",
   url: "/graphql"
@@ -4108,18 +4051,12 @@ function withCustomRequest(customRequest) {
   });
 }
 
-exports.graphql = graphql$1;
-exports.withCustomRequest = withCustomRequest;
-//# sourceMappingURL=index.js.map
-});
+distNode$3.graphql = graphql$1$1;
+distNode$3.withCustomRequest = withCustomRequest;
 
-unwrapExports(distNode$4);
-distNode$4.graphql;
-distNode$4.withCustomRequest;
+var distNode$2 = {};
 
-var distNode$3 = createCommonjsModule(function (module, exports) {
-
-Object.defineProperty(exports, '__esModule', { value: true });
+Object.defineProperty(distNode$2, '__esModule', { value: true });
 
 async function auth(token) {
   const tokenType = token.split(/\./).length === 3 ? "app" : /^v\d+\./.test(token) ? "installation" : "oauth";
@@ -4164,22 +4101,15 @@ const createTokenAuth = function createTokenAuth(token) {
   });
 };
 
-exports.createTokenAuth = createTokenAuth;
-//# sourceMappingURL=index.js.map
-});
+distNode$2.createTokenAuth = createTokenAuth;
 
-unwrapExports(distNode$3);
-distNode$3.createTokenAuth;
+Object.defineProperty(distNode$9, '__esModule', { value: true });
 
-var distNode$2 = createCommonjsModule(function (module, exports) {
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-
-
-
-
-
+var universalUserAgent = distNode$8;
+var beforeAfterHook = beforeAfterHook$1.exports;
+var request = distNode$7;
+var graphql = distNode$3;
+var authToken = distNode$2;
 
 function _objectWithoutPropertiesLoose(source, excluded) {
   if (source == null) return {};
@@ -4217,13 +4147,13 @@ function _objectWithoutProperties(source, excluded) {
   return target;
 }
 
-const VERSION = "3.4.0";
+const VERSION$2 = "3.4.0";
 
 class Octokit {
   constructor(options = {}) {
     const hook = new beforeAfterHook.Collection();
     const requestDefaults = {
-      baseUrl: distNode$5.request.endpoint.DEFAULTS.baseUrl,
+      baseUrl: request.request.endpoint.DEFAULTS.baseUrl,
       headers: {},
       request: Object.assign({}, options.request, {
         // @ts-ignore internal usage only, no need to type
@@ -4235,7 +4165,7 @@ class Octokit {
       }
     }; // prepend default user agent with `options.userAgent` if set
 
-    requestDefaults.headers["user-agent"] = [options.userAgent, `octokit-core.js/${VERSION} ${distNode$9.getUserAgent()}`].filter(Boolean).join(" ");
+    requestDefaults.headers["user-agent"] = [options.userAgent, `octokit-core.js/${VERSION$2} ${universalUserAgent.getUserAgent()}`].filter(Boolean).join(" ");
 
     if (options.baseUrl) {
       requestDefaults.baseUrl = options.baseUrl;
@@ -4249,8 +4179,8 @@ class Octokit {
       requestDefaults.headers["time-zone"] = options.timeZone;
     }
 
-    this.request = distNode$5.request.defaults(requestDefaults);
-    this.graphql = distNode$4.withCustomRequest(this.request).defaults(requestDefaults);
+    this.request = request.request.defaults(requestDefaults);
+    this.graphql = graphql.withCustomRequest(this.request).defaults(requestDefaults);
     this.log = Object.assign({
       debug: () => {},
       info: () => {},
@@ -4271,7 +4201,7 @@ class Octokit {
         });
       } else {
         // (2)
-        const auth = distNode$3.createTokenAuth(options.auth); // @ts-ignore  ¯\_(ツ)_/¯
+        const auth = authToken.createTokenAuth(options.auth); // @ts-ignore  ¯\_(ツ)_/¯
 
         hook.wrap("request", auth.hook);
         this.auth = auth;
@@ -4341,19 +4271,14 @@ class Octokit {
   }
 
 }
-Octokit.VERSION = VERSION;
+Octokit.VERSION = VERSION$2;
 Octokit.plugins = [];
 
-exports.Octokit = Octokit;
-//# sourceMappingURL=index.js.map
-});
+distNode$9.Octokit = Octokit;
 
-unwrapExports(distNode$2);
-distNode$2.Octokit;
+var distNode$1 = {};
 
-var distNode$1 = createCommonjsModule(function (module, exports) {
-
-Object.defineProperty(exports, '__esModule', { value: true });
+Object.defineProperty(distNode$1, '__esModule', { value: true });
 
 function _defineProperty(obj, key, value) {
   if (key in obj) {
@@ -5487,7 +5412,7 @@ const Endpoints = {
   }
 };
 
-const VERSION = "4.15.1";
+const VERSION$1 = "4.15.1";
 
 function endpointsToMethods(octokit, endpointsMap) {
   const newMethods = {};
@@ -5576,18 +5501,13 @@ function restEndpointMethods(octokit) {
     rest: api
   });
 }
-restEndpointMethods.VERSION = VERSION;
+restEndpointMethods.VERSION = VERSION$1;
 
-exports.restEndpointMethods = restEndpointMethods;
-//# sourceMappingURL=index.js.map
-});
+distNode$1.restEndpointMethods = restEndpointMethods;
 
-unwrapExports(distNode$1);
-distNode$1.restEndpointMethods;
+var distNode = {};
 
-var distNode = createCommonjsModule(function (module, exports) {
-
-Object.defineProperty(exports, '__esModule', { value: true });
+Object.defineProperty(distNode, '__esModule', { value: true });
 
 const VERSION = "2.13.3";
 
@@ -5724,48 +5644,39 @@ function paginateRest(octokit) {
 }
 paginateRest.VERSION = VERSION;
 
-exports.composePaginateRest = composePaginateRest;
-exports.isPaginatingEndpoint = isPaginatingEndpoint;
-exports.paginateRest = paginateRest;
-exports.paginatingEndpoints = paginatingEndpoints;
-//# sourceMappingURL=index.js.map
-});
+distNode.composePaginateRest = composePaginateRest;
+distNode.isPaginatingEndpoint = isPaginatingEndpoint;
+distNode.paginateRest = paginateRest;
+distNode.paginatingEndpoints = paginatingEndpoints;
 
-unwrapExports(distNode);
-distNode.composePaginateRest;
-distNode.isPaginatingEndpoint;
-distNode.paginateRest;
-distNode.paginatingEndpoints;
-
-var utils = createCommonjsModule(function (module, exports) {
-var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+var __createBinding$1 = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
 }));
-var __setModuleDefault = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
+var __setModuleDefault$1 = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
     Object.defineProperty(o, "default", { enumerable: true, value: v });
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+var __importStar$1 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) __createBinding$1(result, mod, k);
+    __setModuleDefault$1(result, mod);
     return result;
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOctokitOptions = exports.GitHub = exports.context = void 0;
-const Context = __importStar(context);
-const Utils = __importStar(utils$1);
+Object.defineProperty(utils$1, "__esModule", { value: true });
+utils$1.getOctokitOptions = utils$1.GitHub = utils$1.context = void 0;
+const Context$1 = __importStar$1(context$1);
+const Utils = __importStar$1(utils);
 // octokit + plugins
-
-
-
-exports.context = new Context.Context();
+const core_1 = distNode$9;
+const plugin_rest_endpoint_methods_1 = distNode$1;
+const plugin_paginate_rest_1 = distNode;
+utils$1.context = new Context$1.Context();
 const baseUrl = Utils.getApiBaseUrl();
 const defaults = {
     baseUrl,
@@ -5773,7 +5684,7 @@ const defaults = {
         agent: Utils.getProxyAgent(baseUrl)
     }
 };
-exports.GitHub = distNode$2.Octokit.plugin(distNode$1.restEndpointMethods, distNode.paginateRest).defaults(defaults);
+utils$1.GitHub = core_1.Octokit.plugin(plugin_rest_endpoint_methods_1.restEndpointMethods, plugin_paginate_rest_1.paginateRest).defaults(defaults);
 /**
  * Convience function to correctly format Octokit Options to pass into the constructor.
  *
@@ -5789,16 +5700,8 @@ function getOctokitOptions(token, options) {
     }
     return opts;
 }
-exports.getOctokitOptions = getOctokitOptions;
-//# sourceMappingURL=utils.js.map
-});
+utils$1.getOctokitOptions = getOctokitOptions;
 
-unwrapExports(utils);
-utils.getOctokitOptions;
-utils.GitHub;
-utils.context;
-
-var github = createCommonjsModule(function (module, exports) {
 var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
@@ -5818,11 +5721,11 @@ var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (
     __setModuleDefault(result, mod);
     return result;
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOctokit = exports.context = void 0;
-const Context = __importStar(context);
-
-exports.context = new Context.Context();
+Object.defineProperty(github, "__esModule", { value: true });
+var getOctokit_1 = github.getOctokit = context = github.context = void 0;
+const Context = __importStar(context$1);
+const utils_1 = utils$1;
+var context = github.context = new Context.Context();
 /**
  * Returns a hydrated octokit ready to use for GitHub Actions
  *
@@ -5830,15 +5733,11 @@ exports.context = new Context.Context();
  * @param     options  other options to set
  */
 function getOctokit(token, options) {
-    return new utils.GitHub(utils.getOctokitOptions(token, options));
+    return new utils_1.GitHub(utils_1.getOctokitOptions(token, options));
 }
-exports.getOctokit = getOctokit;
-//# sourceMappingURL=github.js.map
-});
+getOctokit_1 = github.getOctokit = getOctokit;
 
-unwrapExports(github);
-var github_1 = github.getOctokit;
-var github_2 = github.context;
+var lib = {exports: {}};
 
 /*
 Copyright (c) 2012, Yahoo! Inc. All rights reserved.
@@ -5846,10 +5745,11 @@ Code licensed under the BSD License:
 http://yuilibrary.com/license/
 */
 
-
+var fs = require$$0__default['default'],
+    path = require$$4__default['default'];
 
 /* istanbul ignore next */
-var exists = fs__default['default'].exists || path__default['default'].exists;
+var exists = fs.exists || path.exists;
 
 var walkFile = function(str, cb) {
     var data = [], item;
@@ -5955,7 +5855,7 @@ var parse$1 = function(file, cb) {
         if (!x) {
             return walkFile(file, cb);
         }
-        fs__default['default'].readFile(file, 'utf8', function(err, str) {
+        fs.readFile(file, 'utf8', function(err, str) {
             walkFile(str, cb);
         });
     });
@@ -5963,14 +5863,15 @@ var parse$1 = function(file, cb) {
 };
 
 
-var lib = parse$1;
-var source = walkFile;
-lib.source = source;
+lib.exports = parse$1;
+lib.exports.source = walkFile;
+
+var lcov = lib.exports;
 
 // Parse lcov string into lcov data
 function parse(data) {
 	return new Promise(function (resolve, reject) {
-		lib(data, function (err, res) {
+		lcov(data, function (err, res) {
 			if (err) {
 				reject(err);
 				return;
@@ -6230,35 +6131,35 @@ function diff(lcov, before, options) {
 }
 
 async function main() {
-	const token = core$1.getInput("github-token");
-	const lcovFile = core$1.getInput("lcov-file") || "./coverage/lcov.info";
-	const baseFile = core$1.getInput("lcov-base");
-	const prNumber = core$1.getInput("pr-number");
-	const hide_branch_coverage = core$1.getInput("hide-branch-coverage") == "true";
-	const outputFile = core$1.getInput("output-file");
+	const token = core.getInput("github-token");
+	const lcovFile = core.getInput("lcov-file") || "./coverage/lcov.info";
+	const baseFile = core.getInput("lcov-base");
+	const prNumber = core.getInput("pr-number");
+	const hide_branch_coverage = core.getInput("hide-branch-coverage") == "true";
+	const outputFile = core.getInput("output-file");
 
-	const octokit = github_1(token);
+	const octokit = getOctokit_1(token);
 
-	const raw = await fs.promises.readFile(lcovFile, "utf-8").catch((err) => null);
+	const raw = await require$$0.promises.readFile(lcovFile, "utf-8").catch((err) => null);
 	if (!raw) {
 		console.log(`No coverage report found at '${lcovFile}', exiting...`);
 		return;
 	}
 
 	const baseRaw =
-		baseFile && (await fs.promises.readFile(baseFile, "utf-8").catch((err) => null));
+		baseFile && (await require$$0.promises.readFile(baseFile, "utf-8").catch((err) => null));
 	if (baseFile && !baseRaw) {
 		console.log(`No coverage report found at '${baseFile}', ignoring...`);
 	}
 
 	const { data } = await octokit.pulls.get({
-		owner: github_2.repo.owner,
-		repo: github_2.repo.repo,
+		owner: context.repo.owner,
+		repo: context.repo.repo,
 		pull_number: prNumber,
 	});
 
 	const options = {
-		repository: github_2.payload.repository.full_name,
+		repository: context.payload.repository.full_name,
 		prefix: `${process.env.GITHUB_WORKSPACE}/`,
 		commit: data.head.sha,
 		head: data.head.ref,
@@ -6271,11 +6172,11 @@ async function main() {
 	const body = diff(lcov, baselcov, options);
 
 	if (outputFile != null && outputFile != "") {
-		await fs.promises.writeFile(outputFile, body);
+		await require$$0.promises.writeFile(outputFile, body);
 	} else {
 		await new octokit.issues.createComment({
-			repo: github_2.repo.repo,
-			owner: github_2.repo.owner,
+			repo: context.repo.repo,
+			owner: context.repo.owner,
 			issue_number: prNumber,
 			body: body,
 		});
@@ -6284,5 +6185,5 @@ async function main() {
 
 main().catch(function (err) {
 	console.log(err);
-	core$1.setFailed(err.message);
+	core.setFailed(err.message);
 });
