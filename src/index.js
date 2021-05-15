@@ -27,7 +27,7 @@ async function main() {
 		console.log(`No coverage report found at '${baseFile}', ignoring...`);
 	}
 
-	const { data } = await octokit.pulls.get({
+	const { data } = await octokit.rest.pulls.get({
 		owner: context.repo.owner,
 		repo: context.repo.repo,
 		pull_number: prNumber,
@@ -49,7 +49,7 @@ async function main() {
 	if (outputFile != null && outputFile != "") {
 		await fs.writeFile(outputFile, body);
 	} else {
-		await new octokit.issues.createComment({
+		await new octokit.rest.issues.createComment({
 			repo: context.repo.repo,
 			owner: context.repo.owner,
 			issue_number: prNumber,
