@@ -486,7 +486,7 @@ function getState(name) {
     return process.env[`STATE_${name}`] || '';
 }
 exports.getState = getState;
-//# sourceMappingURL=core.js.map
+
 }(core$1));
 
 var core = /*@__PURE__*/getDefaultExportFromCjs(core$1);
