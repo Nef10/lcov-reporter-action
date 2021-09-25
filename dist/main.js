@@ -114,7 +114,7 @@ var __importStar$4 = (commonjsGlobal && commonjsGlobal.__importStar) || function
 };
 Object.defineProperty(command, "__esModule", { value: true });
 command.issue = command.issueCommand = void 0;
-const os$1 = __importStar$4(require$$1__default['default']);
+const os$1 = __importStar$4(require$$1__default["default"]);
 const utils_1$2 = utils$2;
 /**
  * Commands
@@ -210,8 +210,8 @@ Object.defineProperty(fileCommand, "__esModule", { value: true });
 fileCommand.issueCommand = void 0;
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const fs$1 = __importStar$3(require$$0__default['default']);
-const os = __importStar$3(require$$1__default['default']);
+const fs$1 = __importStar$3(require$$0__default["default"]);
+const os = __importStar$3(require$$1__default["default"]);
 const utils_1$1 = utils$2;
 function issueCommand(command, message) {
     const filePath = process.env[`GITHUB_${command}`];
@@ -261,8 +261,8 @@ exports.getState = exports.saveState = exports.group = exports.endGroup = export
 const command_1 = command;
 const file_command_1 = fileCommand;
 const utils_1 = utils$2;
-const os = __importStar(require$$1__default['default']);
-const path = __importStar(require$$4__default['default']);
+const os = __importStar(require$$1__default["default"]);
+const path = __importStar(require$$4__default["default"]);
 /**
  * The code to exit an action
  */
@@ -542,8 +542,8 @@ var context$1 = {};
 
 Object.defineProperty(context$1, "__esModule", { value: true });
 context$1.Context = void 0;
-const fs_1 = require$$0__default['default'];
-const os_1 = require$$1__default['default'];
+const fs_1 = require$$0__default["default"];
+const os_1 = require$$1__default["default"];
 class Context$2 {
     /**
      * Hydrate the context from the environment
@@ -660,11 +660,11 @@ proxy.checkBypass = checkBypass;
 
 var tunnel$1 = {};
 
-var tls = require$$1__default$1['default'];
-var http = http__default['default'];
-var https = require$$3__default['default'];
-var events = require$$4__default$1['default'];
-var util = require$$6__default['default'];
+var tls = require$$1__default$1["default"];
+var http = http__default["default"];
+var https = require$$3__default["default"];
+var events = require$$4__default$1["default"];
+var util = require$$6__default["default"];
 
 
 tunnel$1.httpOverHttp = httpOverHttp;
@@ -925,8 +925,8 @@ var tunnel = tunnel$1;
 
 (function (exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
-const http = http__default['default'];
-const https = require$$3__default['default'];
+const http = http__default["default"];
+const https = require$$3__default["default"];
 const pm = proxy;
 let tunnel$1;
 var HttpCodes;
@@ -2113,7 +2113,7 @@ distNode$6.endpoint = endpoint$1;
 // Based on https://github.com/tmpvar/jsdom/blob/aa85b2abf07766ff7bf5c1f6daafb3726f2f2db5/lib/jsdom/living/blob.js
 
 // fix for "Readable" isn't a named export issue
-const Readable = Stream__default['default'].Readable;
+const Readable = Stream__default["default"].Readable;
 
 const BUFFER = Symbol('buffer');
 const TYPE = Symbol('type');
@@ -2265,7 +2265,7 @@ try {
 const INTERNALS = Symbol('Body internals');
 
 // fix an issue where "PassThrough" isn't a named export for node <10
-const PassThrough = Stream__default['default'].PassThrough;
+const PassThrough = Stream__default["default"].PassThrough;
 
 /**
  * Body mixin
@@ -2298,7 +2298,7 @@ function Body(body) {
 	} else if (ArrayBuffer.isView(body)) {
 		// body is ArrayBufferView
 		body = Buffer.from(body.buffer, body.byteOffset, body.byteLength);
-	} else if (body instanceof Stream__default['default']) ; else {
+	} else if (body instanceof Stream__default["default"]) ; else {
 		// none of the above
 		// coerce to string then buffer
 		body = Buffer.from(String(body));
@@ -2311,7 +2311,7 @@ function Body(body) {
 	this.size = size;
 	this.timeout = timeout;
 
-	if (body instanceof Stream__default['default']) {
+	if (body instanceof Stream__default["default"]) {
 		body.on('error', function (err) {
 			const error = err.name === 'AbortError' ? err : new FetchError(`Invalid response body while trying to fetch ${_this.url}: ${err.message}`, 'system', err);
 			_this[INTERNALS].error = error;
@@ -2467,7 +2467,7 @@ function consumeBody() {
 	}
 
 	// istanbul ignore if: should never happen
-	if (!(body instanceof Stream__default['default'])) {
+	if (!(body instanceof Stream__default["default"])) {
 		return Body.Promise.resolve(Buffer.alloc(0));
 	}
 
@@ -2640,7 +2640,7 @@ function clone(instance) {
 
 	// check that body is a stream and not form-data object
 	// note: we can't clone the form-data object without having it as a dependency
-	if (body instanceof Stream__default['default'] && typeof body.getBoundary !== 'function') {
+	if (body instanceof Stream__default["default"] && typeof body.getBoundary !== 'function') {
 		// tee instance body
 		p1 = new PassThrough();
 		p2 = new PassThrough();
@@ -2688,7 +2688,7 @@ function extractContentType(body) {
 	} else if (typeof body.getBoundary === 'function') {
 		// detect form data input from form-data module
 		return `multipart/form-data;boundary=${body.getBoundary()}`;
-	} else if (body instanceof Stream__default['default']) {
+	} else if (body instanceof Stream__default["default"]) {
 		// body is stream
 		// can't really do much about this
 		return null;
@@ -3142,7 +3142,7 @@ function createHeadersLenient(obj) {
 const INTERNALS$1 = Symbol('Response internals');
 
 // fix an issue where "STATUS_CODES" aren't a named export for node <10
-const STATUS_CODES = http__default['default'].STATUS_CODES;
+const STATUS_CODES = http__default["default"].STATUS_CODES;
 
 /**
  * Response class
@@ -3243,10 +3243,10 @@ Object.defineProperty(Response.prototype, Symbol.toStringTag, {
 const INTERNALS$2 = Symbol('Request internals');
 
 // fix an issue where "format", "parse" aren't a named export for node <10
-const parse_url = Url__default['default'].parse;
-const format_url = Url__default['default'].format;
+const parse_url = Url__default["default"].parse;
+const format_url = Url__default["default"].format;
 
-const streamDestructionSupported = 'destroy' in Stream__default['default'].Readable.prototype;
+const streamDestructionSupported = 'destroy' in Stream__default["default"].Readable.prototype;
 
 /**
  * Check if a value is an instance of Request.
@@ -3409,7 +3409,7 @@ function getNodeRequestOptions(request) {
 		throw new TypeError('Only HTTP(S) protocols are supported');
 	}
 
-	if (request.signal && request.body instanceof Stream__default['default'].Readable && !streamDestructionSupported) {
+	if (request.signal && request.body instanceof Stream__default["default"].Readable && !streamDestructionSupported) {
 		throw new Error('Cancellation of streamed requests with AbortSignal is not supported in node < 8');
 	}
 
@@ -3484,8 +3484,8 @@ AbortError.prototype.constructor = AbortError;
 AbortError.prototype.name = 'AbortError';
 
 // fix an issue where "PassThrough", "resolve" aren't a named export for node <10
-const PassThrough$1 = Stream__default['default'].PassThrough;
-const resolve_url = Url__default['default'].resolve;
+const PassThrough$1 = Stream__default["default"].PassThrough;
+const resolve_url = Url__default["default"].resolve;
 
 /**
  * Fetch function
@@ -3509,7 +3509,7 @@ function fetch(url, opts) {
 		const request = new Request(url, opts);
 		const options = getNodeRequestOptions(request);
 
-		const send = (options.protocol === 'https:' ? require$$3__default['default'] : http__default['default']).request;
+		const send = (options.protocol === 'https:' ? require$$3__default["default"] : http__default["default"]).request;
 		const signal = request.signal;
 
 		let response = null;
@@ -3517,7 +3517,7 @@ function fetch(url, opts) {
 		const abort = function abort() {
 			let error = new AbortError('The user aborted a request.');
 			reject(error);
-			if (request.body && request.body instanceof Stream__default['default'].Readable) {
+			if (request.body && request.body instanceof Stream__default["default"].Readable) {
 				request.body.destroy(error);
 			}
 			if (!response || !response.body) return;
@@ -3681,13 +3681,13 @@ function fetch(url, opts) {
 			// by common browsers.
 			// Always using Z_SYNC_FLUSH is what cURL does.
 			const zlibOptions = {
-				flush: zlib__default['default'].Z_SYNC_FLUSH,
-				finishFlush: zlib__default['default'].Z_SYNC_FLUSH
+				flush: zlib__default["default"].Z_SYNC_FLUSH,
+				finishFlush: zlib__default["default"].Z_SYNC_FLUSH
 			};
 
 			// for gzip
 			if (codings == 'gzip' || codings == 'x-gzip') {
-				body = body.pipe(zlib__default['default'].createGunzip(zlibOptions));
+				body = body.pipe(zlib__default["default"].createGunzip(zlibOptions));
 				response = new Response(body, response_options);
 				resolve(response);
 				return;
@@ -3701,9 +3701,9 @@ function fetch(url, opts) {
 				raw.once('data', function (chunk) {
 					// see http://stackoverflow.com/questions/37519828
 					if ((chunk[0] & 0x0F) === 0x08) {
-						body = body.pipe(zlib__default['default'].createInflate());
+						body = body.pipe(zlib__default["default"].createInflate());
 					} else {
-						body = body.pipe(zlib__default['default'].createInflateRaw());
+						body = body.pipe(zlib__default["default"].createInflateRaw());
 					}
 					response = new Response(body, response_options);
 					resolve(response);
@@ -3712,8 +3712,8 @@ function fetch(url, opts) {
 			}
 
 			// for br
-			if (codings == 'br' && typeof zlib__default['default'].createBrotliDecompress === 'function') {
-				body = body.pipe(zlib__default['default'].createBrotliDecompress());
+			if (codings == 'br' && typeof zlib__default["default"].createBrotliDecompress === 'function') {
+				body = body.pipe(zlib__default["default"].createBrotliDecompress());
 				response = new Response(body, response_options);
 				resolve(response);
 				return;
@@ -6014,8 +6014,8 @@ Code licensed under the BSD License:
 http://yuilibrary.com/license/
 */
 
-var fs = require$$0__default['default'],
-    path = require$$4__default['default'];
+var fs = require$$0__default["default"],
+    path = require$$4__default["default"];
 
 /* istanbul ignore next */
 var exists = fs.exists || path.exists;
