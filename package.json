@@ -32,7 +32,7 @@
 		"@rollup/plugin-node-resolve": "^13.0.5",
 		"babel-jest": "^27.3.1",
 		"core-js": "3",
-		"jest": "^27.2.5",
+		"jest": "^27.3.1",
 		"prettier": "^2.4.1",
 		"regenerator-runtime": "^0.13.9",
 		"rollup": "^2.58.0",
