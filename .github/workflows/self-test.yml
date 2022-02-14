@@ -15,7 +15,7 @@ jobs:
           lcov-file: test-resources/lcov.info
           pr-number: ${{ github.event.pull_request.number }}
       - name: Compare comment
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
             const comments = await github.rest.issues.listComments({
@@ -50,7 +50,7 @@ jobs:
           pr-number: ${{ github.event.pull_request.number }}
           output-file: test.html
       - name: 'Compare Output'
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
             var fs = require('fs').promises;
@@ -75,7 +75,7 @@ jobs:
           output-file: test-no-branch.html
           hide-branch-coverage: true
       - name: 'Compare Output'
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
             var fs = require('fs').promises;
