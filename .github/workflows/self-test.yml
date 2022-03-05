@@ -7,7 +7,7 @@ jobs:
     if: ${{ !startsWith(github.event.pull_request.head.ref, 'dependabot') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Self test basic comment
         uses: ./
         with:
@@ -41,7 +41,7 @@ jobs:
   file:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Self test file output
         uses: ./
         with:
@@ -65,7 +65,7 @@ jobs:
   hide-branch-coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Self test no branch coverage in file
         uses: ./
         with:
