@@ -33,7 +33,7 @@
 		"babel-jest": "^27.5.1",
 		"core-js": "3",
 		"jest": "^27.5.1",
-		"prettier": "^2.6.1",
+		"prettier": "^2.6.2",
 		"regenerator-runtime": "^0.13.9",
 		"rollup": "^2.70.1",
 		"rollup-plugin-node-externals": "^4.0.0"
