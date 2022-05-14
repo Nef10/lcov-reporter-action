@@ -3,16 +3,16 @@
 var require$$0$1 = require('fs');
 var require$$0 = require('os');
 var require$$4$1 = require('path');
-var require$$2 = require('http');
-var require$$3 = require('https');
+var require$$0$2 = require('http');
+var require$$1$2 = require('https');
 require('net');
 var require$$1$1 = require('tls');
 var require$$4 = require('events');
 require('assert');
 var require$$6 = require('util');
-var require$$0$3 = require('stream');
-var require$$2$1 = require('url');
-var require$$0$2 = require('punycode');
+var require$$0$4 = require('stream');
+var require$$2 = require('url');
+var require$$0$3 = require('punycode');
 var require$$5 = require('zlib');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
@@ -20,14 +20,14 @@ function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'defau
 var require$$0__default$1 = /*#__PURE__*/_interopDefaultLegacy(require$$0$1);
 var require$$0__default = /*#__PURE__*/_interopDefaultLegacy(require$$0);
 var require$$4__default$1 = /*#__PURE__*/_interopDefaultLegacy(require$$4$1);
-var require$$2__default = /*#__PURE__*/_interopDefaultLegacy(require$$2);
-var require$$3__default = /*#__PURE__*/_interopDefaultLegacy(require$$3);
+var require$$0__default$2 = /*#__PURE__*/_interopDefaultLegacy(require$$0$2);
+var require$$1__default$1 = /*#__PURE__*/_interopDefaultLegacy(require$$1$2);
 var require$$1__default = /*#__PURE__*/_interopDefaultLegacy(require$$1$1);
 var require$$4__default = /*#__PURE__*/_interopDefaultLegacy(require$$4);
 var require$$6__default = /*#__PURE__*/_interopDefaultLegacy(require$$6);
+var require$$0__default$4 = /*#__PURE__*/_interopDefaultLegacy(require$$0$4);
+var require$$2__default = /*#__PURE__*/_interopDefaultLegacy(require$$2);
 var require$$0__default$3 = /*#__PURE__*/_interopDefaultLegacy(require$$0$3);
-var require$$2__default$1 = /*#__PURE__*/_interopDefaultLegacy(require$$2$1);
-var require$$0__default$2 = /*#__PURE__*/_interopDefaultLegacy(require$$0$2);
 var require$$5__default = /*#__PURE__*/_interopDefaultLegacy(require$$5);
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
@@ -215,13 +215,13 @@ var oidcUtils = {};
 
 var httpClient$1 = {};
 
-var proxy = {};
+var proxy$1 = {};
 
-Object.defineProperty(proxy, "__esModule", { value: true });
-function getProxyUrl(reqUrl) {
+Object.defineProperty(proxy$1, "__esModule", { value: true });
+function getProxyUrl$1(reqUrl) {
     let usingSsl = reqUrl.protocol === 'https:';
     let proxyUrl;
-    if (checkBypass(reqUrl)) {
+    if (checkBypass$1(reqUrl)) {
         return proxyUrl;
     }
     let proxyVar;
@@ -236,8 +236,8 @@ function getProxyUrl(reqUrl) {
     }
     return proxyUrl;
 }
-proxy.getProxyUrl = getProxyUrl;
-function checkBypass(reqUrl) {
+proxy$1.getProxyUrl = getProxyUrl$1;
+function checkBypass$1(reqUrl) {
     if (!reqUrl.hostname) {
         return false;
     }
@@ -272,7 +272,7 @@ function checkBypass(reqUrl) {
     }
     return false;
 }
-proxy.checkBypass = checkBypass;
+proxy$1.checkBypass = checkBypass$1;
 
 var tunnel$1 = {exports: {}};
 
@@ -284,8 +284,8 @@ function requireTunnel$1 () {
 	if (hasRequiredTunnel$1) return tunnel;
 	hasRequiredTunnel$1 = 1;
 	var tls = require$$1__default["default"];
-	var http = require$$2__default["default"];
-	var https = require$$3__default["default"];
+	var http = require$$0__default$2["default"];
+	var https = require$$1__default$1["default"];
 	var events = require$$4__default["default"];
 	var util = require$$6__default["default"];
 
@@ -559,9 +559,9 @@ function requireTunnel () {
 
 (function (exports) {
 	Object.defineProperty(exports, "__esModule", { value: true });
-	const http = require$$2__default["default"];
-	const https = require$$3__default["default"];
-	const pm = proxy;
+	const http = require$$0__default$2["default"];
+	const https = require$$1__default$1["default"];
+	const pm = proxy$1;
 	let tunnel;
 	var HttpCodes;
 	(function (HttpCodes) {
@@ -1928,6 +1928,677 @@ var utils$2 = {};
 
 var utils$1 = {};
 
+var lib$3 = {};
+
+var proxy = {};
+
+Object.defineProperty(proxy, "__esModule", { value: true });
+proxy.checkBypass = proxy.getProxyUrl = void 0;
+function getProxyUrl(reqUrl) {
+    const usingSsl = reqUrl.protocol === 'https:';
+    if (checkBypass(reqUrl)) {
+        return undefined;
+    }
+    const proxyVar = (() => {
+        if (usingSsl) {
+            return process.env['https_proxy'] || process.env['HTTPS_PROXY'];
+        }
+        else {
+            return process.env['http_proxy'] || process.env['HTTP_PROXY'];
+        }
+    })();
+    if (proxyVar) {
+        return new URL(proxyVar);
+    }
+    else {
+        return undefined;
+    }
+}
+proxy.getProxyUrl = getProxyUrl;
+function checkBypass(reqUrl) {
+    if (!reqUrl.hostname) {
+        return false;
+    }
+    const noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
+    if (!noProxy) {
+        return false;
+    }
+    // Determine the request port
+    let reqPort;
+    if (reqUrl.port) {
+        reqPort = Number(reqUrl.port);
+    }
+    else if (reqUrl.protocol === 'http:') {
+        reqPort = 80;
+    }
+    else if (reqUrl.protocol === 'https:') {
+        reqPort = 443;
+    }
+    // Format the request hostname and hostname with port
+    const upperReqHosts = [reqUrl.hostname.toUpperCase()];
+    if (typeof reqPort === 'number') {
+        upperReqHosts.push(`${upperReqHosts[0]}:${reqPort}`);
+    }
+    // Compare request host against noproxy
+    for (const upperNoProxyItem of noProxy
+        .split(',')
+        .map(x => x.trim().toUpperCase())
+        .filter(x => x)) {
+        if (upperReqHosts.some(x => x === upperNoProxyItem)) {
+            return true;
+        }
+    }
+    return false;
+}
+proxy.checkBypass = checkBypass;
+
+(function (exports) {
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+	var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+	}) : (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    o[k2] = m[k];
+	}));
+	var __setModuleDefault = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
+	    Object.defineProperty(o, "default", { enumerable: true, value: v });
+	}) : function(o, v) {
+	    o["default"] = v;
+	});
+	var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+	    if (mod && mod.__esModule) return mod;
+	    var result = {};
+	    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+	    __setModuleDefault(result, mod);
+	    return result;
+	};
+	var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
+	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+	    return new (P || (P = Promise))(function (resolve, reject) {
+	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+	        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+	        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+	        step((generator = generator.apply(thisArg, _arguments || [])).next());
+	    });
+	};
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.HttpClient = exports.isHttps = exports.HttpClientResponse = exports.HttpClientError = exports.getProxyUrl = exports.MediaTypes = exports.Headers = exports.HttpCodes = void 0;
+	const http = __importStar(require$$0__default$2["default"]);
+	const https = __importStar(require$$1__default$1["default"]);
+	const pm = __importStar(proxy);
+	const tunnel = __importStar(requireTunnel());
+	var HttpCodes;
+	(function (HttpCodes) {
+	    HttpCodes[HttpCodes["OK"] = 200] = "OK";
+	    HttpCodes[HttpCodes["MultipleChoices"] = 300] = "MultipleChoices";
+	    HttpCodes[HttpCodes["MovedPermanently"] = 301] = "MovedPermanently";
+	    HttpCodes[HttpCodes["ResourceMoved"] = 302] = "ResourceMoved";
+	    HttpCodes[HttpCodes["SeeOther"] = 303] = "SeeOther";
+	    HttpCodes[HttpCodes["NotModified"] = 304] = "NotModified";
+	    HttpCodes[HttpCodes["UseProxy"] = 305] = "UseProxy";
+	    HttpCodes[HttpCodes["SwitchProxy"] = 306] = "SwitchProxy";
+	    HttpCodes[HttpCodes["TemporaryRedirect"] = 307] = "TemporaryRedirect";
+	    HttpCodes[HttpCodes["PermanentRedirect"] = 308] = "PermanentRedirect";
+	    HttpCodes[HttpCodes["BadRequest"] = 400] = "BadRequest";
+	    HttpCodes[HttpCodes["Unauthorized"] = 401] = "Unauthorized";
+	    HttpCodes[HttpCodes["PaymentRequired"] = 402] = "PaymentRequired";
+	    HttpCodes[HttpCodes["Forbidden"] = 403] = "Forbidden";
+	    HttpCodes[HttpCodes["NotFound"] = 404] = "NotFound";
+	    HttpCodes[HttpCodes["MethodNotAllowed"] = 405] = "MethodNotAllowed";
+	    HttpCodes[HttpCodes["NotAcceptable"] = 406] = "NotAcceptable";
+	    HttpCodes[HttpCodes["ProxyAuthenticationRequired"] = 407] = "ProxyAuthenticationRequired";
+	    HttpCodes[HttpCodes["RequestTimeout"] = 408] = "RequestTimeout";
+	    HttpCodes[HttpCodes["Conflict"] = 409] = "Conflict";
+	    HttpCodes[HttpCodes["Gone"] = 410] = "Gone";
+	    HttpCodes[HttpCodes["TooManyRequests"] = 429] = "TooManyRequests";
+	    HttpCodes[HttpCodes["InternalServerError"] = 500] = "InternalServerError";
+	    HttpCodes[HttpCodes["NotImplemented"] = 501] = "NotImplemented";
+	    HttpCodes[HttpCodes["BadGateway"] = 502] = "BadGateway";
+	    HttpCodes[HttpCodes["ServiceUnavailable"] = 503] = "ServiceUnavailable";
+	    HttpCodes[HttpCodes["GatewayTimeout"] = 504] = "GatewayTimeout";
+	})(HttpCodes = exports.HttpCodes || (exports.HttpCodes = {}));
+	var Headers;
+	(function (Headers) {
+	    Headers["Accept"] = "accept";
+	    Headers["ContentType"] = "content-type";
+	})(Headers = exports.Headers || (exports.Headers = {}));
+	var MediaTypes;
+	(function (MediaTypes) {
+	    MediaTypes["ApplicationJson"] = "application/json";
+	})(MediaTypes = exports.MediaTypes || (exports.MediaTypes = {}));
+	/**
+	 * Returns the proxy URL, depending upon the supplied url and proxy environment variables.
+	 * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
+	 */
+	function getProxyUrl(serverUrl) {
+	    const proxyUrl = pm.getProxyUrl(new URL(serverUrl));
+	    return proxyUrl ? proxyUrl.href : '';
+	}
+	exports.getProxyUrl = getProxyUrl;
+	const HttpRedirectCodes = [
+	    HttpCodes.MovedPermanently,
+	    HttpCodes.ResourceMoved,
+	    HttpCodes.SeeOther,
+	    HttpCodes.TemporaryRedirect,
+	    HttpCodes.PermanentRedirect
+	];
+	const HttpResponseRetryCodes = [
+	    HttpCodes.BadGateway,
+	    HttpCodes.ServiceUnavailable,
+	    HttpCodes.GatewayTimeout
+	];
+	const RetryableHttpVerbs = ['OPTIONS', 'GET', 'DELETE', 'HEAD'];
+	const ExponentialBackoffCeiling = 10;
+	const ExponentialBackoffTimeSlice = 5;
+	class HttpClientError extends Error {
+	    constructor(message, statusCode) {
+	        super(message);
+	        this.name = 'HttpClientError';
+	        this.statusCode = statusCode;
+	        Object.setPrototypeOf(this, HttpClientError.prototype);
+	    }
+	}
+	exports.HttpClientError = HttpClientError;
+	class HttpClientResponse {
+	    constructor(message) {
+	        this.message = message;
+	    }
+	    readBody() {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+	                let output = Buffer.alloc(0);
+	                this.message.on('data', (chunk) => {
+	                    output = Buffer.concat([output, chunk]);
+	                });
+	                this.message.on('end', () => {
+	                    resolve(output.toString());
+	                });
+	            }));
+	        });
+	    }
+	}
+	exports.HttpClientResponse = HttpClientResponse;
+	function isHttps(requestUrl) {
+	    const parsedUrl = new URL(requestUrl);
+	    return parsedUrl.protocol === 'https:';
+	}
+	exports.isHttps = isHttps;
+	class HttpClient {
+	    constructor(userAgent, handlers, requestOptions) {
+	        this._ignoreSslError = false;
+	        this._allowRedirects = true;
+	        this._allowRedirectDowngrade = false;
+	        this._maxRedirects = 50;
+	        this._allowRetries = false;
+	        this._maxRetries = 1;
+	        this._keepAlive = false;
+	        this._disposed = false;
+	        this.userAgent = userAgent;
+	        this.handlers = handlers || [];
+	        this.requestOptions = requestOptions;
+	        if (requestOptions) {
+	            if (requestOptions.ignoreSslError != null) {
+	                this._ignoreSslError = requestOptions.ignoreSslError;
+	            }
+	            this._socketTimeout = requestOptions.socketTimeout;
+	            if (requestOptions.allowRedirects != null) {
+	                this._allowRedirects = requestOptions.allowRedirects;
+	            }
+	            if (requestOptions.allowRedirectDowngrade != null) {
+	                this._allowRedirectDowngrade = requestOptions.allowRedirectDowngrade;
+	            }
+	            if (requestOptions.maxRedirects != null) {
+	                this._maxRedirects = Math.max(requestOptions.maxRedirects, 0);
+	            }
+	            if (requestOptions.keepAlive != null) {
+	                this._keepAlive = requestOptions.keepAlive;
+	            }
+	            if (requestOptions.allowRetries != null) {
+	                this._allowRetries = requestOptions.allowRetries;
+	            }
+	            if (requestOptions.maxRetries != null) {
+	                this._maxRetries = requestOptions.maxRetries;
+	            }
+	        }
+	    }
+	    options(requestUrl, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('OPTIONS', requestUrl, null, additionalHeaders || {});
+	        });
+	    }
+	    get(requestUrl, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('GET', requestUrl, null, additionalHeaders || {});
+	        });
+	    }
+	    del(requestUrl, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('DELETE', requestUrl, null, additionalHeaders || {});
+	        });
+	    }
+	    post(requestUrl, data, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('POST', requestUrl, data, additionalHeaders || {});
+	        });
+	    }
+	    patch(requestUrl, data, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('PATCH', requestUrl, data, additionalHeaders || {});
+	        });
+	    }
+	    put(requestUrl, data, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('PUT', requestUrl, data, additionalHeaders || {});
+	        });
+	    }
+	    head(requestUrl, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('HEAD', requestUrl, null, additionalHeaders || {});
+	        });
+	    }
+	    sendStream(verb, requestUrl, stream, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request(verb, requestUrl, stream, additionalHeaders);
+	        });
+	    }
+	    /**
+	     * Gets a typed object from an endpoint
+	     * Be aware that not found returns a null.  Other errors (4xx, 5xx) reject the promise
+	     */
+	    getJson(requestUrl, additionalHeaders = {}) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+	            const res = yield this.get(requestUrl, additionalHeaders);
+	            return this._processResponse(res, this.requestOptions);
+	        });
+	    }
+	    postJson(requestUrl, obj, additionalHeaders = {}) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const data = JSON.stringify(obj, null, 2);
+	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+	            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+	            const res = yield this.post(requestUrl, data, additionalHeaders);
+	            return this._processResponse(res, this.requestOptions);
+	        });
+	    }
+	    putJson(requestUrl, obj, additionalHeaders = {}) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const data = JSON.stringify(obj, null, 2);
+	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+	            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+	            const res = yield this.put(requestUrl, data, additionalHeaders);
+	            return this._processResponse(res, this.requestOptions);
+	        });
+	    }
+	    patchJson(requestUrl, obj, additionalHeaders = {}) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const data = JSON.stringify(obj, null, 2);
+	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+	            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+	            const res = yield this.patch(requestUrl, data, additionalHeaders);
+	            return this._processResponse(res, this.requestOptions);
+	        });
+	    }
+	    /**
+	     * Makes a raw http request.
+	     * All other methods such as get, post, patch, and request ultimately call this.
+	     * Prefer get, del, post and patch
+	     */
+	    request(verb, requestUrl, data, headers) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            if (this._disposed) {
+	                throw new Error('Client has already been disposed.');
+	            }
+	            const parsedUrl = new URL(requestUrl);
+	            let info = this._prepareRequest(verb, parsedUrl, headers);
+	            // Only perform retries on reads since writes may not be idempotent.
+	            const maxTries = this._allowRetries && RetryableHttpVerbs.includes(verb)
+	                ? this._maxRetries + 1
+	                : 1;
+	            let numTries = 0;
+	            let response;
+	            do {
+	                response = yield this.requestRaw(info, data);
+	                // Check if it's an authentication challenge
+	                if (response &&
+	                    response.message &&
+	                    response.message.statusCode === HttpCodes.Unauthorized) {
+	                    let authenticationHandler;
+	                    for (const handler of this.handlers) {
+	                        if (handler.canHandleAuthentication(response)) {
+	                            authenticationHandler = handler;
+	                            break;
+	                        }
+	                    }
+	                    if (authenticationHandler) {
+	                        return authenticationHandler.handleAuthentication(this, info, data);
+	                    }
+	                    else {
+	                        // We have received an unauthorized response but have no handlers to handle it.
+	                        // Let the response return to the caller.
+	                        return response;
+	                    }
+	                }
+	                let redirectsRemaining = this._maxRedirects;
+	                while (response.message.statusCode &&
+	                    HttpRedirectCodes.includes(response.message.statusCode) &&
+	                    this._allowRedirects &&
+	                    redirectsRemaining > 0) {
+	                    const redirectUrl = response.message.headers['location'];
+	                    if (!redirectUrl) {
+	                        // if there's no location to redirect to, we won't
+	                        break;
+	                    }
+	                    const parsedRedirectUrl = new URL(redirectUrl);
+	                    if (parsedUrl.protocol === 'https:' &&
+	                        parsedUrl.protocol !== parsedRedirectUrl.protocol &&
+	                        !this._allowRedirectDowngrade) {
+	                        throw new Error('Redirect from HTTPS to HTTP protocol. This downgrade is not allowed for security reasons. If you want to allow this behavior, set the allowRedirectDowngrade option to true.');
+	                    }
+	                    // we need to finish reading the response before reassigning response
+	                    // which will leak the open socket.
+	                    yield response.readBody();
+	                    // strip authorization header if redirected to a different hostname
+	                    if (parsedRedirectUrl.hostname !== parsedUrl.hostname) {
+	                        for (const header in headers) {
+	                            // header names are case insensitive
+	                            if (header.toLowerCase() === 'authorization') {
+	                                delete headers[header];
+	                            }
+	                        }
+	                    }
+	                    // let's make the request with the new redirectUrl
+	                    info = this._prepareRequest(verb, parsedRedirectUrl, headers);
+	                    response = yield this.requestRaw(info, data);
+	                    redirectsRemaining--;
+	                }
+	                if (!response.message.statusCode ||
+	                    !HttpResponseRetryCodes.includes(response.message.statusCode)) {
+	                    // If not a retry code, return immediately instead of retrying
+	                    return response;
+	                }
+	                numTries += 1;
+	                if (numTries < maxTries) {
+	                    yield response.readBody();
+	                    yield this._performExponentialBackoff(numTries);
+	                }
+	            } while (numTries < maxTries);
+	            return response;
+	        });
+	    }
+	    /**
+	     * Needs to be called if keepAlive is set to true in request options.
+	     */
+	    dispose() {
+	        if (this._agent) {
+	            this._agent.destroy();
+	        }
+	        this._disposed = true;
+	    }
+	    /**
+	     * Raw request.
+	     * @param info
+	     * @param data
+	     */
+	    requestRaw(info, data) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return new Promise((resolve, reject) => {
+	                function callbackForResult(err, res) {
+	                    if (err) {
+	                        reject(err);
+	                    }
+	                    else if (!res) {
+	                        // If `err` is not passed, then `res` must be passed.
+	                        reject(new Error('Unknown error'));
+	                    }
+	                    else {
+	                        resolve(res);
+	                    }
+	                }
+	                this.requestRawWithCallback(info, data, callbackForResult);
+	            });
+	        });
+	    }
+	    /**
+	     * Raw request with callback.
+	     * @param info
+	     * @param data
+	     * @param onResult
+	     */
+	    requestRawWithCallback(info, data, onResult) {
+	        if (typeof data === 'string') {
+	            if (!info.options.headers) {
+	                info.options.headers = {};
+	            }
+	            info.options.headers['Content-Length'] = Buffer.byteLength(data, 'utf8');
+	        }
+	        let callbackCalled = false;
+	        function handleResult(err, res) {
+	            if (!callbackCalled) {
+	                callbackCalled = true;
+	                onResult(err, res);
+	            }
+	        }
+	        const req = info.httpModule.request(info.options, (msg) => {
+	            const res = new HttpClientResponse(msg);
+	            handleResult(undefined, res);
+	        });
+	        let socket;
+	        req.on('socket', sock => {
+	            socket = sock;
+	        });
+	        // If we ever get disconnected, we want the socket to timeout eventually
+	        req.setTimeout(this._socketTimeout || 3 * 60000, () => {
+	            if (socket) {
+	                socket.end();
+	            }
+	            handleResult(new Error(`Request timeout: ${info.options.path}`));
+	        });
+	        req.on('error', function (err) {
+	            // err has statusCode property
+	            // res should have headers
+	            handleResult(err);
+	        });
+	        if (data && typeof data === 'string') {
+	            req.write(data, 'utf8');
+	        }
+	        if (data && typeof data !== 'string') {
+	            data.on('close', function () {
+	                req.end();
+	            });
+	            data.pipe(req);
+	        }
+	        else {
+	            req.end();
+	        }
+	    }
+	    /**
+	     * Gets an http agent. This function is useful when you need an http agent that handles
+	     * routing through a proxy server - depending upon the url and proxy environment variables.
+	     * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
+	     */
+	    getAgent(serverUrl) {
+	        const parsedUrl = new URL(serverUrl);
+	        return this._getAgent(parsedUrl);
+	    }
+	    _prepareRequest(method, requestUrl, headers) {
+	        const info = {};
+	        info.parsedUrl = requestUrl;
+	        const usingSsl = info.parsedUrl.protocol === 'https:';
+	        info.httpModule = usingSsl ? https : http;
+	        const defaultPort = usingSsl ? 443 : 80;
+	        info.options = {};
+	        info.options.host = info.parsedUrl.hostname;
+	        info.options.port = info.parsedUrl.port
+	            ? parseInt(info.parsedUrl.port)
+	            : defaultPort;
+	        info.options.path =
+	            (info.parsedUrl.pathname || '') + (info.parsedUrl.search || '');
+	        info.options.method = method;
+	        info.options.headers = this._mergeHeaders(headers);
+	        if (this.userAgent != null) {
+	            info.options.headers['user-agent'] = this.userAgent;
+	        }
+	        info.options.agent = this._getAgent(info.parsedUrl);
+	        // gives handlers an opportunity to participate
+	        if (this.handlers) {
+	            for (const handler of this.handlers) {
+	                handler.prepareRequest(info.options);
+	            }
+	        }
+	        return info;
+	    }
+	    _mergeHeaders(headers) {
+	        if (this.requestOptions && this.requestOptions.headers) {
+	            return Object.assign({}, lowercaseKeys(this.requestOptions.headers), lowercaseKeys(headers || {}));
+	        }
+	        return lowercaseKeys(headers || {});
+	    }
+	    _getExistingOrDefaultHeader(additionalHeaders, header, _default) {
+	        let clientHeader;
+	        if (this.requestOptions && this.requestOptions.headers) {
+	            clientHeader = lowercaseKeys(this.requestOptions.headers)[header];
+	        }
+	        return additionalHeaders[header] || clientHeader || _default;
+	    }
+	    _getAgent(parsedUrl) {
+	        let agent;
+	        const proxyUrl = pm.getProxyUrl(parsedUrl);
+	        const useProxy = proxyUrl && proxyUrl.hostname;
+	        if (this._keepAlive && useProxy) {
+	            agent = this._proxyAgent;
+	        }
+	        if (this._keepAlive && !useProxy) {
+	            agent = this._agent;
+	        }
+	        // if agent is already assigned use that agent.
+	        if (agent) {
+	            return agent;
+	        }
+	        const usingSsl = parsedUrl.protocol === 'https:';
+	        let maxSockets = 100;
+	        if (this.requestOptions) {
+	            maxSockets = this.requestOptions.maxSockets || http.globalAgent.maxSockets;
+	        }
+	        // This is `useProxy` again, but we need to check `proxyURl` directly for TypeScripts's flow analysis.
+	        if (proxyUrl && proxyUrl.hostname) {
+	            const agentOptions = {
+	                maxSockets,
+	                keepAlive: this._keepAlive,
+	                proxy: Object.assign(Object.assign({}, ((proxyUrl.username || proxyUrl.password) && {
+	                    proxyAuth: `${proxyUrl.username}:${proxyUrl.password}`
+	                })), { host: proxyUrl.hostname, port: proxyUrl.port })
+	            };
+	            let tunnelAgent;
+	            const overHttps = proxyUrl.protocol === 'https:';
+	            if (usingSsl) {
+	                tunnelAgent = overHttps ? tunnel.httpsOverHttps : tunnel.httpsOverHttp;
+	            }
+	            else {
+	                tunnelAgent = overHttps ? tunnel.httpOverHttps : tunnel.httpOverHttp;
+	            }
+	            agent = tunnelAgent(agentOptions);
+	            this._proxyAgent = agent;
+	        }
+	        // if reusing agent across request and tunneling agent isn't assigned create a new agent
+	        if (this._keepAlive && !agent) {
+	            const options = { keepAlive: this._keepAlive, maxSockets };
+	            agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
+	            this._agent = agent;
+	        }
+	        // if not using private agent and tunnel agent isn't setup then use global agent
+	        if (!agent) {
+	            agent = usingSsl ? https.globalAgent : http.globalAgent;
+	        }
+	        if (usingSsl && this._ignoreSslError) {
+	            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
+	            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
+	            // we have to cast it to any and change it directly
+	            agent.options = Object.assign(agent.options || {}, {
+	                rejectUnauthorized: false
+	            });
+	        }
+	        return agent;
+	    }
+	    _performExponentialBackoff(retryNumber) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            retryNumber = Math.min(ExponentialBackoffCeiling, retryNumber);
+	            const ms = ExponentialBackoffTimeSlice * Math.pow(2, retryNumber);
+	            return new Promise(resolve => setTimeout(() => resolve(), ms));
+	        });
+	    }
+	    _processResponse(res, options) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+	                const statusCode = res.message.statusCode || 0;
+	                const response = {
+	                    statusCode,
+	                    result: null,
+	                    headers: {}
+	                };
+	                // not found leads to null obj returned
+	                if (statusCode === HttpCodes.NotFound) {
+	                    resolve(response);
+	                }
+	                // get the result from the body
+	                function dateTimeDeserializer(key, value) {
+	                    if (typeof value === 'string') {
+	                        const a = new Date(value);
+	                        if (!isNaN(a.valueOf())) {
+	                            return a;
+	                        }
+	                    }
+	                    return value;
+	                }
+	                let obj;
+	                let contents;
+	                try {
+	                    contents = yield res.readBody();
+	                    if (contents && contents.length > 0) {
+	                        if (options && options.deserializeDates) {
+	                            obj = JSON.parse(contents, dateTimeDeserializer);
+	                        }
+	                        else {
+	                            obj = JSON.parse(contents);
+	                        }
+	                        response.result = obj;
+	                    }
+	                    response.headers = res.message.headers;
+	                }
+	                catch (err) {
+	                    // Invalid resource (contents not json);  leaving result obj null
+	                }
+	                // note that 3xx redirects are handled by the http layer.
+	                if (statusCode > 299) {
+	                    let msg;
+	                    // if exception/error in body, attempt to get better error
+	                    if (obj && obj.message) {
+	                        msg = obj.message;
+	                    }
+	                    else if (contents && contents.length > 0) {
+	                        // it may be the case that the exception is in the body message as string
+	                        msg = contents;
+	                    }
+	                    else {
+	                        msg = `Failed request: (${statusCode})`;
+	                    }
+	                    const err = new HttpClientError(msg, statusCode);
+	                    err.result = response.result;
+	                    reject(err);
+	                }
+	                else {
+	                    resolve(response);
+	                }
+	            }));
+	        });
+	    }
+	}
+	exports.HttpClient = HttpClient;
+	const lowercaseKeys = (obj) => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCase()] = obj[k]), c), {});
+	
+} (lib$3));
+
 var __createBinding$2 = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
@@ -1949,7 +2620,7 @@ var __importStar$2 = (commonjsGlobal && commonjsGlobal.__importStar) || function
 };
 Object.defineProperty(utils$1, "__esModule", { value: true });
 utils$1.getApiBaseUrl = utils$1.getProxyAgent = utils$1.getAuthString = void 0;
-const httpClient = __importStar$2(httpClient$1);
+const httpClient = __importStar$2(lib$3);
 function getAuthString(token, options) {
     if (!token && !options.auth) {
         throw new Error('Parameter token or opts.auth is required');
@@ -80450,7 +81121,7 @@ var require$$1 = [
 	]
 ];
 
-var punycode = require$$0__default$2["default"];
+var punycode = require$$0__default$3["default"];
 var mappingTable = require$$1;
 
 var PROCESSING_OPTIONS = {
@@ -80642,7 +81313,7 @@ tr46.toUnicode = function(domain_name, useSTD3) {
 tr46.PROCESSING_OPTIONS = PROCESSING_OPTIONS;
 
 (function (module) {
-	const punycode = require$$0__default$2["default"];
+	const punycode = require$$0__default$3["default"];
 	const tr46$1 = tr46;
 
 	const specialSchemes = {
@@ -82352,11 +83023,11 @@ publicApi.parseURL = urlStateMachine.exports.parseURL;
 
 	function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-	var Stream = _interopDefault(require$$0__default$3["default"]);
-	var http = _interopDefault(require$$2__default["default"]);
-	var Url = _interopDefault(require$$2__default$1["default"]);
+	var Stream = _interopDefault(require$$0__default$4["default"]);
+	var http = _interopDefault(require$$0__default$2["default"]);
+	var Url = _interopDefault(require$$2__default["default"]);
 	var whatwgUrl = _interopDefault(publicApi);
-	var https = _interopDefault(require$$3__default["default"]);
+	var https = _interopDefault(require$$1__default$1["default"]);
 	var zlib = _interopDefault(require$$5__default["default"]);
 
 	// Based on https://github.com/tmpvar/jsdom/blob/aa85b2abf07766ff7bf5c1f6daafb3726f2f2db5/lib/jsdom/living/blob.js
