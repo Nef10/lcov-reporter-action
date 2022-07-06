@@ -23,7 +23,16 @@ jobs:
     runs-on: ubuntu-latest
     name: Check build and format have been run
     steps:
-      - uses: actions/checkout@v3
+      - name: Generate token
+        id: generate_token
+        uses: tibdex/github-app-token@v1.3.0
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ steps.generate_token.outputs.token }}
       - name: Setup node
         uses: actions/setup-node@v3
         with:
