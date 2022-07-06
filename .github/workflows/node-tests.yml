@@ -29,6 +29,8 @@ jobs:
         with:
           app_id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
+      - name: Set git user config
+        run: git config user.email "217586+NodeBuilder[bot]@users.noreply.github.com" && git config user.name "Node Builder"
       - name: Checkout code
         uses: actions/checkout@v3
         with:
