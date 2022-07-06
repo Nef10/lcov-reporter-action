@@ -33,6 +33,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           token: ${{ steps.generate_token.outputs.token }} 
+          fetch-depth: 0
       - name: Set git user config
         run: git config user.email "217586+NodeBuilder[bot]@users.noreply.github.com" && git config user.name "Node Builder"
       - name: Setup node
@@ -54,4 +55,4 @@ jobs:
           fi
       - name: Fix missing build
         if: ${{ failure() && steps.file-changed.conclusion == 'failure' }}
-        run: npm ci && npm run format && npm run build && git add --all && git commit -m "npm run build" && git push
+        run: git checkout ${{ github.event.pull_request.head.ref }} && npm ci && npm run format && npm run build && git add --all && git commit -m "npm run build" && git push
