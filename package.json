@@ -24,7 +24,7 @@
 		"lcov-parse": "^1.0.0"
 	},
 	"devDependencies": {
-		"@babel/core": "^7.18.10",
+		"@babel/core": "^7.18.13",
 		"@babel/node": "^7.18.10",
 		"@babel/preset-env": "^7.18.10",
 		"@rollup/plugin-commonjs": "^22.0.2",
