@@ -98,28 +98,28 @@ function toCommandProperties(annotationProperties) {
 }
 utils$3.toCommandProperties = toCommandProperties;
 
-var __createBinding$4 = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+var __createBinding$3 = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
 }));
-var __setModuleDefault$4 = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
+var __setModuleDefault$3 = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
     Object.defineProperty(o, "default", { enumerable: true, value: v });
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar$4 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+var __importStar$3 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding$4(result, mod, k);
-    __setModuleDefault$4(result, mod);
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding$3(result, mod, k);
+    __setModuleDefault$3(result, mod);
     return result;
 };
 Object.defineProperty(command, "__esModule", { value: true });
 command.issue = command.issueCommand = void 0;
-const os$1 = __importStar$4(require$$0__default["default"]);
+const os$1 = __importStar$3(require$$0__default["default"]);
 const utils_1$2 = utils$3;
 /**
  * Commands
@@ -192,31 +192,31 @@ function escapeProperty(s) {
 var fileCommand = {};
 
 // For internal use, subject to change.
-var __createBinding$3 = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+var __createBinding$2 = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
 }));
-var __setModuleDefault$3 = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
+var __setModuleDefault$2 = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
     Object.defineProperty(o, "default", { enumerable: true, value: v });
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar$3 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+var __importStar$2 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding$3(result, mod, k);
-    __setModuleDefault$3(result, mod);
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding$2(result, mod, k);
+    __setModuleDefault$2(result, mod);
     return result;
 };
 Object.defineProperty(fileCommand, "__esModule", { value: true });
 fileCommand.issueCommand = void 0;
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const fs$1 = __importStar$3(require$$0__default$1["default"]);
-const os = __importStar$3(require$$0__default["default"]);
+const fs$1 = __importStar$2(require$$0__default$1["default"]);
+const os = __importStar$2(require$$0__default["default"]);
 const utils_1$1 = utils$3;
 function issueCommand(command, message) {
     const filePath = process.env[`GITHUB_${command}`];
@@ -2657,7 +2657,7 @@ Object.defineProperty(context$1, "__esModule", { value: true });
 context$1.Context = void 0;
 const fs_1 = require$$0__default$1["default"];
 const os_1 = require$$0__default["default"];
-class Context$2 {
+class Context$1 {
     /**
      * Hydrate the context from the environment
      */
@@ -2704,34 +2704,34 @@ class Context$2 {
         throw new Error("context.repo requires a GITHUB_REPOSITORY environment variable like 'owner/repo'");
     }
 }
-context$1.Context = Context$2;
+context$1.Context = Context$1;
 
 var utils$2 = {};
 
 var utils$1 = {};
 
-var __createBinding$2 = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+var __createBinding$1 = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
 }));
-var __setModuleDefault$2 = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
+var __setModuleDefault$1 = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
     Object.defineProperty(o, "default", { enumerable: true, value: v });
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar$2 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+var __importStar$1 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding$2(result, mod, k);
-    __setModuleDefault$2(result, mod);
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding$1(result, mod, k);
+    __setModuleDefault$1(result, mod);
     return result;
 };
 Object.defineProperty(utils$1, "__esModule", { value: true });
 utils$1.getApiBaseUrl = utils$1.getProxyAgent = utils$1.getAuthString = void 0;
-const httpClient = __importStar$2(lib$3);
+const httpClient = __importStar$1(lib$3);
 function getAuthString(token, options) {
     if (!token && !options.auth) {
         throw new Error('Parameter token or opts.auth is required');
@@ -86766,58 +86766,61 @@ distNode.isPaginatingEndpoint = isPaginatingEndpoint;
 distNode.paginateRest = paginateRest;
 distNode.paginatingEndpoints = paginatingEndpoints;
 
-var __createBinding$1 = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault$1 = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar$1 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding$1(result, mod, k);
-    __setModuleDefault$1(result, mod);
-    return result;
-};
-Object.defineProperty(utils$2, "__esModule", { value: true });
-utils$2.getOctokitOptions = utils$2.GitHub = utils$2.context = void 0;
-const Context$1 = __importStar$1(context$1);
-const Utils = __importStar$1(utils$1);
-// octokit + plugins
-const core_1 = distNode$9;
-const plugin_rest_endpoint_methods_1 = distNode$1;
-const plugin_paginate_rest_1 = distNode;
-utils$2.context = new Context$1.Context();
-const baseUrl = Utils.getApiBaseUrl();
-const defaults = {
-    baseUrl,
-    request: {
-        agent: Utils.getProxyAgent(baseUrl)
-    }
-};
-utils$2.GitHub = core_1.Octokit.plugin(plugin_rest_endpoint_methods_1.restEndpointMethods, plugin_paginate_rest_1.paginateRest).defaults(defaults);
-/**
- * Convience function to correctly format Octokit Options to pass into the constructor.
- *
- * @param     token    the repo PAT or GITHUB_TOKEN
- * @param     options  other options to set
- */
-function getOctokitOptions(token, options) {
-    const opts = Object.assign({}, options || {}); // Shallow clone - don't mutate the object provided by the caller
-    // Auth
-    const auth = Utils.getAuthString(token, opts);
-    if (auth) {
-        opts.auth = auth;
-    }
-    return opts;
-}
-utils$2.getOctokitOptions = getOctokitOptions;
+(function (exports) {
+	var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+	}) : (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    o[k2] = m[k];
+	}));
+	var __setModuleDefault = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
+	    Object.defineProperty(o, "default", { enumerable: true, value: v });
+	}) : function(o, v) {
+	    o["default"] = v;
+	});
+	var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+	    if (mod && mod.__esModule) return mod;
+	    var result = {};
+	    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+	    __setModuleDefault(result, mod);
+	    return result;
+	};
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.getOctokitOptions = exports.GitHub = exports.defaults = exports.context = void 0;
+	const Context = __importStar(context$1);
+	const Utils = __importStar(utils$1);
+	// octokit + plugins
+	const core_1 = distNode$9;
+	const plugin_rest_endpoint_methods_1 = distNode$1;
+	const plugin_paginate_rest_1 = distNode;
+	exports.context = new Context.Context();
+	const baseUrl = Utils.getApiBaseUrl();
+	exports.defaults = {
+	    baseUrl,
+	    request: {
+	        agent: Utils.getProxyAgent(baseUrl)
+	    }
+	};
+	exports.GitHub = core_1.Octokit.plugin(plugin_rest_endpoint_methods_1.restEndpointMethods, plugin_paginate_rest_1.paginateRest).defaults(exports.defaults);
+	/**
+	 * Convience function to correctly format Octokit Options to pass into the constructor.
+	 *
+	 * @param     token    the repo PAT or GITHUB_TOKEN
+	 * @param     options  other options to set
+	 */
+	function getOctokitOptions(token, options) {
+	    const opts = Object.assign({}, options || {}); // Shallow clone - don't mutate the object provided by the caller
+	    // Auth
+	    const auth = Utils.getAuthString(token, opts);
+	    if (auth) {
+	        opts.auth = auth;
+	    }
+	    return opts;
+	}
+	exports.getOctokitOptions = getOctokitOptions;
+	
+} (utils$2));
 
 var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
