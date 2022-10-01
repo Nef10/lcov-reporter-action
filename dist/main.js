@@ -3,7 +3,7 @@
 var require$$0$1 = require('fs');
 var require$$0 = require('os');
 var require$$0$2 = require('path');
-var require$$2 = require('http');
+var require$$2$1 = require('http');
 var require$$3 = require('https');
 require('net');
 var require$$1$1 = require('tls');
@@ -11,24 +11,24 @@ var require$$4 = require('events');
 require('assert');
 var require$$6 = require('util');
 var require$$0$4 = require('stream');
-var require$$2$1 = require('url');
+var require$$2$2 = require('url');
 var require$$0$3 = require('punycode');
-var require$$5$1 = require('zlib');
+var require$$5 = require('zlib');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
 var require$$0__default$1 = /*#__PURE__*/_interopDefaultLegacy(require$$0$1);
 var require$$0__default = /*#__PURE__*/_interopDefaultLegacy(require$$0);
 var require$$0__default$2 = /*#__PURE__*/_interopDefaultLegacy(require$$0$2);
-var require$$2__default = /*#__PURE__*/_interopDefaultLegacy(require$$2);
+var require$$2__default = /*#__PURE__*/_interopDefaultLegacy(require$$2$1);
 var require$$3__default = /*#__PURE__*/_interopDefaultLegacy(require$$3);
 var require$$1__default = /*#__PURE__*/_interopDefaultLegacy(require$$1$1);
 var require$$4__default = /*#__PURE__*/_interopDefaultLegacy(require$$4);
 var require$$6__default = /*#__PURE__*/_interopDefaultLegacy(require$$6);
 var require$$0__default$4 = /*#__PURE__*/_interopDefaultLegacy(require$$0$4);
-var require$$2__default$1 = /*#__PURE__*/_interopDefaultLegacy(require$$2$1);
+var require$$2__default$1 = /*#__PURE__*/_interopDefaultLegacy(require$$2$2);
 var require$$0__default$3 = /*#__PURE__*/_interopDefaultLegacy(require$$0$3);
-var require$$5__default = /*#__PURE__*/_interopDefaultLegacy(require$$5$1);
+var require$$5__default = /*#__PURE__*/_interopDefaultLegacy(require$$5);
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -131,13 +131,13 @@ const utils_1$2 = utils$3;
  *   ::warning::This is the message
  *   ::set-env name=MY_VAR::some value
  */
-function issueCommand$1(command, properties, message) {
+function issueCommand(command, properties, message) {
     const cmd = new Command(command, properties, message);
     process.stdout.write(cmd.toString() + os$1.EOL);
 }
-command.issueCommand = issueCommand$1;
+command.issueCommand = issueCommand;
 function issue(name, message = '') {
-    issueCommand$1(name, {}, message);
+    issueCommand(name, {}, message);
 }
 command.issue = issue;
 const CMD_STRING = '::';
@@ -190,47 +190,6 @@ function escapeProperty(s) {
 }
 
 var fileCommand = {};
-
-// For internal use, subject to change.
-var __createBinding$2 = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault$2 = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar$2 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding$2(result, mod, k);
-    __setModuleDefault$2(result, mod);
-    return result;
-};
-Object.defineProperty(fileCommand, "__esModule", { value: true });
-fileCommand.issueCommand = void 0;
-// We use any as a valid input type
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const fs$1 = __importStar$2(require$$0__default$1["default"]);
-const os = __importStar$2(require$$0__default["default"]);
-const utils_1$1 = utils$3;
-function issueCommand(command, message) {
-    const filePath = process.env[`GITHUB_${command}`];
-    if (!filePath) {
-        throw new Error(`Unable to find environment variable for file command ${command}`);
-    }
-    if (!fs$1.existsSync(filePath)) {
-        throw new Error(`Missing file at path: ${filePath}`);
-    }
-    fs$1.appendFileSync(filePath, `${utils_1$1.toCommandValue(message)}${os.EOL}`, {
-        encoding: 'utf8'
-    });
-}
-fileCommand.issueCommand = issueCommand;
 
 // Unique ID creation requires a high quality random # generator. In the browser we therefore
 // require the crypto API and do not support built-in fallback to lower quality random number
@@ -830,7 +789,64 @@ var esmBrowser = /*#__PURE__*/Object.freeze({
 	parse: parse$3
 });
 
-var require$$5 = /*@__PURE__*/getAugmentedNamespace(esmBrowser);
+var require$$2 = /*@__PURE__*/getAugmentedNamespace(esmBrowser);
+
+// For internal use, subject to change.
+var __createBinding$2 = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault$2 = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar$2 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding$2(result, mod, k);
+    __setModuleDefault$2(result, mod);
+    return result;
+};
+Object.defineProperty(fileCommand, "__esModule", { value: true });
+fileCommand.prepareKeyValueMessage = fileCommand.issueFileCommand = void 0;
+// We use any as a valid input type
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const fs$1 = __importStar$2(require$$0__default$1["default"]);
+const os = __importStar$2(require$$0__default["default"]);
+const uuid_1 = require$$2;
+const utils_1$1 = utils$3;
+function issueFileCommand(command, message) {
+    const filePath = process.env[`GITHUB_${command}`];
+    if (!filePath) {
+        throw new Error(`Unable to find environment variable for file command ${command}`);
+    }
+    if (!fs$1.existsSync(filePath)) {
+        throw new Error(`Missing file at path: ${filePath}`);
+    }
+    fs$1.appendFileSync(filePath, `${utils_1$1.toCommandValue(message)}${os.EOL}`, {
+        encoding: 'utf8'
+    });
+}
+fileCommand.issueFileCommand = issueFileCommand;
+function prepareKeyValueMessage(key, value) {
+    const delimiter = `ghadelimiter_${uuid_1.v4()}`;
+    const convertedValue = utils_1$1.toCommandValue(value);
+    // These should realistically never happen, but just in case someone finds a
+    // way to exploit uuid generation let's not allow keys or values that contain
+    // the delimiter.
+    if (key.includes(delimiter)) {
+        throw new Error(`Unexpected input: name should not contain the delimiter "${delimiter}"`);
+    }
+    if (convertedValue.includes(delimiter)) {
+        throw new Error(`Unexpected input: value should not contain the delimiter "${delimiter}"`);
+    }
+    return `${key}<<${delimiter}${os.EOL}${convertedValue}${os.EOL}${delimiter}`;
+}
+fileCommand.prepareKeyValueMessage = prepareKeyValueMessage;
 
 var oidcUtils = {};
 
@@ -2342,7 +2358,6 @@ function requireCore () {
 		const utils_1 = utils$3;
 		const os = __importStar(require$$0__default["default"]);
 		const path = __importStar(require$$0__default$2["default"]);
-		const uuid_1 = require$$5;
 		const oidc_utils_1 = requireOidcUtils();
 		/**
 		 * The code to exit an action
@@ -2372,20 +2387,9 @@ function requireCore () {
 		    process.env[name] = convertedVal;
 		    const filePath = process.env['GITHUB_ENV'] || '';
 		    if (filePath) {
-		        const delimiter = `ghadelimiter_${uuid_1.v4()}`;
-		        // These should realistically never happen, but just in case someone finds a way to exploit uuid generation let's not allow keys or values that contain the delimiter.
-		        if (name.includes(delimiter)) {
-		            throw new Error(`Unexpected input: name should not contain the delimiter "${delimiter}"`);
-		        }
-		        if (convertedVal.includes(delimiter)) {
-		            throw new Error(`Unexpected input: value should not contain the delimiter "${delimiter}"`);
-		        }
-		        const commandValue = `${name}<<${delimiter}${os.EOL}${convertedVal}${os.EOL}${delimiter}`;
-		        file_command_1.issueCommand('ENV', commandValue);
+		        return file_command_1.issueFileCommand('ENV', file_command_1.prepareKeyValueMessage(name, val));
 		    }
-		    else {
-		        command_1.issueCommand('set-env', { name }, convertedVal);
-		    }
+		    command_1.issueCommand('set-env', { name }, convertedVal);
 		}
 		exports.exportVariable = exportVariable;
 		/**
@@ -2403,7 +2407,7 @@ function requireCore () {
 		function addPath(inputPath) {
 		    const filePath = process.env['GITHUB_PATH'] || '';
 		    if (filePath) {
-		        file_command_1.issueCommand('PATH', inputPath);
+		        file_command_1.issueFileCommand('PATH', inputPath);
 		    }
 		    else {
 		        command_1.issueCommand('add-path', {}, inputPath);
@@ -2443,7 +2447,10 @@ function requireCore () {
 		    const inputs = getInput(name, options)
 		        .split('\n')
 		        .filter(x => x !== '');
-		    return inputs;
+		    if (options && options.trimWhitespace === false) {
+		        return inputs;
+		    }
+		    return inputs.map(input => input.trim());
 		}
 		exports.getMultilineInput = getMultilineInput;
 		/**
@@ -2476,8 +2483,12 @@ function requireCore () {
 		 */
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		function setOutput(name, value) {
+		    const filePath = process.env['GITHUB_OUTPUT'] || '';
+		    if (filePath) {
+		        return file_command_1.issueFileCommand('OUTPUT', file_command_1.prepareKeyValueMessage(name, value));
+		    }
 		    process.stdout.write(os.EOL);
-		    command_1.issueCommand('set-output', { name }, value);
+		    command_1.issueCommand('set-output', { name }, utils_1.toCommandValue(value));
 		}
 		exports.setOutput = setOutput;
 		/**
@@ -2606,7 +2617,11 @@ function requireCore () {
 		 */
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		function saveState(name, value) {
-		    command_1.issueCommand('save-state', { name }, value);
+		    const filePath = process.env['GITHUB_STATE'] || '';
+		    if (filePath) {
+		        return file_command_1.issueFileCommand('STATE', file_command_1.prepareKeyValueMessage(name, value));
+		    }
+		    command_1.issueCommand('save-state', { name }, utils_1.toCommandValue(value));
 		}
 		exports.saveState = saveState;
 		/**
