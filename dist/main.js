@@ -1,19 +1,19 @@
 'use strict';
 
-var require$$0$1 = require('fs');
-var require$$0 = require('os');
-var require$$0$2 = require('path');
-var require$$2$1 = require('http');
-var require$$3 = require('https');
-require('net');
-var require$$1$1 = require('tls');
-var require$$4 = require('events');
-require('assert');
-var require$$6 = require('util');
-var require$$0$4 = require('stream');
-var require$$2$2 = require('url');
-var require$$0$3 = require('punycode');
-var require$$5 = require('zlib');
+var require$$0$1 = require('node:fs');
+var require$$0 = require('node:os');
+var require$$0$2 = require('node:path');
+var require$$2$1 = require('node:http');
+var require$$3 = require('node:https');
+require('node:net');
+var require$$1$1 = require('node:tls');
+var require$$4 = require('node:events');
+require('node:assert');
+var require$$6 = require('node:util');
+var require$$0$4 = require('node:stream');
+var require$$2$2 = require('node:url');
+var require$$0$3 = require('node:punycode');
+var require$$5 = require('node:zlib');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
