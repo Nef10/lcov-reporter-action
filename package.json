@@ -30,7 +30,7 @@
 		"@rollup/plugin-commonjs": "^23.0.2",
 		"@rollup/plugin-json": "^5.0.1",
 		"@rollup/plugin-node-resolve": "^15.0.1",
-		"babel-jest": "^29.2.0",
+		"babel-jest": "^29.2.2",
 		"core-js": "3",
 		"jest": "^29.2.1",
 		"prettier": "^2.7.1",
