@@ -25,7 +25,7 @@
 	},
 	"devDependencies": {
 		"@babel/core": "^7.19.6",
-		"@babel/node": "^7.20.0",
+		"@babel/node": "^7.20.2",
 		"@babel/preset-env": "^7.19.4",
 		"@rollup/plugin-commonjs": "^23.0.2",
 		"@rollup/plugin-json": "^5.0.1",
