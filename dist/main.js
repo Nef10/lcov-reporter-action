@@ -920,7 +920,11 @@ function checkBypass(reqUrl) {
 }
 proxy.checkBypass = checkBypass;
 
-var tunnel$1 = {exports: {}};
+var tunnelExports = {};
+var tunnel$1 = {
+  get exports(){ return tunnelExports; },
+  set exports(v){ tunnelExports = v; },
+};
 
 var tunnel = {};
 
@@ -1224,7 +1228,7 @@ tunnel.debug = debug; // for test
 	const http = __importStar(require$$2__default["default"]);
 	const https = __importStar(require$$3__default["default"]);
 	const pm = __importStar(proxy);
-	const tunnel = __importStar(tunnel$1.exports);
+	const tunnel = __importStar(tunnelExports);
 	var HttpCodes;
 	(function (HttpCodes) {
 	    HttpCodes[HttpCodes["OK"] = 200] = "OK";
@@ -2793,7 +2797,11 @@ function getUserAgent() {
 
 distNode$8.getUserAgent = getUserAgent;
 
-var beforeAfterHook$1 = {exports: {}};
+var beforeAfterHookExports = {};
+var beforeAfterHook$1 = {
+  get exports(){ return beforeAfterHookExports; },
+  set exports(v){ beforeAfterHookExports = v; },
+};
 
 var register_1 = register$1;
 
@@ -2944,9 +2952,9 @@ Hook.Collection = HookCollection.bind();
 
 beforeAfterHook$1.exports = Hook;
 // expose constructors as a named property for TypeScript
-beforeAfterHook$1.exports.Hook = Hook;
-beforeAfterHook$1.exports.Singular = Hook.Singular;
-beforeAfterHook$1.exports.Collection = Hook.Collection;
+beforeAfterHookExports.Hook = Hook;
+beforeAfterHookExports.Singular = Hook.Singular;
+beforeAfterHookExports.Collection = Hook.Collection;
 
 var distNode$7 = {};
 
@@ -3379,11 +3387,19 @@ const endpoint$1 = withDefaults$2(null, DEFAULTS);
 
 distNode$6.endpoint = endpoint$1;
 
-var lib$2 = {exports: {}};
+var libExports$1 = {};
+var lib$2 = {
+  get exports(){ return libExports$1; },
+  set exports(v){ libExports$1 = v; },
+};
 
 var publicApi = {};
 
-var URL$1 = {exports: {}};
+var URLExports = {};
+var URL$1 = {
+  get exports(){ return URLExports; },
+  set exports(v){ URLExports = v; },
+};
 
 var conversions = {};
 var lib$1 = conversions;
@@ -3573,7 +3589,11 @@ conversions["RegExp"] = function (V, opts) {
     return V;
 };
 
-var utils = {exports: {}};
+var utilsExports = {};
+var utils = {
+  get exports(){ return utilsExports; },
+  set exports(v){ utilsExports = v; },
+};
 
 (function (module) {
 
@@ -3598,7 +3618,11 @@ var utils = {exports: {}};
 
 var URLImpl = {};
 
-var urlStateMachine = {exports: {}};
+var urlStateMachineExports = {};
+var urlStateMachine = {
+  get exports(){ return urlStateMachineExports; },
+  set exports(v){ urlStateMachineExports = v; },
+};
 
 var tr46 = {};
 
@@ -82743,7 +82767,7 @@ tr46.PROCESSING_OPTIONS = PROCESSING_OPTIONS;
 	};
 } (urlStateMachine));
 
-const usm = urlStateMachine.exports;
+const usm = urlStateMachineExports;
 
 URLImpl.implementation = class URLImpl {
   constructor(constructorArgs) {
@@ -82946,10 +82970,10 @@ URLImpl.implementation = class URLImpl {
 (function (module) {
 
 	const conversions = lib$1;
-	const utils$1 = utils.exports;
+	const utils = utilsExports;
 	const Impl = URLImpl;
 
-	const impl = utils$1.implSymbol;
+	const impl = utils.implSymbol;
 
 	function URL(url) {
 	  if (!this || this[impl] || !(this instanceof URL)) {
@@ -83130,7 +83154,7 @@ URLImpl.implementation = class URLImpl {
 	    privateData.wrapper = obj;
 
 	    obj[impl] = new Impl.implementation(constructorArgs, privateData);
-	    obj[impl][utils$1.wrapperSymbol] = obj;
+	    obj[impl][utils.wrapperSymbol] = obj;
 	  },
 	  interface: URL,
 	  expose: {
@@ -83140,15 +83164,15 @@ URLImpl.implementation = class URLImpl {
 	};
 } (URL$1));
 
-publicApi.URL = URL$1.exports.interface;
-publicApi.serializeURL = urlStateMachine.exports.serializeURL;
-publicApi.serializeURLOrigin = urlStateMachine.exports.serializeURLOrigin;
-publicApi.basicURLParse = urlStateMachine.exports.basicURLParse;
-publicApi.setTheUsername = urlStateMachine.exports.setTheUsername;
-publicApi.setThePassword = urlStateMachine.exports.setThePassword;
-publicApi.serializeHost = urlStateMachine.exports.serializeHost;
-publicApi.serializeInteger = urlStateMachine.exports.serializeInteger;
-publicApi.parseURL = urlStateMachine.exports.parseURL;
+publicApi.URL = URLExports.interface;
+publicApi.serializeURL = urlStateMachineExports.serializeURL;
+publicApi.serializeURLOrigin = urlStateMachineExports.serializeURLOrigin;
+publicApi.basicURLParse = urlStateMachineExports.basicURLParse;
+publicApi.setTheUsername = urlStateMachineExports.setTheUsername;
+publicApi.setThePassword = urlStateMachineExports.setThePassword;
+publicApi.serializeHost = urlStateMachineExports.serializeHost;
+publicApi.serializeInteger = urlStateMachineExports.serializeInteger;
+publicApi.parseURL = urlStateMachineExports.parseURL;
 
 (function (module, exports) {
 
@@ -84847,7 +84871,7 @@ publicApi.parseURL = urlStateMachine.exports.parseURL;
 	exports.Request = Request;
 	exports.Response = Response;
 	exports.FetchError = FetchError;
-} (lib$2, lib$2.exports));
+} (lib$2, libExports$1));
 
 var distNode$5 = {};
 
@@ -84872,7 +84896,11 @@ class Deprecation extends Error {
 
 distNode$4.Deprecation = Deprecation;
 
-var once$2 = {exports: {}};
+var onceExports = {};
+var once$2 = {
+  get exports(){ return onceExports; },
+  set exports(v){ onceExports = v; },
+};
 
 // Returns a wrapper function that returns a wrapped callback
 // The wrapper function should do some stuff, and return a
@@ -84910,7 +84938,7 @@ function wrappy$1 (fn, cb) {
 
 var wrappy = wrappy_1;
 once$2.exports = wrappy(once$1);
-once$2.exports.strict = wrappy(onceStrict);
+onceExports.strict = wrappy(onceStrict);
 
 once$1.proto = once$1(function () {
   Object.defineProperty(Function.prototype, 'once', {
@@ -84956,7 +84984,7 @@ Object.defineProperty(distNode$5, '__esModule', { value: true });
 function _interopDefault$2 (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 var deprecation = distNode$4;
-var once = _interopDefault$2(once$2.exports);
+var once = _interopDefault$2(onceExports);
 
 const logOnceCode = once(deprecation => console.warn(deprecation));
 const logOnceHeaders = once(deprecation => console.warn(deprecation));
@@ -85030,7 +85058,7 @@ function _interopDefault$1 (ex) { return (ex && (typeof ex === 'object') && 'def
 var endpoint = distNode$6;
 var universalUserAgent$2 = distNode$8;
 var isPlainObject = isPlainObject$3;
-var nodeFetch = _interopDefault$1(lib$2.exports);
+var nodeFetch = _interopDefault$1(libExports$1);
 var requestError = distNode$5;
 
 const VERSION$4 = "5.6.3";
@@ -85374,7 +85402,7 @@ distNode$2.createTokenAuth = createTokenAuth;
 Object.defineProperty(distNode$9, '__esModule', { value: true });
 
 var universalUserAgent = distNode$8;
-var beforeAfterHook = beforeAfterHook$1.exports;
+var beforeAfterHook = beforeAfterHookExports;
 var request = distNode$7;
 var graphql = distNode$3;
 var authToken = distNode$2;
@@ -86879,7 +86907,11 @@ function getOctokit(token, options, ...additionalPlugins) {
 }
 getOctokit_1 = github.getOctokit = getOctokit;
 
-var lib = {exports: {}};
+var libExports = {};
+var lib = {
+  get exports(){ return libExports; },
+  set exports(v){ libExports = v; },
+};
 
 /*
 Copyright (c) 2012, Yahoo! Inc. All rights reserved.
@@ -87006,12 +87038,12 @@ var parse$1 = function(file, cb) {
 
 
 lib.exports = parse$1;
-lib.exports.source = walkFile;
+libExports.source = walkFile;
 
 // Parse lcov string into lcov data
 function parse(data) {
 	return new Promise(function (resolve, reject) {
-		lib.exports(data, function (err, res) {
+		libExports(data, function (err, res) {
 			if (err) {
 				reject(err);
 				return;
