@@ -32,7 +32,12 @@ var require$$5__default = /*#__PURE__*/_interopDefaultLegacy(require$$5);
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
+function getDefaultExportFromCjs (x) {
+	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+}
+
 function getAugmentedNamespace(n) {
+  if (n.__esModule) return n;
   var f = n.default;
 	if (typeof f == "function") {
 		var a = function a () {
@@ -59,7 +64,7 @@ function getAugmentedNamespace(n) {
 	return a;
 }
 
-var core = {};
+var core$1 = {};
 
 var command = {};
 
@@ -2330,7 +2335,7 @@ function requirePathUtils () {
 var hasRequiredCore;
 
 function requireCore () {
-	if (hasRequiredCore) return core;
+	if (hasRequiredCore) return core$1;
 	hasRequiredCore = 1;
 	(function (exports) {
 		var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
@@ -2668,11 +2673,12 @@ function requireCore () {
 		Object.defineProperty(exports, "toWin32Path", { enumerable: true, get: function () { return path_utils_1.toWin32Path; } });
 		Object.defineProperty(exports, "toPlatformPath", { enumerable: true, get: function () { return path_utils_1.toPlatformPath; } });
 		
-} (core));
-	return core;
+} (core$1));
+	return core$1;
 }
 
 var coreExports = requireCore();
+var core = /*@__PURE__*/getDefaultExportFromCjs(coreExports);
 
 var github = {};
 
@@ -87303,12 +87309,12 @@ function diff(lcov, before, options) {
 }
 
 async function main() {
-	const token = coreExports.getInput("github-token");
-	const lcovFile = coreExports.getInput("lcov-file") || "./coverage/lcov.info";
-	const baseFile = coreExports.getInput("lcov-base");
-	const prNumber = coreExports.getInput("pr-number");
-	const hide_branch_coverage = coreExports.getInput("hide-branch-coverage") == "true";
-	const outputFile = coreExports.getInput("output-file");
+	const token = core.getInput("github-token");
+	const lcovFile = core.getInput("lcov-file") || "./coverage/lcov.info";
+	const baseFile = core.getInput("lcov-base");
+	const prNumber = core.getInput("pr-number");
+	const hide_branch_coverage = core.getInput("hide-branch-coverage") == "true";
+	const outputFile = core.getInput("output-file");
 
 	const octokit = getOctokit_1(token);
 
@@ -87357,5 +87363,5 @@ async function main() {
 
 main().catch(function (err) {
 	console.log(err);
-	coreExports.setFailed(err.message);
+	core.setFailed(err.message);
 });
