@@ -774,15 +774,15 @@ function version(uuid) {
 
 var esmBrowser = /*#__PURE__*/Object.freeze({
 	__proto__: null,
+	NIL: nil,
+	parse: parse$3,
+	stringify: stringify,
 	v1: v1,
 	v3: v3$1,
 	v4: v4,
 	v5: v5$1,
-	NIL: nil,
-	version: version,
 	validate: validate,
-	stringify: stringify,
-	parse: parse$3
+	version: version
 });
 
 var require$$2 = /*@__PURE__*/getAugmentedNamespace(esmBrowser);
