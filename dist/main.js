@@ -910,13 +910,7 @@ function checkBypass(reqUrl) {
 }
 proxy.checkBypass = checkBypass;
 
-var tunnelExports = {};
-var tunnel$1 = {
-  get exports(){ return tunnelExports; },
-  set exports(v){ tunnelExports = v; },
-};
-
-var tunnel = {};
+var tunnel$1 = {};
 
 var tls = require$$1$1;
 var http = require$$2$1;
@@ -925,10 +919,10 @@ var events = require$$4;
 var util = require$$6;
 
 
-tunnel.httpOverHttp = httpOverHttp;
-tunnel.httpsOverHttp = httpsOverHttp;
-tunnel.httpOverHttps = httpOverHttps;
-tunnel.httpsOverHttps = httpsOverHttps;
+tunnel$1.httpOverHttp = httpOverHttp;
+tunnel$1.httpsOverHttp = httpsOverHttp;
+tunnel$1.httpOverHttps = httpOverHttps;
+tunnel$1.httpsOverHttps = httpsOverHttps;
 
 
 function httpOverHttp(options) {
@@ -1177,11 +1171,9 @@ if (process.env.NODE_DEBUG && /\btunnel\b/.test(process.env.NODE_DEBUG)) {
 } else {
   debug = function() {};
 }
-tunnel.debug = debug; // for test
+tunnel$1.debug = debug; // for test
 
-(function (module) {
-	module.exports = tunnel;
-} (tunnel$1));
+var tunnel = tunnel$1;
 
 (function (exports) {
 	/* eslint-disable @typescript-eslint/no-explicit-any */
@@ -1218,7 +1210,7 @@ tunnel.debug = debug; // for test
 	const http = __importStar(require$$2$1);
 	const https = __importStar(require$$3);
 	const pm = __importStar(proxy);
-	const tunnel = __importStar(tunnelExports);
+	const tunnel$1 = __importStar(tunnel);
 	var HttpCodes;
 	(function (HttpCodes) {
 	    HttpCodes[HttpCodes["OK"] = 200] = "OK";
@@ -1684,10 +1676,10 @@ tunnel.debug = debug; // for test
 	            let tunnelAgent;
 	            const overHttps = proxyUrl.protocol === 'https:';
 	            if (usingSsl) {
-	                tunnelAgent = overHttps ? tunnel.httpsOverHttps : tunnel.httpsOverHttp;
+	                tunnelAgent = overHttps ? tunnel$1.httpsOverHttps : tunnel$1.httpsOverHttp;
 	            }
 	            else {
-	                tunnelAgent = overHttps ? tunnel.httpOverHttps : tunnel.httpOverHttp;
+	                tunnelAgent = overHttps ? tunnel$1.httpOverHttps : tunnel$1.httpOverHttp;
 	            }
 	            agent = tunnelAgent(agentOptions);
 	            this._proxyAgent = agent;
@@ -2246,7 +2238,7 @@ function requireSummary () {
 		exports.markdownSummary = _summary;
 		exports.summary = _summary;
 		
-} (summary$1));
+	} (summary$1));
 	return summary$1;
 }
 
@@ -2658,7 +2650,7 @@ function requireCore () {
 		Object.defineProperty(exports, "toWin32Path", { enumerable: true, get: function () { return path_utils_1.toWin32Path; } });
 		Object.defineProperty(exports, "toPlatformPath", { enumerable: true, get: function () { return path_utils_1.toPlatformPath; } });
 		
-} (core$1));
+	} (core$1));
 	return core$1;
 }
 
@@ -2788,11 +2780,7 @@ function getUserAgent() {
 
 distNode$8.getUserAgent = getUserAgent;
 
-var beforeAfterHookExports = {};
-var beforeAfterHook$1 = {
-  get exports(){ return beforeAfterHookExports; },
-  set exports(v){ beforeAfterHookExports = v; },
-};
+var beforeAfterHook$1 = {exports: {}};
 
 var register_1 = register$1;
 
@@ -2943,9 +2931,11 @@ Hook.Collection = HookCollection.bind();
 
 beforeAfterHook$1.exports = Hook;
 // expose constructors as a named property for TypeScript
-beforeAfterHookExports.Hook = Hook;
-beforeAfterHookExports.Singular = Hook.Singular;
-beforeAfterHookExports.Collection = Hook.Collection;
+beforeAfterHook$1.exports.Hook = Hook;
+beforeAfterHook$1.exports.Singular = Hook.Singular;
+beforeAfterHook$1.exports.Collection = Hook.Collection;
+
+var beforeAfterHookExports = beforeAfterHook$1.exports;
 
 var distNode$7 = {};
 
@@ -3378,19 +3368,11 @@ const endpoint$1 = withDefaults$2(null, DEFAULTS);
 
 distNode$6.endpoint = endpoint$1;
 
-var libExports$1 = {};
-var lib$2 = {
-  get exports(){ return libExports$1; },
-  set exports(v){ libExports$1 = v; },
-};
+var lib$2 = {exports: {}};
 
 var publicApi = {};
 
-var URLExports = {};
-var URL$1 = {
-  get exports(){ return URLExports; },
-  set exports(v){ URLExports = v; },
-};
+var URL$1 = {exports: {}};
 
 var conversions = {};
 var lib$1 = conversions;
@@ -3580,11 +3562,7 @@ conversions["RegExp"] = function (V, opts) {
     return V;
 };
 
-var utilsExports = {};
-var utils = {
-  get exports(){ return utilsExports; },
-  set exports(v){ utilsExports = v; },
-};
+var utils = {exports: {}};
 
 (function (module) {
 
@@ -3604,16 +3582,14 @@ var utils = {
 
 	module.exports.implForWrapper = function (wrapper) {
 	  return wrapper[module.exports.implSymbol];
-	};
+	}; 
 } (utils));
+
+var utilsExports = utils.exports;
 
 var URLImpl = {};
 
-var urlStateMachineExports = {};
-var urlStateMachine = {
-  get exports(){ return urlStateMachineExports; },
-  set exports(v){ urlStateMachineExports = v; },
-};
+var urlStateMachine = {exports: {}};
 
 var tr46 = {};
 
@@ -82755,8 +82731,10 @@ tr46.PROCESSING_OPTIONS = PROCESSING_OPTIONS;
 
 	  // We don't handle blobs, so this just delegates:
 	  return module.exports.basicURLParse(input, { baseURL: options.baseURL, encodingOverride: options.encodingOverride });
-	};
+	}; 
 } (urlStateMachine));
+
+var urlStateMachineExports = urlStateMachine.exports;
 
 const usm = urlStateMachineExports;
 
@@ -83152,8 +83130,10 @@ URLImpl.implementation = class URLImpl {
 	    Window: { URL: URL },
 	    Worker: { URL: URL }
 	  }
-	};
+	}; 
 } (URL$1));
+
+var URLExports = URL$1.exports;
 
 publicApi.URL = URLExports.interface;
 publicApi.serializeURL = urlStateMachineExports.serializeURL;
@@ -84861,8 +84841,10 @@ publicApi.parseURL = urlStateMachineExports.parseURL;
 	exports.Headers = Headers;
 	exports.Request = Request;
 	exports.Response = Response;
-	exports.FetchError = FetchError;
-} (lib$2, libExports$1));
+	exports.FetchError = FetchError; 
+} (lib$2, lib$2.exports));
+
+var libExports$1 = lib$2.exports;
 
 var distNode$5 = {};
 
@@ -84887,11 +84869,7 @@ class Deprecation extends Error {
 
 distNode$4.Deprecation = Deprecation;
 
-var onceExports = {};
-var once$2 = {
-  get exports(){ return onceExports; },
-  set exports(v){ onceExports = v; },
-};
+var once$2 = {exports: {}};
 
 // Returns a wrapper function that returns a wrapped callback
 // The wrapper function should do some stuff, and return a
@@ -84929,7 +84907,7 @@ function wrappy$1 (fn, cb) {
 
 var wrappy = wrappy_1;
 once$2.exports = wrappy(once$1);
-onceExports.strict = wrappy(onceStrict);
+once$2.exports.strict = wrappy(onceStrict);
 
 once$1.proto = once$1(function () {
   Object.defineProperty(Function.prototype, 'once', {
@@ -84969,6 +84947,8 @@ function onceStrict (fn) {
   f.called = false;
   return f
 }
+
+var onceExports = once$2.exports;
 
 Object.defineProperty(distNode$5, '__esModule', { value: true });
 
@@ -86898,11 +86878,7 @@ function getOctokit(token, options, ...additionalPlugins) {
 }
 getOctokit_1 = github.getOctokit = getOctokit;
 
-var libExports = {};
-var lib = {
-  get exports(){ return libExports; },
-  set exports(v){ libExports = v; },
-};
+var lib = {exports: {}};
 
 /*
 Copyright (c) 2012, Yahoo! Inc. All rights reserved.
@@ -87029,12 +87005,15 @@ var parse$1 = function(file, cb) {
 
 
 lib.exports = parse$1;
-libExports.source = walkFile;
+lib.exports.source = walkFile;
+
+var libExports = lib.exports;
+var lcov = /*@__PURE__*/getDefaultExportFromCjs(libExports);
 
 // Parse lcov string into lcov data
 function parse(data) {
 	return new Promise(function (resolve, reject) {
-		libExports(data, function (err, res) {
+		lcov(data, function (err, res) {
 			if (err) {
 				reject(err);
 				return;
