@@ -33,9 +33,9 @@ test("html fragment should return the children", function () {
 
 test("html tags should accept props", function () {
 	expect(a({ href: "http://www.example.com" }, "example")).toBe(
-		"<a href='http://www.example.com'>example</a>"
+		"<a href='http://www.example.com'>example</a>",
 	);
 	expect(
-		a({ href: "http://www.example.com", target: "_blank" }, "example")
+		a({ href: "http://www.example.com", target: "_blank" }, "example"),
 	).toBe("<a href='http://www.example.com' target='_blank'>example</a>");
 });

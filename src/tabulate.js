@@ -9,7 +9,7 @@ export function tabulate(lcov, options) {
 			th("Stmts"),
 			th("Funcs"),
 			th("Lines"),
-			th("Uncovered Lines")
+			th("Uncovered Lines"),
 		);
 	} else {
 		head = tr(
@@ -18,7 +18,7 @@ export function tabulate(lcov, options) {
 			th("Branches"),
 			th("Funcs"),
 			th("Lines"),
-			th("Uncovered Lines")
+			th("Uncovered Lines"),
 		);
 	}
 
@@ -38,7 +38,7 @@ export function tabulate(lcov, options) {
 				toFolder(key, options),
 				...folders[key].map((file) => toRow(file, key !== "", options)),
 			],
-			[]
+			[],
 		);
 
 	return table(tbody(head, ...rows));
@@ -66,7 +66,7 @@ function getStatement(file) {
 				found: acc.found + curr.found,
 			};
 		},
-		{ hit: 0, found: 0 }
+		{ hit: 0, found: 0 },
 	);
 }
 
@@ -77,7 +77,7 @@ function toRow(file, indent, options) {
 			td(percentage(getStatement(file), options)),
 			td(percentage(file.functions, options)),
 			td(percentage(file.lines, options)),
-			td(uncovered(file, options))
+			td(uncovered(file, options)),
 		);
 	} else {
 		return tr(
@@ -86,7 +86,7 @@ function toRow(file, indent, options) {
 			td(percentage(file.branches, options)),
 			td(percentage(file.functions, options)),
 			td(percentage(file.lines, options)),
-			td(uncovered(file, options))
+			td(uncovered(file, options)),
 		);
 	}
 }

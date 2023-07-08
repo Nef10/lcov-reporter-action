@@ -114,6 +114,6 @@ test("percentage should calculate the correct percentage", function () {
 		percentage([
 			{ lines: { hit: 20, found: 25 } },
 			{ lines: { hit: 10, found: 15 } },
-		])
+		]),
 	).toBe(75);
 });
