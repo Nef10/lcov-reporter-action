@@ -26683,7 +26683,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   // file that has been converted to a CommonJS file using a Babel-
   // compatible transform (i.e. "__esModule" has not been set), then set
   // "default" to the CommonJS "module.exports" for node compatibility.
-  isNodeMode || !mod || !mod.__esModule ? __defProp$6(target, "default", { value: mod, enumerable: true }) : target,
+  !mod || !mod.__esModule ? __defProp$6(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
 var __toCommonJS$6 = (mod) => __copyProps$6(__defProp$6({}, "__esModule", { value: true }), mod);
