@@ -5,9 +5,9 @@ var require$$0 = require('node:os');
 var require$$0$8 = require('node:path');
 var require$$2$1 = require('node:http');
 var require$$3 = require('node:https');
-var require$$1$1 = require('node:tls');
+var require$$1 = require('node:tls');
 var require$$0$2 = require('node:events');
-var require$$1 = require('node:util');
+var require$$1$1 = require('node:util');
 var require$$0$3 = require('node:assert');
 var require$$0$5 = require('node:net');
 var require$$0$4 = require('node:stream');
@@ -61,134 +61,150 @@ var command = {};
 
 var utils$3 = {};
 
-// We use any as a valid input type
-/* eslint-disable @typescript-eslint/no-explicit-any */
-Object.defineProperty(utils$3, "__esModule", { value: true });
-utils$3.toCommandProperties = utils$3.toCommandValue = void 0;
-/**
- * Sanitizes an input into a string so it can be passed into issueCommand safely
- * @param input input to sanitize into a string
- */
-function toCommandValue(input) {
-    if (input === null || input === undefined) {
-        return '';
-    }
-    else if (typeof input === 'string' || input instanceof String) {
-        return input;
-    }
-    return JSON.stringify(input);
-}
-utils$3.toCommandValue = toCommandValue;
-/**
- *
- * @param annotationProperties
- * @returns The command properties to send with the actual annotation command
- * See IssueCommandProperties: https://github.com/actions/runner/blob/main/src/Runner.Worker/ActionCommandManager.cs#L646
- */
-function toCommandProperties(annotationProperties) {
-    if (!Object.keys(annotationProperties).length) {
-        return {};
-    }
-    return {
-        title: annotationProperties.title,
-        file: annotationProperties.file,
-        line: annotationProperties.startLine,
-        endLine: annotationProperties.endLine,
-        col: annotationProperties.startColumn,
-        endColumn: annotationProperties.endColumn
-    };
-}
-utils$3.toCommandProperties = toCommandProperties;
+var hasRequiredUtils$3;
 
-var __createBinding$4 = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault$4 = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar$4 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding$4(result, mod, k);
-    __setModuleDefault$4(result, mod);
-    return result;
-};
-Object.defineProperty(command, "__esModule", { value: true });
-command.issue = command.issueCommand = void 0;
-const os$1 = __importStar$4(require$$0);
-const utils_1$2 = utils$3;
-/**
- * Commands
- *
- * Command Format:
- *   ::name key=value,key=value::message
- *
- * Examples:
- *   ::warning::This is the message
- *   ::set-env name=MY_VAR::some value
- */
-function issueCommand(command, properties, message) {
-    const cmd = new Command(command, properties, message);
-    process.stdout.write(cmd.toString() + os$1.EOL);
+function requireUtils$3 () {
+	if (hasRequiredUtils$3) return utils$3;
+	hasRequiredUtils$3 = 1;
+	// We use any as a valid input type
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+	Object.defineProperty(utils$3, "__esModule", { value: true });
+	utils$3.toCommandProperties = utils$3.toCommandValue = void 0;
+	/**
+	 * Sanitizes an input into a string so it can be passed into issueCommand safely
+	 * @param input input to sanitize into a string
+	 */
+	function toCommandValue(input) {
+	    if (input === null || input === undefined) {
+	        return '';
+	    }
+	    else if (typeof input === 'string' || input instanceof String) {
+	        return input;
+	    }
+	    return JSON.stringify(input);
+	}
+	utils$3.toCommandValue = toCommandValue;
+	/**
+	 *
+	 * @param annotationProperties
+	 * @returns The command properties to send with the actual annotation command
+	 * See IssueCommandProperties: https://github.com/actions/runner/blob/main/src/Runner.Worker/ActionCommandManager.cs#L646
+	 */
+	function toCommandProperties(annotationProperties) {
+	    if (!Object.keys(annotationProperties).length) {
+	        return {};
+	    }
+	    return {
+	        title: annotationProperties.title,
+	        file: annotationProperties.file,
+	        line: annotationProperties.startLine,
+	        endLine: annotationProperties.endLine,
+	        col: annotationProperties.startColumn,
+	        endColumn: annotationProperties.endColumn
+	    };
+	}
+	utils$3.toCommandProperties = toCommandProperties;
+	
+	return utils$3;
 }
-command.issueCommand = issueCommand;
-function issue(name, message = '') {
-    issueCommand(name, {}, message);
-}
-command.issue = issue;
-const CMD_STRING = '::';
-class Command {
-    constructor(command, properties, message) {
-        if (!command) {
-            command = 'missing.command';
-        }
-        this.command = command;
-        this.properties = properties;
-        this.message = message;
-    }
-    toString() {
-        let cmdStr = CMD_STRING + this.command;
-        if (this.properties && Object.keys(this.properties).length > 0) {
-            cmdStr += ' ';
-            let first = true;
-            for (const key in this.properties) {
-                if (this.properties.hasOwnProperty(key)) {
-                    const val = this.properties[key];
-                    if (val) {
-                        if (first) {
-                            first = false;
-                        }
-                        else {
-                            cmdStr += ',';
-                        }
-                        cmdStr += `${key}=${escapeProperty(val)}`;
-                    }
-                }
-            }
-        }
-        cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
-        return cmdStr;
-    }
-}
-function escapeData(s) {
-    return utils_1$2.toCommandValue(s)
-        .replace(/%/g, '%25')
-        .replace(/\r/g, '%0D')
-        .replace(/\n/g, '%0A');
-}
-function escapeProperty(s) {
-    return utils_1$2.toCommandValue(s)
-        .replace(/%/g, '%25')
-        .replace(/\r/g, '%0D')
-        .replace(/\n/g, '%0A')
-        .replace(/:/g, '%3A')
-        .replace(/,/g, '%2C');
+
+var hasRequiredCommand;
+
+function requireCommand () {
+	if (hasRequiredCommand) return command;
+	hasRequiredCommand = 1;
+	var __createBinding = (command && command.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+	}) : (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    o[k2] = m[k];
+	}));
+	var __setModuleDefault = (command && command.__setModuleDefault) || (Object.create ? (function(o, v) {
+	    Object.defineProperty(o, "default", { enumerable: true, value: v });
+	}) : function(o, v) {
+	    o["default"] = v;
+	});
+	var __importStar = (command && command.__importStar) || function (mod) {
+	    if (mod && mod.__esModule) return mod;
+	    var result = {};
+	    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+	    __setModuleDefault(result, mod);
+	    return result;
+	};
+	Object.defineProperty(command, "__esModule", { value: true });
+	command.issue = command.issueCommand = void 0;
+	const os = __importStar(require$$0);
+	const utils_1 = requireUtils$3();
+	/**
+	 * Commands
+	 *
+	 * Command Format:
+	 *   ::name key=value,key=value::message
+	 *
+	 * Examples:
+	 *   ::warning::This is the message
+	 *   ::set-env name=MY_VAR::some value
+	 */
+	function issueCommand(command, properties, message) {
+	    const cmd = new Command(command, properties, message);
+	    process.stdout.write(cmd.toString() + os.EOL);
+	}
+	command.issueCommand = issueCommand;
+	function issue(name, message = '') {
+	    issueCommand(name, {}, message);
+	}
+	command.issue = issue;
+	const CMD_STRING = '::';
+	class Command {
+	    constructor(command, properties, message) {
+	        if (!command) {
+	            command = 'missing.command';
+	        }
+	        this.command = command;
+	        this.properties = properties;
+	        this.message = message;
+	    }
+	    toString() {
+	        let cmdStr = CMD_STRING + this.command;
+	        if (this.properties && Object.keys(this.properties).length > 0) {
+	            cmdStr += ' ';
+	            let first = true;
+	            for (const key in this.properties) {
+	                if (this.properties.hasOwnProperty(key)) {
+	                    const val = this.properties[key];
+	                    if (val) {
+	                        if (first) {
+	                            first = false;
+	                        }
+	                        else {
+	                            cmdStr += ',';
+	                        }
+	                        cmdStr += `${key}=${escapeProperty(val)}`;
+	                    }
+	                }
+	            }
+	        }
+	        cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
+	        return cmdStr;
+	    }
+	}
+	function escapeData(s) {
+	    return utils_1.toCommandValue(s)
+	        .replace(/%/g, '%25')
+	        .replace(/\r/g, '%0D')
+	        .replace(/\n/g, '%0A');
+	}
+	function escapeProperty(s) {
+	    return utils_1.toCommandValue(s)
+	        .replace(/%/g, '%25')
+	        .replace(/\r/g, '%0D')
+	        .replace(/\n/g, '%0A')
+	        .replace(/:/g, '%3A')
+	        .replace(/,/g, '%2C');
+	}
+	
+	return command;
 }
 
 var fileCommand = {};
@@ -230,7 +246,7 @@ for (var i = 0; i < 256; ++i) {
   byteToHex.push((i + 0x100).toString(16).substr(1));
 }
 
-function stringify$1(arr) {
+function stringify(arr) {
   var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
   // Note: Be careful editing this code!  It's been tuned for performance
   // and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434
@@ -336,10 +352,10 @@ function v1(options, buf, offset) {
     b[i + n] = node[n];
   }
 
-  return buf || stringify$1(b);
+  return buf || stringify(b);
 }
 
-function parse$4(uuid) {
+function parse$2(uuid) {
   if (!validate(uuid)) {
     throw TypeError('Invalid UUID');
   }
@@ -384,7 +400,7 @@ function stringToBytes(str) {
 }
 
 var DNS = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
-var URL$2 = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
+var URL$1 = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
 function v35 (name, version, hashfunc) {
   function generateUUID(value, namespace, buf, offset) {
     if (typeof value === 'string') {
@@ -392,7 +408,7 @@ function v35 (name, version, hashfunc) {
     }
 
     if (typeof namespace === 'string') {
-      namespace = parse$4(namespace);
+      namespace = parse$2(namespace);
     }
 
     if (namespace.length !== 16) {
@@ -419,7 +435,7 @@ function v35 (name, version, hashfunc) {
       return buf;
     }
 
-    return stringify$1(bytes);
+    return stringify(bytes);
   } // Function#name is not settable on some platforms (#270)
 
 
@@ -429,7 +445,7 @@ function v35 (name, version, hashfunc) {
 
 
   generateUUID.DNS = DNS;
-  generateUUID.URL = URL$2;
+  generateUUID.URL = URL$1;
   return generateUUID;
 }
 
@@ -666,7 +682,7 @@ function v4(options, buf, offset) {
     return buf;
   }
 
-  return stringify$1(rnds);
+  return stringify(rnds);
 }
 
 // Adapted from Chris Veness' SHA1 code at
@@ -779,8 +795,8 @@ function version(uuid) {
 var esmBrowser = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	NIL: nil,
-	parse: parse$4,
-	stringify: stringify$1,
+	parse: parse$2,
+	stringify: stringify,
 	v1: v1,
 	v3: v3,
 	v4: v4,
@@ -791,62 +807,70 @@ var esmBrowser = /*#__PURE__*/Object.freeze({
 
 var require$$2 = /*@__PURE__*/getAugmentedNamespace(esmBrowser);
 
-// For internal use, subject to change.
-var __createBinding$3 = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault$3 = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar$3 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding$3(result, mod, k);
-    __setModuleDefault$3(result, mod);
-    return result;
-};
-Object.defineProperty(fileCommand, "__esModule", { value: true });
-fileCommand.prepareKeyValueMessage = fileCommand.issueFileCommand = void 0;
-// We use any as a valid input type
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const fs$1 = __importStar$3(require$$0$1);
-const os = __importStar$3(require$$0);
-const uuid_1 = require$$2;
-const utils_1$1 = utils$3;
-function issueFileCommand(command, message) {
-    const filePath = process.env[`GITHUB_${command}`];
-    if (!filePath) {
-        throw new Error(`Unable to find environment variable for file command ${command}`);
-    }
-    if (!fs$1.existsSync(filePath)) {
-        throw new Error(`Missing file at path: ${filePath}`);
-    }
-    fs$1.appendFileSync(filePath, `${utils_1$1.toCommandValue(message)}${os.EOL}`, {
-        encoding: 'utf8'
-    });
+var hasRequiredFileCommand;
+
+function requireFileCommand () {
+	if (hasRequiredFileCommand) return fileCommand;
+	hasRequiredFileCommand = 1;
+	// For internal use, subject to change.
+	var __createBinding = (fileCommand && fileCommand.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+	}) : (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    o[k2] = m[k];
+	}));
+	var __setModuleDefault = (fileCommand && fileCommand.__setModuleDefault) || (Object.create ? (function(o, v) {
+	    Object.defineProperty(o, "default", { enumerable: true, value: v });
+	}) : function(o, v) {
+	    o["default"] = v;
+	});
+	var __importStar = (fileCommand && fileCommand.__importStar) || function (mod) {
+	    if (mod && mod.__esModule) return mod;
+	    var result = {};
+	    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+	    __setModuleDefault(result, mod);
+	    return result;
+	};
+	Object.defineProperty(fileCommand, "__esModule", { value: true });
+	fileCommand.prepareKeyValueMessage = fileCommand.issueFileCommand = void 0;
+	// We use any as a valid input type
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+	const fs = __importStar(require$$0$1);
+	const os = __importStar(require$$0);
+	const uuid_1 = require$$2;
+	const utils_1 = requireUtils$3();
+	function issueFileCommand(command, message) {
+	    const filePath = process.env[`GITHUB_${command}`];
+	    if (!filePath) {
+	        throw new Error(`Unable to find environment variable for file command ${command}`);
+	    }
+	    if (!fs.existsSync(filePath)) {
+	        throw new Error(`Missing file at path: ${filePath}`);
+	    }
+	    fs.appendFileSync(filePath, `${utils_1.toCommandValue(message)}${os.EOL}`, {
+	        encoding: 'utf8'
+	    });
+	}
+	fileCommand.issueFileCommand = issueFileCommand;
+	function prepareKeyValueMessage(key, value) {
+	    const delimiter = `ghadelimiter_${uuid_1.v4()}`;
+	    const convertedValue = utils_1.toCommandValue(value);
+	    // These should realistically never happen, but just in case someone finds a
+	    // way to exploit uuid generation let's not allow keys or values that contain
+	    // the delimiter.
+	    if (key.includes(delimiter)) {
+	        throw new Error(`Unexpected input: name should not contain the delimiter "${delimiter}"`);
+	    }
+	    if (convertedValue.includes(delimiter)) {
+	        throw new Error(`Unexpected input: value should not contain the delimiter "${delimiter}"`);
+	    }
+	    return `${key}<<${delimiter}${os.EOL}${convertedValue}${os.EOL}${delimiter}`;
+	}
+	fileCommand.prepareKeyValueMessage = prepareKeyValueMessage;
+	
+	return fileCommand;
 }
-fileCommand.issueFileCommand = issueFileCommand;
-function prepareKeyValueMessage(key, value) {
-    const delimiter = `ghadelimiter_${uuid_1.v4()}`;
-    const convertedValue = utils_1$1.toCommandValue(value);
-    // These should realistically never happen, but just in case someone finds a
-    // way to exploit uuid generation let's not allow keys or values that contain
-    // the delimiter.
-    if (key.includes(delimiter)) {
-        throw new Error(`Unexpected input: name should not contain the delimiter "${delimiter}"`);
-    }
-    if (convertedValue.includes(delimiter)) {
-        throw new Error(`Unexpected input: value should not contain the delimiter "${delimiter}"`);
-    }
-    return `${key}<<${delimiter}${os.EOL}${convertedValue}${os.EOL}${delimiter}`;
-}
-fileCommand.prepareKeyValueMessage = prepareKeyValueMessage;
 
 var oidcUtils = {};
 
@@ -854,1380 +878,1447 @@ var lib$1 = {};
 
 var proxy = {};
 
-Object.defineProperty(proxy, "__esModule", { value: true });
-proxy.checkBypass = proxy.getProxyUrl = void 0;
-function getProxyUrl$1(reqUrl) {
-    const usingSsl = reqUrl.protocol === 'https:';
-    if (checkBypass(reqUrl)) {
-        return undefined;
-    }
-    const proxyVar = (() => {
-        if (usingSsl) {
-            return process.env['https_proxy'] || process.env['HTTPS_PROXY'];
-        }
-        else {
-            return process.env['http_proxy'] || process.env['HTTP_PROXY'];
-        }
-    })();
-    if (proxyVar) {
-        try {
-            return new URL(proxyVar);
-        }
-        catch (_a) {
-            if (!proxyVar.startsWith('http://') && !proxyVar.startsWith('https://'))
-                return new URL(`http://${proxyVar}`);
-        }
-    }
-    else {
-        return undefined;
-    }
-}
-proxy.getProxyUrl = getProxyUrl$1;
-function checkBypass(reqUrl) {
-    if (!reqUrl.hostname) {
-        return false;
-    }
-    const reqHost = reqUrl.hostname;
-    if (isLoopbackAddress(reqHost)) {
-        return true;
-    }
-    const noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
-    if (!noProxy) {
-        return false;
-    }
-    // Determine the request port
-    let reqPort;
-    if (reqUrl.port) {
-        reqPort = Number(reqUrl.port);
-    }
-    else if (reqUrl.protocol === 'http:') {
-        reqPort = 80;
-    }
-    else if (reqUrl.protocol === 'https:') {
-        reqPort = 443;
-    }
-    // Format the request hostname and hostname with port
-    const upperReqHosts = [reqUrl.hostname.toUpperCase()];
-    if (typeof reqPort === 'number') {
-        upperReqHosts.push(`${upperReqHosts[0]}:${reqPort}`);
-    }
-    // Compare request host against noproxy
-    for (const upperNoProxyItem of noProxy
-        .split(',')
-        .map(x => x.trim().toUpperCase())
-        .filter(x => x)) {
-        if (upperNoProxyItem === '*' ||
-            upperReqHosts.some(x => x === upperNoProxyItem ||
-                x.endsWith(`.${upperNoProxyItem}`) ||
-                (upperNoProxyItem.startsWith('.') &&
-                    x.endsWith(`${upperNoProxyItem}`)))) {
-            return true;
-        }
-    }
-    return false;
-}
-proxy.checkBypass = checkBypass;
-function isLoopbackAddress(host) {
-    const hostLower = host.toLowerCase();
-    return (hostLower === 'localhost' ||
-        hostLower.startsWith('127.') ||
-        hostLower.startsWith('[::1]') ||
-        hostLower.startsWith('[0:0:0:0:0:0:0:1]'));
-}
+var hasRequiredProxy;
 
-var tunnel$2 = {};
-
-var tls$1 = require$$1$1;
-var http$2 = require$$2$1;
-var https$1 = require$$3;
-var events$1 = require$$0$2;
-var util$k = require$$1;
-
-
-tunnel$2.httpOverHttp = httpOverHttp;
-tunnel$2.httpsOverHttp = httpsOverHttp;
-tunnel$2.httpOverHttps = httpOverHttps;
-tunnel$2.httpsOverHttps = httpsOverHttps;
-
-
-function httpOverHttp(options) {
-  var agent = new TunnelingAgent(options);
-  agent.request = http$2.request;
-  return agent;
+function requireProxy () {
+	if (hasRequiredProxy) return proxy;
+	hasRequiredProxy = 1;
+	Object.defineProperty(proxy, "__esModule", { value: true });
+	proxy.checkBypass = proxy.getProxyUrl = void 0;
+	function getProxyUrl(reqUrl) {
+	    const usingSsl = reqUrl.protocol === 'https:';
+	    if (checkBypass(reqUrl)) {
+	        return undefined;
+	    }
+	    const proxyVar = (() => {
+	        if (usingSsl) {
+	            return process.env['https_proxy'] || process.env['HTTPS_PROXY'];
+	        }
+	        else {
+	            return process.env['http_proxy'] || process.env['HTTP_PROXY'];
+	        }
+	    })();
+	    if (proxyVar) {
+	        try {
+	            return new URL(proxyVar);
+	        }
+	        catch (_a) {
+	            if (!proxyVar.startsWith('http://') && !proxyVar.startsWith('https://'))
+	                return new URL(`http://${proxyVar}`);
+	        }
+	    }
+	    else {
+	        return undefined;
+	    }
+	}
+	proxy.getProxyUrl = getProxyUrl;
+	function checkBypass(reqUrl) {
+	    if (!reqUrl.hostname) {
+	        return false;
+	    }
+	    const reqHost = reqUrl.hostname;
+	    if (isLoopbackAddress(reqHost)) {
+	        return true;
+	    }
+	    const noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
+	    if (!noProxy) {
+	        return false;
+	    }
+	    // Determine the request port
+	    let reqPort;
+	    if (reqUrl.port) {
+	        reqPort = Number(reqUrl.port);
+	    }
+	    else if (reqUrl.protocol === 'http:') {
+	        reqPort = 80;
+	    }
+	    else if (reqUrl.protocol === 'https:') {
+	        reqPort = 443;
+	    }
+	    // Format the request hostname and hostname with port
+	    const upperReqHosts = [reqUrl.hostname.toUpperCase()];
+	    if (typeof reqPort === 'number') {
+	        upperReqHosts.push(`${upperReqHosts[0]}:${reqPort}`);
+	    }
+	    // Compare request host against noproxy
+	    for (const upperNoProxyItem of noProxy
+	        .split(',')
+	        .map(x => x.trim().toUpperCase())
+	        .filter(x => x)) {
+	        if (upperNoProxyItem === '*' ||
+	            upperReqHosts.some(x => x === upperNoProxyItem ||
+	                x.endsWith(`.${upperNoProxyItem}`) ||
+	                (upperNoProxyItem.startsWith('.') &&
+	                    x.endsWith(`${upperNoProxyItem}`)))) {
+	            return true;
+	        }
+	    }
+	    return false;
+	}
+	proxy.checkBypass = checkBypass;
+	function isLoopbackAddress(host) {
+	    const hostLower = host.toLowerCase();
+	    return (hostLower === 'localhost' ||
+	        hostLower.startsWith('127.') ||
+	        hostLower.startsWith('[::1]') ||
+	        hostLower.startsWith('[0:0:0:0:0:0:0:1]'));
+	}
+	
+	return proxy;
 }
 
-function httpsOverHttp(options) {
-  var agent = new TunnelingAgent(options);
-  agent.request = http$2.request;
-  agent.createSocket = createSecureSocket;
-  agent.defaultPort = 443;
-  return agent;
+var tunnel$1 = {};
+
+var hasRequiredTunnel$1;
+
+function requireTunnel$1 () {
+	if (hasRequiredTunnel$1) return tunnel$1;
+	hasRequiredTunnel$1 = 1;
+	var tls = require$$1;
+	var http = require$$2$1;
+	var https = require$$3;
+	var events = require$$0$2;
+	var util = require$$1$1;
+
+
+	tunnel$1.httpOverHttp = httpOverHttp;
+	tunnel$1.httpsOverHttp = httpsOverHttp;
+	tunnel$1.httpOverHttps = httpOverHttps;
+	tunnel$1.httpsOverHttps = httpsOverHttps;
+
+
+	function httpOverHttp(options) {
+	  var agent = new TunnelingAgent(options);
+	  agent.request = http.request;
+	  return agent;
+	}
+
+	function httpsOverHttp(options) {
+	  var agent = new TunnelingAgent(options);
+	  agent.request = http.request;
+	  agent.createSocket = createSecureSocket;
+	  agent.defaultPort = 443;
+	  return agent;
+	}
+
+	function httpOverHttps(options) {
+	  var agent = new TunnelingAgent(options);
+	  agent.request = https.request;
+	  return agent;
+	}
+
+	function httpsOverHttps(options) {
+	  var agent = new TunnelingAgent(options);
+	  agent.request = https.request;
+	  agent.createSocket = createSecureSocket;
+	  agent.defaultPort = 443;
+	  return agent;
+	}
+
+
+	function TunnelingAgent(options) {
+	  var self = this;
+	  self.options = options || {};
+	  self.proxyOptions = self.options.proxy || {};
+	  self.maxSockets = self.options.maxSockets || http.Agent.defaultMaxSockets;
+	  self.requests = [];
+	  self.sockets = [];
+
+	  self.on('free', function onFree(socket, host, port, localAddress) {
+	    var options = toOptions(host, port, localAddress);
+	    for (var i = 0, len = self.requests.length; i < len; ++i) {
+	      var pending = self.requests[i];
+	      if (pending.host === options.host && pending.port === options.port) {
+	        // Detect the request to connect same origin server,
+	        // reuse the connection.
+	        self.requests.splice(i, 1);
+	        pending.request.onSocket(socket);
+	        return;
+	      }
+	    }
+	    socket.destroy();
+	    self.removeSocket(socket);
+	  });
+	}
+	util.inherits(TunnelingAgent, events.EventEmitter);
+
+	TunnelingAgent.prototype.addRequest = function addRequest(req, host, port, localAddress) {
+	  var self = this;
+	  var options = mergeOptions({request: req}, self.options, toOptions(host, port, localAddress));
+
+	  if (self.sockets.length >= this.maxSockets) {
+	    // We are over limit so we'll add it to the queue.
+	    self.requests.push(options);
+	    return;
+	  }
+
+	  // If we are under maxSockets create a new one.
+	  self.createSocket(options, function(socket) {
+	    socket.on('free', onFree);
+	    socket.on('close', onCloseOrRemove);
+	    socket.on('agentRemove', onCloseOrRemove);
+	    req.onSocket(socket);
+
+	    function onFree() {
+	      self.emit('free', socket, options);
+	    }
+
+	    function onCloseOrRemove(err) {
+	      self.removeSocket(socket);
+	      socket.removeListener('free', onFree);
+	      socket.removeListener('close', onCloseOrRemove);
+	      socket.removeListener('agentRemove', onCloseOrRemove);
+	    }
+	  });
+	};
+
+	TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
+	  var self = this;
+	  var placeholder = {};
+	  self.sockets.push(placeholder);
+
+	  var connectOptions = mergeOptions({}, self.proxyOptions, {
+	    method: 'CONNECT',
+	    path: options.host + ':' + options.port,
+	    agent: false,
+	    headers: {
+	      host: options.host + ':' + options.port
+	    }
+	  });
+	  if (options.localAddress) {
+	    connectOptions.localAddress = options.localAddress;
+	  }
+	  if (connectOptions.proxyAuth) {
+	    connectOptions.headers = connectOptions.headers || {};
+	    connectOptions.headers['Proxy-Authorization'] = 'Basic ' +
+	        new Buffer(connectOptions.proxyAuth).toString('base64');
+	  }
+
+	  debug('making CONNECT request');
+	  var connectReq = self.request(connectOptions);
+	  connectReq.useChunkedEncodingByDefault = false; // for v0.6
+	  connectReq.once('response', onResponse); // for v0.6
+	  connectReq.once('upgrade', onUpgrade);   // for v0.6
+	  connectReq.once('connect', onConnect);   // for v0.7 or later
+	  connectReq.once('error', onError);
+	  connectReq.end();
+
+	  function onResponse(res) {
+	    // Very hacky. This is necessary to avoid http-parser leaks.
+	    res.upgrade = true;
+	  }
+
+	  function onUpgrade(res, socket, head) {
+	    // Hacky.
+	    process.nextTick(function() {
+	      onConnect(res, socket, head);
+	    });
+	  }
+
+	  function onConnect(res, socket, head) {
+	    connectReq.removeAllListeners();
+	    socket.removeAllListeners();
+
+	    if (res.statusCode !== 200) {
+	      debug('tunneling socket could not be established, statusCode=%d',
+	        res.statusCode);
+	      socket.destroy();
+	      var error = new Error('tunneling socket could not be established, ' +
+	        'statusCode=' + res.statusCode);
+	      error.code = 'ECONNRESET';
+	      options.request.emit('error', error);
+	      self.removeSocket(placeholder);
+	      return;
+	    }
+	    if (head.length > 0) {
+	      debug('got illegal response body from proxy');
+	      socket.destroy();
+	      var error = new Error('got illegal response body from proxy');
+	      error.code = 'ECONNRESET';
+	      options.request.emit('error', error);
+	      self.removeSocket(placeholder);
+	      return;
+	    }
+	    debug('tunneling connection has established');
+	    self.sockets[self.sockets.indexOf(placeholder)] = socket;
+	    return cb(socket);
+	  }
+
+	  function onError(cause) {
+	    connectReq.removeAllListeners();
+
+	    debug('tunneling socket could not be established, cause=%s\n',
+	          cause.message, cause.stack);
+	    var error = new Error('tunneling socket could not be established, ' +
+	                          'cause=' + cause.message);
+	    error.code = 'ECONNRESET';
+	    options.request.emit('error', error);
+	    self.removeSocket(placeholder);
+	  }
+	};
+
+	TunnelingAgent.prototype.removeSocket = function removeSocket(socket) {
+	  var pos = this.sockets.indexOf(socket);
+	  if (pos === -1) {
+	    return;
+	  }
+	  this.sockets.splice(pos, 1);
+
+	  var pending = this.requests.shift();
+	  if (pending) {
+	    // If we have pending requests and a socket gets closed a new one
+	    // needs to be created to take over in the pool for the one that closed.
+	    this.createSocket(pending, function(socket) {
+	      pending.request.onSocket(socket);
+	    });
+	  }
+	};
+
+	function createSecureSocket(options, cb) {
+	  var self = this;
+	  TunnelingAgent.prototype.createSocket.call(self, options, function(socket) {
+	    var hostHeader = options.request.getHeader('host');
+	    var tlsOptions = mergeOptions({}, self.options, {
+	      socket: socket,
+	      servername: hostHeader ? hostHeader.replace(/:.*$/, '') : options.host
+	    });
+
+	    // 0 is dummy port for v0.6
+	    var secureSocket = tls.connect(0, tlsOptions);
+	    self.sockets[self.sockets.indexOf(socket)] = secureSocket;
+	    cb(secureSocket);
+	  });
+	}
+
+
+	function toOptions(host, port, localAddress) {
+	  if (typeof host === 'string') { // since v0.10
+	    return {
+	      host: host,
+	      port: port,
+	      localAddress: localAddress
+	    };
+	  }
+	  return host; // for v0.11 or later
+	}
+
+	function mergeOptions(target) {
+	  for (var i = 1, len = arguments.length; i < len; ++i) {
+	    var overrides = arguments[i];
+	    if (typeof overrides === 'object') {
+	      var keys = Object.keys(overrides);
+	      for (var j = 0, keyLen = keys.length; j < keyLen; ++j) {
+	        var k = keys[j];
+	        if (overrides[k] !== undefined) {
+	          target[k] = overrides[k];
+	        }
+	      }
+	    }
+	  }
+	  return target;
+	}
+
+
+	var debug;
+	if (process.env.NODE_DEBUG && /\btunnel\b/.test(process.env.NODE_DEBUG)) {
+	  debug = function() {
+	    var args = Array.prototype.slice.call(arguments);
+	    if (typeof args[0] === 'string') {
+	      args[0] = 'TUNNEL: ' + args[0];
+	    } else {
+	      args.unshift('TUNNEL:');
+	    }
+	    console.error.apply(console, args);
+	  };
+	} else {
+	  debug = function() {};
+	}
+	tunnel$1.debug = debug; // for test
+	return tunnel$1;
 }
 
-function httpOverHttps(options) {
-  var agent = new TunnelingAgent(options);
-  agent.request = https$1.request;
-  return agent;
+var tunnel;
+var hasRequiredTunnel;
+
+function requireTunnel () {
+	if (hasRequiredTunnel) return tunnel;
+	hasRequiredTunnel = 1;
+	tunnel = requireTunnel$1();
+	return tunnel;
 }
-
-function httpsOverHttps(options) {
-  var agent = new TunnelingAgent(options);
-  agent.request = https$1.request;
-  agent.createSocket = createSecureSocket;
-  agent.defaultPort = 443;
-  return agent;
-}
-
-
-function TunnelingAgent(options) {
-  var self = this;
-  self.options = options || {};
-  self.proxyOptions = self.options.proxy || {};
-  self.maxSockets = self.options.maxSockets || http$2.Agent.defaultMaxSockets;
-  self.requests = [];
-  self.sockets = [];
-
-  self.on('free', function onFree(socket, host, port, localAddress) {
-    var options = toOptions(host, port, localAddress);
-    for (var i = 0, len = self.requests.length; i < len; ++i) {
-      var pending = self.requests[i];
-      if (pending.host === options.host && pending.port === options.port) {
-        // Detect the request to connect same origin server,
-        // reuse the connection.
-        self.requests.splice(i, 1);
-        pending.request.onSocket(socket);
-        return;
-      }
-    }
-    socket.destroy();
-    self.removeSocket(socket);
-  });
-}
-util$k.inherits(TunnelingAgent, events$1.EventEmitter);
-
-TunnelingAgent.prototype.addRequest = function addRequest(req, host, port, localAddress) {
-  var self = this;
-  var options = mergeOptions({request: req}, self.options, toOptions(host, port, localAddress));
-
-  if (self.sockets.length >= this.maxSockets) {
-    // We are over limit so we'll add it to the queue.
-    self.requests.push(options);
-    return;
-  }
-
-  // If we are under maxSockets create a new one.
-  self.createSocket(options, function(socket) {
-    socket.on('free', onFree);
-    socket.on('close', onCloseOrRemove);
-    socket.on('agentRemove', onCloseOrRemove);
-    req.onSocket(socket);
-
-    function onFree() {
-      self.emit('free', socket, options);
-    }
-
-    function onCloseOrRemove(err) {
-      self.removeSocket(socket);
-      socket.removeListener('free', onFree);
-      socket.removeListener('close', onCloseOrRemove);
-      socket.removeListener('agentRemove', onCloseOrRemove);
-    }
-  });
-};
-
-TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
-  var self = this;
-  var placeholder = {};
-  self.sockets.push(placeholder);
-
-  var connectOptions = mergeOptions({}, self.proxyOptions, {
-    method: 'CONNECT',
-    path: options.host + ':' + options.port,
-    agent: false,
-    headers: {
-      host: options.host + ':' + options.port
-    }
-  });
-  if (options.localAddress) {
-    connectOptions.localAddress = options.localAddress;
-  }
-  if (connectOptions.proxyAuth) {
-    connectOptions.headers = connectOptions.headers || {};
-    connectOptions.headers['Proxy-Authorization'] = 'Basic ' +
-        new Buffer(connectOptions.proxyAuth).toString('base64');
-  }
-
-  debug('making CONNECT request');
-  var connectReq = self.request(connectOptions);
-  connectReq.useChunkedEncodingByDefault = false; // for v0.6
-  connectReq.once('response', onResponse); // for v0.6
-  connectReq.once('upgrade', onUpgrade);   // for v0.6
-  connectReq.once('connect', onConnect);   // for v0.7 or later
-  connectReq.once('error', onError);
-  connectReq.end();
-
-  function onResponse(res) {
-    // Very hacky. This is necessary to avoid http-parser leaks.
-    res.upgrade = true;
-  }
-
-  function onUpgrade(res, socket, head) {
-    // Hacky.
-    process.nextTick(function() {
-      onConnect(res, socket, head);
-    });
-  }
-
-  function onConnect(res, socket, head) {
-    connectReq.removeAllListeners();
-    socket.removeAllListeners();
-
-    if (res.statusCode !== 200) {
-      debug('tunneling socket could not be established, statusCode=%d',
-        res.statusCode);
-      socket.destroy();
-      var error = new Error('tunneling socket could not be established, ' +
-        'statusCode=' + res.statusCode);
-      error.code = 'ECONNRESET';
-      options.request.emit('error', error);
-      self.removeSocket(placeholder);
-      return;
-    }
-    if (head.length > 0) {
-      debug('got illegal response body from proxy');
-      socket.destroy();
-      var error = new Error('got illegal response body from proxy');
-      error.code = 'ECONNRESET';
-      options.request.emit('error', error);
-      self.removeSocket(placeholder);
-      return;
-    }
-    debug('tunneling connection has established');
-    self.sockets[self.sockets.indexOf(placeholder)] = socket;
-    return cb(socket);
-  }
-
-  function onError(cause) {
-    connectReq.removeAllListeners();
-
-    debug('tunneling socket could not be established, cause=%s\n',
-          cause.message, cause.stack);
-    var error = new Error('tunneling socket could not be established, ' +
-                          'cause=' + cause.message);
-    error.code = 'ECONNRESET';
-    options.request.emit('error', error);
-    self.removeSocket(placeholder);
-  }
-};
-
-TunnelingAgent.prototype.removeSocket = function removeSocket(socket) {
-  var pos = this.sockets.indexOf(socket);
-  if (pos === -1) {
-    return;
-  }
-  this.sockets.splice(pos, 1);
-
-  var pending = this.requests.shift();
-  if (pending) {
-    // If we have pending requests and a socket gets closed a new one
-    // needs to be created to take over in the pool for the one that closed.
-    this.createSocket(pending, function(socket) {
-      pending.request.onSocket(socket);
-    });
-  }
-};
-
-function createSecureSocket(options, cb) {
-  var self = this;
-  TunnelingAgent.prototype.createSocket.call(self, options, function(socket) {
-    var hostHeader = options.request.getHeader('host');
-    var tlsOptions = mergeOptions({}, self.options, {
-      socket: socket,
-      servername: hostHeader ? hostHeader.replace(/:.*$/, '') : options.host
-    });
-
-    // 0 is dummy port for v0.6
-    var secureSocket = tls$1.connect(0, tlsOptions);
-    self.sockets[self.sockets.indexOf(socket)] = secureSocket;
-    cb(secureSocket);
-  });
-}
-
-
-function toOptions(host, port, localAddress) {
-  if (typeof host === 'string') { // since v0.10
-    return {
-      host: host,
-      port: port,
-      localAddress: localAddress
-    };
-  }
-  return host; // for v0.11 or later
-}
-
-function mergeOptions(target) {
-  for (var i = 1, len = arguments.length; i < len; ++i) {
-    var overrides = arguments[i];
-    if (typeof overrides === 'object') {
-      var keys = Object.keys(overrides);
-      for (var j = 0, keyLen = keys.length; j < keyLen; ++j) {
-        var k = keys[j];
-        if (overrides[k] !== undefined) {
-          target[k] = overrides[k];
-        }
-      }
-    }
-  }
-  return target;
-}
-
-
-var debug;
-if (process.env.NODE_DEBUG && /\btunnel\b/.test(process.env.NODE_DEBUG)) {
-  debug = function() {
-    var args = Array.prototype.slice.call(arguments);
-    if (typeof args[0] === 'string') {
-      args[0] = 'TUNNEL: ' + args[0];
-    } else {
-      args.unshift('TUNNEL:');
-    }
-    console.error.apply(console, args);
-  };
-} else {
-  debug = function() {};
-}
-tunnel$2.debug = debug; // for test
-
-var tunnel$1 = tunnel$2;
 
 var undici = {};
 
-var symbols$4 = {
-  kClose: Symbol('close'),
-  kDestroy: Symbol('destroy'),
-  kDispatch: Symbol('dispatch'),
-  kUrl: Symbol('url'),
-  kWriting: Symbol('writing'),
-  kResuming: Symbol('resuming'),
-  kQueue: Symbol('queue'),
-  kConnect: Symbol('connect'),
-  kConnecting: Symbol('connecting'),
-  kHeadersList: Symbol('headers list'),
-  kKeepAliveDefaultTimeout: Symbol('default keep alive timeout'),
-  kKeepAliveMaxTimeout: Symbol('max keep alive timeout'),
-  kKeepAliveTimeoutThreshold: Symbol('keep alive timeout threshold'),
-  kKeepAliveTimeoutValue: Symbol('keep alive timeout'),
-  kKeepAlive: Symbol('keep alive'),
-  kHeadersTimeout: Symbol('headers timeout'),
-  kBodyTimeout: Symbol('body timeout'),
-  kServerName: Symbol('server name'),
-  kLocalAddress: Symbol('local address'),
-  kHost: Symbol('host'),
-  kNoRef: Symbol('no ref'),
-  kBodyUsed: Symbol('used'),
-  kRunning: Symbol('running'),
-  kBlocking: Symbol('blocking'),
-  kPending: Symbol('pending'),
-  kSize: Symbol('size'),
-  kBusy: Symbol('busy'),
-  kQueued: Symbol('queued'),
-  kFree: Symbol('free'),
-  kConnected: Symbol('connected'),
-  kClosed: Symbol('closed'),
-  kNeedDrain: Symbol('need drain'),
-  kReset: Symbol('reset'),
-  kDestroyed: Symbol.for('nodejs.stream.destroyed'),
-  kMaxHeadersSize: Symbol('max headers size'),
-  kRunningIdx: Symbol('running index'),
-  kPendingIdx: Symbol('pending index'),
-  kError: Symbol('error'),
-  kClients: Symbol('clients'),
-  kClient: Symbol('client'),
-  kParser: Symbol('parser'),
-  kOnDestroyed: Symbol('destroy callbacks'),
-  kPipelining: Symbol('pipelining'),
-  kSocket: Symbol('socket'),
-  kHostHeader: Symbol('host header'),
-  kConnector: Symbol('connector'),
-  kStrictContentLength: Symbol('strict content length'),
-  kMaxRedirections: Symbol('maxRedirections'),
-  kMaxRequests: Symbol('maxRequestsPerClient'),
-  kProxy: Symbol('proxy agent options'),
-  kCounter: Symbol('socket request counter'),
-  kInterceptors: Symbol('dispatch interceptors'),
-  kMaxResponseSize: Symbol('max response size'),
-  kHTTP2Session: Symbol('http2Session'),
-  kHTTP2SessionState: Symbol('http2Session state'),
-  kHTTP2BuildRequest: Symbol('http2 build request'),
-  kHTTP1BuildRequest: Symbol('http1 build request'),
-  kHTTP2CopyHeaders: Symbol('http2 copy headers'),
-  kHTTPConnVersion: Symbol('http connection version'),
-  kRetryHandlerDefaultRetry: Symbol('retry agent default retry'),
-  kConstruct: Symbol('constructable')
-};
+var symbols$4;
+var hasRequiredSymbols$4;
 
-let UndiciError$2 = class UndiciError extends Error {
-  constructor (message) {
-    super(message);
-    this.name = 'UndiciError';
-    this.code = 'UND_ERR';
-  }
-};
-
-let ConnectTimeoutError$1 = class ConnectTimeoutError extends UndiciError$2 {
-  constructor (message) {
-    super(message);
-    Error.captureStackTrace(this, ConnectTimeoutError);
-    this.name = 'ConnectTimeoutError';
-    this.message = message || 'Connect Timeout Error';
-    this.code = 'UND_ERR_CONNECT_TIMEOUT';
-  }
-};
-
-let HeadersTimeoutError$1 = class HeadersTimeoutError extends UndiciError$2 {
-  constructor (message) {
-    super(message);
-    Error.captureStackTrace(this, HeadersTimeoutError);
-    this.name = 'HeadersTimeoutError';
-    this.message = message || 'Headers Timeout Error';
-    this.code = 'UND_ERR_HEADERS_TIMEOUT';
-  }
-};
-
-let HeadersOverflowError$1 = class HeadersOverflowError extends UndiciError$2 {
-  constructor (message) {
-    super(message);
-    Error.captureStackTrace(this, HeadersOverflowError);
-    this.name = 'HeadersOverflowError';
-    this.message = message || 'Headers Overflow Error';
-    this.code = 'UND_ERR_HEADERS_OVERFLOW';
-  }
-};
-
-let BodyTimeoutError$1 = class BodyTimeoutError extends UndiciError$2 {
-  constructor (message) {
-    super(message);
-    Error.captureStackTrace(this, BodyTimeoutError);
-    this.name = 'BodyTimeoutError';
-    this.message = message || 'Body Timeout Error';
-    this.code = 'UND_ERR_BODY_TIMEOUT';
-  }
-};
-
-let ResponseStatusCodeError$1 = class ResponseStatusCodeError extends UndiciError$2 {
-  constructor (message, statusCode, headers, body) {
-    super(message);
-    Error.captureStackTrace(this, ResponseStatusCodeError);
-    this.name = 'ResponseStatusCodeError';
-    this.message = message || 'Response Status Code Error';
-    this.code = 'UND_ERR_RESPONSE_STATUS_CODE';
-    this.body = body;
-    this.status = statusCode;
-    this.statusCode = statusCode;
-    this.headers = headers;
-  }
-};
-
-let InvalidArgumentError$m = class InvalidArgumentError extends UndiciError$2 {
-  constructor (message) {
-    super(message);
-    Error.captureStackTrace(this, InvalidArgumentError);
-    this.name = 'InvalidArgumentError';
-    this.message = message || 'Invalid Argument Error';
-    this.code = 'UND_ERR_INVALID_ARG';
-  }
-};
-
-let InvalidReturnValueError$2 = class InvalidReturnValueError extends UndiciError$2 {
-  constructor (message) {
-    super(message);
-    Error.captureStackTrace(this, InvalidReturnValueError);
-    this.name = 'InvalidReturnValueError';
-    this.message = message || 'Invalid Return Value Error';
-    this.code = 'UND_ERR_INVALID_RETURN_VALUE';
-  }
-};
-
-let RequestAbortedError$9 = class RequestAbortedError extends UndiciError$2 {
-  constructor (message) {
-    super(message);
-    Error.captureStackTrace(this, RequestAbortedError);
-    this.name = 'AbortError';
-    this.message = message || 'Request aborted';
-    this.code = 'UND_ERR_ABORTED';
-  }
-};
-
-let InformationalError$1 = class InformationalError extends UndiciError$2 {
-  constructor (message) {
-    super(message);
-    Error.captureStackTrace(this, InformationalError);
-    this.name = 'InformationalError';
-    this.message = message || 'Request information';
-    this.code = 'UND_ERR_INFO';
-  }
-};
-
-let RequestContentLengthMismatchError$1 = class RequestContentLengthMismatchError extends UndiciError$2 {
-  constructor (message) {
-    super(message);
-    Error.captureStackTrace(this, RequestContentLengthMismatchError);
-    this.name = 'RequestContentLengthMismatchError';
-    this.message = message || 'Request body length does not match content-length header';
-    this.code = 'UND_ERR_REQ_CONTENT_LENGTH_MISMATCH';
-  }
-};
-
-let ResponseContentLengthMismatchError$1 = class ResponseContentLengthMismatchError extends UndiciError$2 {
-  constructor (message) {
-    super(message);
-    Error.captureStackTrace(this, ResponseContentLengthMismatchError);
-    this.name = 'ResponseContentLengthMismatchError';
-    this.message = message || 'Response body length does not match content-length header';
-    this.code = 'UND_ERR_RES_CONTENT_LENGTH_MISMATCH';
-  }
-};
-
-let ClientDestroyedError$2 = class ClientDestroyedError extends UndiciError$2 {
-  constructor (message) {
-    super(message);
-    Error.captureStackTrace(this, ClientDestroyedError);
-    this.name = 'ClientDestroyedError';
-    this.message = message || 'The client is destroyed';
-    this.code = 'UND_ERR_DESTROYED';
-  }
-};
-
-let ClientClosedError$1 = class ClientClosedError extends UndiciError$2 {
-  constructor (message) {
-    super(message);
-    Error.captureStackTrace(this, ClientClosedError);
-    this.name = 'ClientClosedError';
-    this.message = message || 'The client is closed';
-    this.code = 'UND_ERR_CLOSED';
-  }
-};
-
-let SocketError$3 = class SocketError extends UndiciError$2 {
-  constructor (message, socket) {
-    super(message);
-    Error.captureStackTrace(this, SocketError);
-    this.name = 'SocketError';
-    this.message = message || 'Socket error';
-    this.code = 'UND_ERR_SOCKET';
-    this.socket = socket;
-  }
-};
-
-let NotSupportedError$2 = class NotSupportedError extends UndiciError$2 {
-  constructor (message) {
-    super(message);
-    Error.captureStackTrace(this, NotSupportedError);
-    this.name = 'NotSupportedError';
-    this.message = message || 'Not supported error';
-    this.code = 'UND_ERR_NOT_SUPPORTED';
-  }
-};
-
-let BalancedPoolMissingUpstreamError$1 = class BalancedPoolMissingUpstreamError extends UndiciError$2 {
-  constructor (message) {
-    super(message);
-    Error.captureStackTrace(this, NotSupportedError$2);
-    this.name = 'MissingUpstreamError';
-    this.message = message || 'No upstream has been added to the BalancedPool';
-    this.code = 'UND_ERR_BPL_MISSING_UPSTREAM';
-  }
-};
-
-let HTTPParserError$1 = class HTTPParserError extends Error {
-  constructor (message, code, data) {
-    super(message);
-    Error.captureStackTrace(this, HTTPParserError);
-    this.name = 'HTTPParserError';
-    this.code = code ? `HPE_${code}` : undefined;
-    this.data = data ? data.toString() : undefined;
-  }
-};
-
-let ResponseExceededMaxSizeError$1 = class ResponseExceededMaxSizeError extends UndiciError$2 {
-  constructor (message) {
-    super(message);
-    Error.captureStackTrace(this, ResponseExceededMaxSizeError);
-    this.name = 'ResponseExceededMaxSizeError';
-    this.message = message || 'Response content exceeded max size';
-    this.code = 'UND_ERR_RES_EXCEEDED_MAX_SIZE';
-  }
-};
-
-let RequestRetryError$1 = class RequestRetryError extends UndiciError$2 {
-  constructor (message, code, { headers, data }) {
-    super(message);
-    Error.captureStackTrace(this, RequestRetryError);
-    this.name = 'RequestRetryError';
-    this.message = message || 'Request retry error';
-    this.code = 'UND_ERR_REQ_RETRY';
-    this.statusCode = code;
-    this.data = data;
-    this.headers = headers;
-  }
-};
-
-var errors$1 = {
-  HTTPParserError: HTTPParserError$1,
-  UndiciError: UndiciError$2,
-  HeadersTimeoutError: HeadersTimeoutError$1,
-  HeadersOverflowError: HeadersOverflowError$1,
-  BodyTimeoutError: BodyTimeoutError$1,
-  RequestContentLengthMismatchError: RequestContentLengthMismatchError$1,
-  ConnectTimeoutError: ConnectTimeoutError$1,
-  ResponseStatusCodeError: ResponseStatusCodeError$1,
-  InvalidArgumentError: InvalidArgumentError$m,
-  InvalidReturnValueError: InvalidReturnValueError$2,
-  RequestAbortedError: RequestAbortedError$9,
-  ClientDestroyedError: ClientDestroyedError$2,
-  ClientClosedError: ClientClosedError$1,
-  InformationalError: InformationalError$1,
-  SocketError: SocketError$3,
-  NotSupportedError: NotSupportedError$2,
-  ResponseContentLengthMismatchError: ResponseContentLengthMismatchError$1,
-  BalancedPoolMissingUpstreamError: BalancedPoolMissingUpstreamError$1,
-  ResponseExceededMaxSizeError: ResponseExceededMaxSizeError$1,
-  RequestRetryError: RequestRetryError$1
-};
-
-/** @type {Record<string, string | undefined>} */
-const headerNameLowerCasedRecord$1 = {};
-
-// https://developer.mozilla.org/docs/Web/HTTP/Headers
-const wellknownHeaderNames = [
-  'Accept',
-  'Accept-Encoding',
-  'Accept-Language',
-  'Accept-Ranges',
-  'Access-Control-Allow-Credentials',
-  'Access-Control-Allow-Headers',
-  'Access-Control-Allow-Methods',
-  'Access-Control-Allow-Origin',
-  'Access-Control-Expose-Headers',
-  'Access-Control-Max-Age',
-  'Access-Control-Request-Headers',
-  'Access-Control-Request-Method',
-  'Age',
-  'Allow',
-  'Alt-Svc',
-  'Alt-Used',
-  'Authorization',
-  'Cache-Control',
-  'Clear-Site-Data',
-  'Connection',
-  'Content-Disposition',
-  'Content-Encoding',
-  'Content-Language',
-  'Content-Length',
-  'Content-Location',
-  'Content-Range',
-  'Content-Security-Policy',
-  'Content-Security-Policy-Report-Only',
-  'Content-Type',
-  'Cookie',
-  'Cross-Origin-Embedder-Policy',
-  'Cross-Origin-Opener-Policy',
-  'Cross-Origin-Resource-Policy',
-  'Date',
-  'Device-Memory',
-  'Downlink',
-  'ECT',
-  'ETag',
-  'Expect',
-  'Expect-CT',
-  'Expires',
-  'Forwarded',
-  'From',
-  'Host',
-  'If-Match',
-  'If-Modified-Since',
-  'If-None-Match',
-  'If-Range',
-  'If-Unmodified-Since',
-  'Keep-Alive',
-  'Last-Modified',
-  'Link',
-  'Location',
-  'Max-Forwards',
-  'Origin',
-  'Permissions-Policy',
-  'Pragma',
-  'Proxy-Authenticate',
-  'Proxy-Authorization',
-  'RTT',
-  'Range',
-  'Referer',
-  'Referrer-Policy',
-  'Refresh',
-  'Retry-After',
-  'Sec-WebSocket-Accept',
-  'Sec-WebSocket-Extensions',
-  'Sec-WebSocket-Key',
-  'Sec-WebSocket-Protocol',
-  'Sec-WebSocket-Version',
-  'Server',
-  'Server-Timing',
-  'Service-Worker-Allowed',
-  'Service-Worker-Navigation-Preload',
-  'Set-Cookie',
-  'SourceMap',
-  'Strict-Transport-Security',
-  'Supports-Loading-Mode',
-  'TE',
-  'Timing-Allow-Origin',
-  'Trailer',
-  'Transfer-Encoding',
-  'Upgrade',
-  'Upgrade-Insecure-Requests',
-  'User-Agent',
-  'Vary',
-  'Via',
-  'WWW-Authenticate',
-  'X-Content-Type-Options',
-  'X-DNS-Prefetch-Control',
-  'X-Frame-Options',
-  'X-Permitted-Cross-Domain-Policies',
-  'X-Powered-By',
-  'X-Requested-With',
-  'X-XSS-Protection'
-];
-
-for (let i = 0; i < wellknownHeaderNames.length; ++i) {
-  const key = wellknownHeaderNames[i];
-  const lowerCasedKey = key.toLowerCase();
-  headerNameLowerCasedRecord$1[key] = headerNameLowerCasedRecord$1[lowerCasedKey] =
-    lowerCasedKey;
+function requireSymbols$4 () {
+	if (hasRequiredSymbols$4) return symbols$4;
+	hasRequiredSymbols$4 = 1;
+	symbols$4 = {
+	  kClose: Symbol('close'),
+	  kDestroy: Symbol('destroy'),
+	  kDispatch: Symbol('dispatch'),
+	  kUrl: Symbol('url'),
+	  kWriting: Symbol('writing'),
+	  kResuming: Symbol('resuming'),
+	  kQueue: Symbol('queue'),
+	  kConnect: Symbol('connect'),
+	  kConnecting: Symbol('connecting'),
+	  kHeadersList: Symbol('headers list'),
+	  kKeepAliveDefaultTimeout: Symbol('default keep alive timeout'),
+	  kKeepAliveMaxTimeout: Symbol('max keep alive timeout'),
+	  kKeepAliveTimeoutThreshold: Symbol('keep alive timeout threshold'),
+	  kKeepAliveTimeoutValue: Symbol('keep alive timeout'),
+	  kKeepAlive: Symbol('keep alive'),
+	  kHeadersTimeout: Symbol('headers timeout'),
+	  kBodyTimeout: Symbol('body timeout'),
+	  kServerName: Symbol('server name'),
+	  kLocalAddress: Symbol('local address'),
+	  kHost: Symbol('host'),
+	  kNoRef: Symbol('no ref'),
+	  kBodyUsed: Symbol('used'),
+	  kRunning: Symbol('running'),
+	  kBlocking: Symbol('blocking'),
+	  kPending: Symbol('pending'),
+	  kSize: Symbol('size'),
+	  kBusy: Symbol('busy'),
+	  kQueued: Symbol('queued'),
+	  kFree: Symbol('free'),
+	  kConnected: Symbol('connected'),
+	  kClosed: Symbol('closed'),
+	  kNeedDrain: Symbol('need drain'),
+	  kReset: Symbol('reset'),
+	  kDestroyed: Symbol.for('nodejs.stream.destroyed'),
+	  kMaxHeadersSize: Symbol('max headers size'),
+	  kRunningIdx: Symbol('running index'),
+	  kPendingIdx: Symbol('pending index'),
+	  kError: Symbol('error'),
+	  kClients: Symbol('clients'),
+	  kClient: Symbol('client'),
+	  kParser: Symbol('parser'),
+	  kOnDestroyed: Symbol('destroy callbacks'),
+	  kPipelining: Symbol('pipelining'),
+	  kSocket: Symbol('socket'),
+	  kHostHeader: Symbol('host header'),
+	  kConnector: Symbol('connector'),
+	  kStrictContentLength: Symbol('strict content length'),
+	  kMaxRedirections: Symbol('maxRedirections'),
+	  kMaxRequests: Symbol('maxRequestsPerClient'),
+	  kProxy: Symbol('proxy agent options'),
+	  kCounter: Symbol('socket request counter'),
+	  kInterceptors: Symbol('dispatch interceptors'),
+	  kMaxResponseSize: Symbol('max response size'),
+	  kHTTP2Session: Symbol('http2Session'),
+	  kHTTP2SessionState: Symbol('http2Session state'),
+	  kHTTP2BuildRequest: Symbol('http2 build request'),
+	  kHTTP1BuildRequest: Symbol('http1 build request'),
+	  kHTTP2CopyHeaders: Symbol('http2 copy headers'),
+	  kHTTPConnVersion: Symbol('http connection version'),
+	  kRetryHandlerDefaultRetry: Symbol('retry agent default retry'),
+	  kConstruct: Symbol('constructable')
+	};
+	return symbols$4;
 }
 
-// Note: object prototypes should not be able to be referenced. e.g. `Object#hasOwnProperty`.
-Object.setPrototypeOf(headerNameLowerCasedRecord$1, null);
+var errors;
+var hasRequiredErrors;
 
-var constants$5 = {
-  wellknownHeaderNames,
-  headerNameLowerCasedRecord: headerNameLowerCasedRecord$1
-};
+function requireErrors () {
+	if (hasRequiredErrors) return errors;
+	hasRequiredErrors = 1;
 
-const assert$9 = require$$0$3;
-const { kDestroyed: kDestroyed$1, kBodyUsed: kBodyUsed$1 } = symbols$4;
-const { IncomingMessage } = require$$2$1;
-const stream$1 = require$$0$4;
-const net$2 = require$$0$5;
-const { InvalidArgumentError: InvalidArgumentError$l } = errors$1;
-const { Blob: Blob$2 } = require$$7;
-const nodeUtil = require$$1;
-const { stringify } = require$$8;
-const { headerNameLowerCasedRecord } = constants$5;
+	class UndiciError extends Error {
+	  constructor (message) {
+	    super(message);
+	    this.name = 'UndiciError';
+	    this.code = 'UND_ERR';
+	  }
+	}
 
-const [nodeMajor, nodeMinor] = process.versions.node.split('.').map(v => Number(v));
+	class ConnectTimeoutError extends UndiciError {
+	  constructor (message) {
+	    super(message);
+	    Error.captureStackTrace(this, ConnectTimeoutError);
+	    this.name = 'ConnectTimeoutError';
+	    this.message = message || 'Connect Timeout Error';
+	    this.code = 'UND_ERR_CONNECT_TIMEOUT';
+	  }
+	}
 
-function nop$1 () {}
+	class HeadersTimeoutError extends UndiciError {
+	  constructor (message) {
+	    super(message);
+	    Error.captureStackTrace(this, HeadersTimeoutError);
+	    this.name = 'HeadersTimeoutError';
+	    this.message = message || 'Headers Timeout Error';
+	    this.code = 'UND_ERR_HEADERS_TIMEOUT';
+	  }
+	}
 
-function isStream (obj) {
-  return obj && typeof obj === 'object' && typeof obj.pipe === 'function' && typeof obj.on === 'function'
+	class HeadersOverflowError extends UndiciError {
+	  constructor (message) {
+	    super(message);
+	    Error.captureStackTrace(this, HeadersOverflowError);
+	    this.name = 'HeadersOverflowError';
+	    this.message = message || 'Headers Overflow Error';
+	    this.code = 'UND_ERR_HEADERS_OVERFLOW';
+	  }
+	}
+
+	class BodyTimeoutError extends UndiciError {
+	  constructor (message) {
+	    super(message);
+	    Error.captureStackTrace(this, BodyTimeoutError);
+	    this.name = 'BodyTimeoutError';
+	    this.message = message || 'Body Timeout Error';
+	    this.code = 'UND_ERR_BODY_TIMEOUT';
+	  }
+	}
+
+	class ResponseStatusCodeError extends UndiciError {
+	  constructor (message, statusCode, headers, body) {
+	    super(message);
+	    Error.captureStackTrace(this, ResponseStatusCodeError);
+	    this.name = 'ResponseStatusCodeError';
+	    this.message = message || 'Response Status Code Error';
+	    this.code = 'UND_ERR_RESPONSE_STATUS_CODE';
+	    this.body = body;
+	    this.status = statusCode;
+	    this.statusCode = statusCode;
+	    this.headers = headers;
+	  }
+	}
+
+	class InvalidArgumentError extends UndiciError {
+	  constructor (message) {
+	    super(message);
+	    Error.captureStackTrace(this, InvalidArgumentError);
+	    this.name = 'InvalidArgumentError';
+	    this.message = message || 'Invalid Argument Error';
+	    this.code = 'UND_ERR_INVALID_ARG';
+	  }
+	}
+
+	class InvalidReturnValueError extends UndiciError {
+	  constructor (message) {
+	    super(message);
+	    Error.captureStackTrace(this, InvalidReturnValueError);
+	    this.name = 'InvalidReturnValueError';
+	    this.message = message || 'Invalid Return Value Error';
+	    this.code = 'UND_ERR_INVALID_RETURN_VALUE';
+	  }
+	}
+
+	class RequestAbortedError extends UndiciError {
+	  constructor (message) {
+	    super(message);
+	    Error.captureStackTrace(this, RequestAbortedError);
+	    this.name = 'AbortError';
+	    this.message = message || 'Request aborted';
+	    this.code = 'UND_ERR_ABORTED';
+	  }
+	}
+
+	class InformationalError extends UndiciError {
+	  constructor (message) {
+	    super(message);
+	    Error.captureStackTrace(this, InformationalError);
+	    this.name = 'InformationalError';
+	    this.message = message || 'Request information';
+	    this.code = 'UND_ERR_INFO';
+	  }
+	}
+
+	class RequestContentLengthMismatchError extends UndiciError {
+	  constructor (message) {
+	    super(message);
+	    Error.captureStackTrace(this, RequestContentLengthMismatchError);
+	    this.name = 'RequestContentLengthMismatchError';
+	    this.message = message || 'Request body length does not match content-length header';
+	    this.code = 'UND_ERR_REQ_CONTENT_LENGTH_MISMATCH';
+	  }
+	}
+
+	class ResponseContentLengthMismatchError extends UndiciError {
+	  constructor (message) {
+	    super(message);
+	    Error.captureStackTrace(this, ResponseContentLengthMismatchError);
+	    this.name = 'ResponseContentLengthMismatchError';
+	    this.message = message || 'Response body length does not match content-length header';
+	    this.code = 'UND_ERR_RES_CONTENT_LENGTH_MISMATCH';
+	  }
+	}
+
+	class ClientDestroyedError extends UndiciError {
+	  constructor (message) {
+	    super(message);
+	    Error.captureStackTrace(this, ClientDestroyedError);
+	    this.name = 'ClientDestroyedError';
+	    this.message = message || 'The client is destroyed';
+	    this.code = 'UND_ERR_DESTROYED';
+	  }
+	}
+
+	class ClientClosedError extends UndiciError {
+	  constructor (message) {
+	    super(message);
+	    Error.captureStackTrace(this, ClientClosedError);
+	    this.name = 'ClientClosedError';
+	    this.message = message || 'The client is closed';
+	    this.code = 'UND_ERR_CLOSED';
+	  }
+	}
+
+	class SocketError extends UndiciError {
+	  constructor (message, socket) {
+	    super(message);
+	    Error.captureStackTrace(this, SocketError);
+	    this.name = 'SocketError';
+	    this.message = message || 'Socket error';
+	    this.code = 'UND_ERR_SOCKET';
+	    this.socket = socket;
+	  }
+	}
+
+	class NotSupportedError extends UndiciError {
+	  constructor (message) {
+	    super(message);
+	    Error.captureStackTrace(this, NotSupportedError);
+	    this.name = 'NotSupportedError';
+	    this.message = message || 'Not supported error';
+	    this.code = 'UND_ERR_NOT_SUPPORTED';
+	  }
+	}
+
+	class BalancedPoolMissingUpstreamError extends UndiciError {
+	  constructor (message) {
+	    super(message);
+	    Error.captureStackTrace(this, NotSupportedError);
+	    this.name = 'MissingUpstreamError';
+	    this.message = message || 'No upstream has been added to the BalancedPool';
+	    this.code = 'UND_ERR_BPL_MISSING_UPSTREAM';
+	  }
+	}
+
+	class HTTPParserError extends Error {
+	  constructor (message, code, data) {
+	    super(message);
+	    Error.captureStackTrace(this, HTTPParserError);
+	    this.name = 'HTTPParserError';
+	    this.code = code ? `HPE_${code}` : undefined;
+	    this.data = data ? data.toString() : undefined;
+	  }
+	}
+
+	class ResponseExceededMaxSizeError extends UndiciError {
+	  constructor (message) {
+	    super(message);
+	    Error.captureStackTrace(this, ResponseExceededMaxSizeError);
+	    this.name = 'ResponseExceededMaxSizeError';
+	    this.message = message || 'Response content exceeded max size';
+	    this.code = 'UND_ERR_RES_EXCEEDED_MAX_SIZE';
+	  }
+	}
+
+	class RequestRetryError extends UndiciError {
+	  constructor (message, code, { headers, data }) {
+	    super(message);
+	    Error.captureStackTrace(this, RequestRetryError);
+	    this.name = 'RequestRetryError';
+	    this.message = message || 'Request retry error';
+	    this.code = 'UND_ERR_REQ_RETRY';
+	    this.statusCode = code;
+	    this.data = data;
+	    this.headers = headers;
+	  }
+	}
+
+	errors = {
+	  HTTPParserError,
+	  UndiciError,
+	  HeadersTimeoutError,
+	  HeadersOverflowError,
+	  BodyTimeoutError,
+	  RequestContentLengthMismatchError,
+	  ConnectTimeoutError,
+	  ResponseStatusCodeError,
+	  InvalidArgumentError,
+	  InvalidReturnValueError,
+	  RequestAbortedError,
+	  ClientDestroyedError,
+	  ClientClosedError,
+	  InformationalError,
+	  SocketError,
+	  NotSupportedError,
+	  ResponseContentLengthMismatchError,
+	  BalancedPoolMissingUpstreamError,
+	  ResponseExceededMaxSizeError,
+	  RequestRetryError
+	};
+	return errors;
 }
 
-// based on https://github.com/node-fetch/fetch-blob/blob/8ab587d34080de94140b54f07168451e7d0b655e/index.js#L229-L241 (MIT License)
-function isBlobLike (object) {
-  return (Blob$2 && object instanceof Blob$2) || (
-    object &&
-    typeof object === 'object' &&
-    (typeof object.stream === 'function' ||
-      typeof object.arrayBuffer === 'function') &&
-    /^(Blob|File)$/.test(object[Symbol.toStringTag])
-  )
+var constants$4;
+var hasRequiredConstants$4;
+
+function requireConstants$4 () {
+	if (hasRequiredConstants$4) return constants$4;
+	hasRequiredConstants$4 = 1;
+
+	/** @type {Record<string, string | undefined>} */
+	const headerNameLowerCasedRecord = {};
+
+	// https://developer.mozilla.org/docs/Web/HTTP/Headers
+	const wellknownHeaderNames = [
+	  'Accept',
+	  'Accept-Encoding',
+	  'Accept-Language',
+	  'Accept-Ranges',
+	  'Access-Control-Allow-Credentials',
+	  'Access-Control-Allow-Headers',
+	  'Access-Control-Allow-Methods',
+	  'Access-Control-Allow-Origin',
+	  'Access-Control-Expose-Headers',
+	  'Access-Control-Max-Age',
+	  'Access-Control-Request-Headers',
+	  'Access-Control-Request-Method',
+	  'Age',
+	  'Allow',
+	  'Alt-Svc',
+	  'Alt-Used',
+	  'Authorization',
+	  'Cache-Control',
+	  'Clear-Site-Data',
+	  'Connection',
+	  'Content-Disposition',
+	  'Content-Encoding',
+	  'Content-Language',
+	  'Content-Length',
+	  'Content-Location',
+	  'Content-Range',
+	  'Content-Security-Policy',
+	  'Content-Security-Policy-Report-Only',
+	  'Content-Type',
+	  'Cookie',
+	  'Cross-Origin-Embedder-Policy',
+	  'Cross-Origin-Opener-Policy',
+	  'Cross-Origin-Resource-Policy',
+	  'Date',
+	  'Device-Memory',
+	  'Downlink',
+	  'ECT',
+	  'ETag',
+	  'Expect',
+	  'Expect-CT',
+	  'Expires',
+	  'Forwarded',
+	  'From',
+	  'Host',
+	  'If-Match',
+	  'If-Modified-Since',
+	  'If-None-Match',
+	  'If-Range',
+	  'If-Unmodified-Since',
+	  'Keep-Alive',
+	  'Last-Modified',
+	  'Link',
+	  'Location',
+	  'Max-Forwards',
+	  'Origin',
+	  'Permissions-Policy',
+	  'Pragma',
+	  'Proxy-Authenticate',
+	  'Proxy-Authorization',
+	  'RTT',
+	  'Range',
+	  'Referer',
+	  'Referrer-Policy',
+	  'Refresh',
+	  'Retry-After',
+	  'Sec-WebSocket-Accept',
+	  'Sec-WebSocket-Extensions',
+	  'Sec-WebSocket-Key',
+	  'Sec-WebSocket-Protocol',
+	  'Sec-WebSocket-Version',
+	  'Server',
+	  'Server-Timing',
+	  'Service-Worker-Allowed',
+	  'Service-Worker-Navigation-Preload',
+	  'Set-Cookie',
+	  'SourceMap',
+	  'Strict-Transport-Security',
+	  'Supports-Loading-Mode',
+	  'TE',
+	  'Timing-Allow-Origin',
+	  'Trailer',
+	  'Transfer-Encoding',
+	  'Upgrade',
+	  'Upgrade-Insecure-Requests',
+	  'User-Agent',
+	  'Vary',
+	  'Via',
+	  'WWW-Authenticate',
+	  'X-Content-Type-Options',
+	  'X-DNS-Prefetch-Control',
+	  'X-Frame-Options',
+	  'X-Permitted-Cross-Domain-Policies',
+	  'X-Powered-By',
+	  'X-Requested-With',
+	  'X-XSS-Protection'
+	];
+
+	for (let i = 0; i < wellknownHeaderNames.length; ++i) {
+	  const key = wellknownHeaderNames[i];
+	  const lowerCasedKey = key.toLowerCase();
+	  headerNameLowerCasedRecord[key] = headerNameLowerCasedRecord[lowerCasedKey] =
+	    lowerCasedKey;
+	}
+
+	// Note: object prototypes should not be able to be referenced. e.g. `Object#hasOwnProperty`.
+	Object.setPrototypeOf(headerNameLowerCasedRecord, null);
+
+	constants$4 = {
+	  wellknownHeaderNames,
+	  headerNameLowerCasedRecord
+	};
+	return constants$4;
 }
 
-function buildURL$2 (url, queryParams) {
-  if (url.includes('?') || url.includes('#')) {
-    throw new Error('Query params cannot be passed when url already contains "?" or "#".')
-  }
+var util$6;
+var hasRequiredUtil$6;
 
-  const stringified = stringify(queryParams);
+function requireUtil$6 () {
+	if (hasRequiredUtil$6) return util$6;
+	hasRequiredUtil$6 = 1;
 
-  if (stringified) {
-    url += '?' + stringified;
-  }
+	const assert = require$$0$3;
+	const { kDestroyed, kBodyUsed } = requireSymbols$4();
+	const { IncomingMessage } = require$$2$1;
+	const stream = require$$0$4;
+	const net = require$$0$5;
+	const { InvalidArgumentError } = requireErrors();
+	const { Blob } = require$$7;
+	const nodeUtil = require$$1$1;
+	const { stringify } = require$$8;
+	const { headerNameLowerCasedRecord } = requireConstants$4();
 
-  return url
+	const [nodeMajor, nodeMinor] = process.versions.node.split('.').map(v => Number(v));
+
+	function nop () {}
+
+	function isStream (obj) {
+	  return obj && typeof obj === 'object' && typeof obj.pipe === 'function' && typeof obj.on === 'function'
+	}
+
+	// based on https://github.com/node-fetch/fetch-blob/blob/8ab587d34080de94140b54f07168451e7d0b655e/index.js#L229-L241 (MIT License)
+	function isBlobLike (object) {
+	  return (Blob && object instanceof Blob) || (
+	    object &&
+	    typeof object === 'object' &&
+	    (typeof object.stream === 'function' ||
+	      typeof object.arrayBuffer === 'function') &&
+	    /^(Blob|File)$/.test(object[Symbol.toStringTag])
+	  )
+	}
+
+	function buildURL (url, queryParams) {
+	  if (url.includes('?') || url.includes('#')) {
+	    throw new Error('Query params cannot be passed when url already contains "?" or "#".')
+	  }
+
+	  const stringified = stringify(queryParams);
+
+	  if (stringified) {
+	    url += '?' + stringified;
+	  }
+
+	  return url
+	}
+
+	function parseURL (url) {
+	  if (typeof url === 'string') {
+	    url = new URL(url);
+
+	    if (!/^https?:/.test(url.origin || url.protocol)) {
+	      throw new InvalidArgumentError('Invalid URL protocol: the URL must start with `http:` or `https:`.')
+	    }
+
+	    return url
+	  }
+
+	  if (!url || typeof url !== 'object') {
+	    throw new InvalidArgumentError('Invalid URL: The URL argument must be a non-null object.')
+	  }
+
+	  if (!/^https?:/.test(url.origin || url.protocol)) {
+	    throw new InvalidArgumentError('Invalid URL protocol: the URL must start with `http:` or `https:`.')
+	  }
+
+	  if (!(url instanceof URL)) {
+	    if (url.port != null && url.port !== '' && !Number.isFinite(parseInt(url.port))) {
+	      throw new InvalidArgumentError('Invalid URL: port must be a valid integer or a string representation of an integer.')
+	    }
+
+	    if (url.path != null && typeof url.path !== 'string') {
+	      throw new InvalidArgumentError('Invalid URL path: the path must be a string or null/undefined.')
+	    }
+
+	    if (url.pathname != null && typeof url.pathname !== 'string') {
+	      throw new InvalidArgumentError('Invalid URL pathname: the pathname must be a string or null/undefined.')
+	    }
+
+	    if (url.hostname != null && typeof url.hostname !== 'string') {
+	      throw new InvalidArgumentError('Invalid URL hostname: the hostname must be a string or null/undefined.')
+	    }
+
+	    if (url.origin != null && typeof url.origin !== 'string') {
+	      throw new InvalidArgumentError('Invalid URL origin: the origin must be a string or null/undefined.')
+	    }
+
+	    const port = url.port != null
+	      ? url.port
+	      : (url.protocol === 'https:' ? 443 : 80);
+	    let origin = url.origin != null
+	      ? url.origin
+	      : `${url.protocol}//${url.hostname}:${port}`;
+	    let path = url.path != null
+	      ? url.path
+	      : `${url.pathname || ''}${url.search || ''}`;
+
+	    if (origin.endsWith('/')) {
+	      origin = origin.substring(0, origin.length - 1);
+	    }
+
+	    if (path && !path.startsWith('/')) {
+	      path = `/${path}`;
+	    }
+	    // new URL(path, origin) is unsafe when `path` contains an absolute URL
+	    // From https://developer.mozilla.org/en-US/docs/Web/API/URL/URL:
+	    // If first parameter is a relative URL, second param is required, and will be used as the base URL.
+	    // If first parameter is an absolute URL, a given second param will be ignored.
+	    url = new URL(origin + path);
+	  }
+
+	  return url
+	}
+
+	function parseOrigin (url) {
+	  url = parseURL(url);
+
+	  if (url.pathname !== '/' || url.search || url.hash) {
+	    throw new InvalidArgumentError('invalid url')
+	  }
+
+	  return url
+	}
+
+	function getHostname (host) {
+	  if (host[0] === '[') {
+	    const idx = host.indexOf(']');
+
+	    assert(idx !== -1);
+	    return host.substring(1, idx)
+	  }
+
+	  const idx = host.indexOf(':');
+	  if (idx === -1) return host
+
+	  return host.substring(0, idx)
+	}
+
+	// IP addresses are not valid server names per RFC6066
+	// > Currently, the only server names supported are DNS hostnames
+	function getServerName (host) {
+	  if (!host) {
+	    return null
+	  }
+
+	  assert.strictEqual(typeof host, 'string');
+
+	  const servername = getHostname(host);
+	  if (net.isIP(servername)) {
+	    return ''
+	  }
+
+	  return servername
+	}
+
+	function deepClone (obj) {
+	  return JSON.parse(JSON.stringify(obj))
+	}
+
+	function isAsyncIterable (obj) {
+	  return !!(obj != null && typeof obj[Symbol.asyncIterator] === 'function')
+	}
+
+	function isIterable (obj) {
+	  return !!(obj != null && (typeof obj[Symbol.iterator] === 'function' || typeof obj[Symbol.asyncIterator] === 'function'))
+	}
+
+	function bodyLength (body) {
+	  if (body == null) {
+	    return 0
+	  } else if (isStream(body)) {
+	    const state = body._readableState;
+	    return state && state.objectMode === false && state.ended === true && Number.isFinite(state.length)
+	      ? state.length
+	      : null
+	  } else if (isBlobLike(body)) {
+	    return body.size != null ? body.size : null
+	  } else if (isBuffer(body)) {
+	    return body.byteLength
+	  }
+
+	  return null
+	}
+
+	function isDestroyed (stream) {
+	  return !stream || !!(stream.destroyed || stream[kDestroyed])
+	}
+
+	function isReadableAborted (stream) {
+	  const state = stream && stream._readableState;
+	  return isDestroyed(stream) && state && !state.endEmitted
+	}
+
+	function destroy (stream, err) {
+	  if (stream == null || !isStream(stream) || isDestroyed(stream)) {
+	    return
+	  }
+
+	  if (typeof stream.destroy === 'function') {
+	    if (Object.getPrototypeOf(stream).constructor === IncomingMessage) {
+	      // See: https://github.com/nodejs/node/pull/38505/files
+	      stream.socket = null;
+	    }
+
+	    stream.destroy(err);
+	  } else if (err) {
+	    process.nextTick((stream, err) => {
+	      stream.emit('error', err);
+	    }, stream, err);
+	  }
+
+	  if (stream.destroyed !== true) {
+	    stream[kDestroyed] = true;
+	  }
+	}
+
+	const KEEPALIVE_TIMEOUT_EXPR = /timeout=(\d+)/;
+	function parseKeepAliveTimeout (val) {
+	  const m = val.toString().match(KEEPALIVE_TIMEOUT_EXPR);
+	  return m ? parseInt(m[1], 10) * 1000 : null
+	}
+
+	/**
+	 * Retrieves a header name and returns its lowercase value.
+	 * @param {string | Buffer} value Header name
+	 * @returns {string}
+	 */
+	function headerNameToString (value) {
+	  return headerNameLowerCasedRecord[value] || value.toLowerCase()
+	}
+
+	function parseHeaders (headers, obj = {}) {
+	  // For H2 support
+	  if (!Array.isArray(headers)) return headers
+
+	  for (let i = 0; i < headers.length; i += 2) {
+	    const key = headers[i].toString().toLowerCase();
+	    let val = obj[key];
+
+	    if (!val) {
+	      if (Array.isArray(headers[i + 1])) {
+	        obj[key] = headers[i + 1].map(x => x.toString('utf8'));
+	      } else {
+	        obj[key] = headers[i + 1].toString('utf8');
+	      }
+	    } else {
+	      if (!Array.isArray(val)) {
+	        val = [val];
+	        obj[key] = val;
+	      }
+	      val.push(headers[i + 1].toString('utf8'));
+	    }
+	  }
+
+	  // See https://github.com/nodejs/node/pull/46528
+	  if ('content-length' in obj && 'content-disposition' in obj) {
+	    obj['content-disposition'] = Buffer.from(obj['content-disposition']).toString('latin1');
+	  }
+
+	  return obj
+	}
+
+	function parseRawHeaders (headers) {
+	  const ret = [];
+	  let hasContentLength = false;
+	  let contentDispositionIdx = -1;
+
+	  for (let n = 0; n < headers.length; n += 2) {
+	    const key = headers[n + 0].toString();
+	    const val = headers[n + 1].toString('utf8');
+
+	    if (key.length === 14 && (key === 'content-length' || key.toLowerCase() === 'content-length')) {
+	      ret.push(key, val);
+	      hasContentLength = true;
+	    } else if (key.length === 19 && (key === 'content-disposition' || key.toLowerCase() === 'content-disposition')) {
+	      contentDispositionIdx = ret.push(key, val) - 1;
+	    } else {
+	      ret.push(key, val);
+	    }
+	  }
+
+	  // See https://github.com/nodejs/node/pull/46528
+	  if (hasContentLength && contentDispositionIdx !== -1) {
+	    ret[contentDispositionIdx] = Buffer.from(ret[contentDispositionIdx]).toString('latin1');
+	  }
+
+	  return ret
+	}
+
+	function isBuffer (buffer) {
+	  // See, https://github.com/mcollina/undici/pull/319
+	  return buffer instanceof Uint8Array || Buffer.isBuffer(buffer)
+	}
+
+	function validateHandler (handler, method, upgrade) {
+	  if (!handler || typeof handler !== 'object') {
+	    throw new InvalidArgumentError('handler must be an object')
+	  }
+
+	  if (typeof handler.onConnect !== 'function') {
+	    throw new InvalidArgumentError('invalid onConnect method')
+	  }
+
+	  if (typeof handler.onError !== 'function') {
+	    throw new InvalidArgumentError('invalid onError method')
+	  }
+
+	  if (typeof handler.onBodySent !== 'function' && handler.onBodySent !== undefined) {
+	    throw new InvalidArgumentError('invalid onBodySent method')
+	  }
+
+	  if (upgrade || method === 'CONNECT') {
+	    if (typeof handler.onUpgrade !== 'function') {
+	      throw new InvalidArgumentError('invalid onUpgrade method')
+	    }
+	  } else {
+	    if (typeof handler.onHeaders !== 'function') {
+	      throw new InvalidArgumentError('invalid onHeaders method')
+	    }
+
+	    if (typeof handler.onData !== 'function') {
+	      throw new InvalidArgumentError('invalid onData method')
+	    }
+
+	    if (typeof handler.onComplete !== 'function') {
+	      throw new InvalidArgumentError('invalid onComplete method')
+	    }
+	  }
+	}
+
+	// A body is disturbed if it has been read from and it cannot
+	// be re-used without losing state or data.
+	function isDisturbed (body) {
+	  return !!(body && (
+	    stream.isDisturbed
+	      ? stream.isDisturbed(body) || body[kBodyUsed] // TODO (fix): Why is body[kBodyUsed] needed?
+	      : body[kBodyUsed] ||
+	        body.readableDidRead ||
+	        (body._readableState && body._readableState.dataEmitted) ||
+	        isReadableAborted(body)
+	  ))
+	}
+
+	function isErrored (body) {
+	  return !!(body && (
+	    stream.isErrored
+	      ? stream.isErrored(body)
+	      : /state: 'errored'/.test(nodeUtil.inspect(body)
+	      )))
+	}
+
+	function isReadable (body) {
+	  return !!(body && (
+	    stream.isReadable
+	      ? stream.isReadable(body)
+	      : /state: 'readable'/.test(nodeUtil.inspect(body)
+	      )))
+	}
+
+	function getSocketInfo (socket) {
+	  return {
+	    localAddress: socket.localAddress,
+	    localPort: socket.localPort,
+	    remoteAddress: socket.remoteAddress,
+	    remotePort: socket.remotePort,
+	    remoteFamily: socket.remoteFamily,
+	    timeout: socket.timeout,
+	    bytesWritten: socket.bytesWritten,
+	    bytesRead: socket.bytesRead
+	  }
+	}
+
+	async function * convertIterableToBuffer (iterable) {
+	  for await (const chunk of iterable) {
+	    yield Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+	  }
+	}
+
+	let ReadableStream;
+	function ReadableStreamFrom (iterable) {
+	  if (!ReadableStream) {
+	    ReadableStream = require$$13.ReadableStream;
+	  }
+
+	  if (ReadableStream.from) {
+	    return ReadableStream.from(convertIterableToBuffer(iterable))
+	  }
+
+	  let iterator;
+	  return new ReadableStream(
+	    {
+	      async start () {
+	        iterator = iterable[Symbol.asyncIterator]();
+	      },
+	      async pull (controller) {
+	        const { done, value } = await iterator.next();
+	        if (done) {
+	          queueMicrotask(() => {
+	            controller.close();
+	          });
+	        } else {
+	          const buf = Buffer.isBuffer(value) ? value : Buffer.from(value);
+	          controller.enqueue(new Uint8Array(buf));
+	        }
+	        return controller.desiredSize > 0
+	      },
+	      async cancel (reason) {
+	        await iterator.return();
+	      }
+	    },
+	    0
+	  )
+	}
+
+	// The chunk should be a FormData instance and contains
+	// all the required methods.
+	function isFormDataLike (object) {
+	  return (
+	    object &&
+	    typeof object === 'object' &&
+	    typeof object.append === 'function' &&
+	    typeof object.delete === 'function' &&
+	    typeof object.get === 'function' &&
+	    typeof object.getAll === 'function' &&
+	    typeof object.has === 'function' &&
+	    typeof object.set === 'function' &&
+	    object[Symbol.toStringTag] === 'FormData'
+	  )
+	}
+
+	function throwIfAborted (signal) {
+	  if (!signal) { return }
+	  if (typeof signal.throwIfAborted === 'function') {
+	    signal.throwIfAborted();
+	  } else {
+	    if (signal.aborted) {
+	      // DOMException not available < v17.0.0
+	      const err = new Error('The operation was aborted');
+	      err.name = 'AbortError';
+	      throw err
+	    }
+	  }
+	}
+
+	function addAbortListener (signal, listener) {
+	  if ('addEventListener' in signal) {
+	    signal.addEventListener('abort', listener, { once: true });
+	    return () => signal.removeEventListener('abort', listener)
+	  }
+	  signal.addListener('abort', listener);
+	  return () => signal.removeListener('abort', listener)
+	}
+
+	const hasToWellFormed = !!String.prototype.toWellFormed;
+
+	/**
+	 * @param {string} val
+	 */
+	function toUSVString (val) {
+	  if (hasToWellFormed) {
+	    return `${val}`.toWellFormed()
+	  } else if (nodeUtil.toUSVString) {
+	    return nodeUtil.toUSVString(val)
+	  }
+
+	  return `${val}`
+	}
+
+	// Parsed accordingly to RFC 9110
+	// https://www.rfc-editor.org/rfc/rfc9110#field.content-range
+	function parseRangeHeader (range) {
+	  if (range == null || range === '') return { start: 0, end: null, size: null }
+
+	  const m = range ? range.match(/^bytes (\d+)-(\d+)\/(\d+)?$/) : null;
+	  return m
+	    ? {
+	        start: parseInt(m[1]),
+	        end: m[2] ? parseInt(m[2]) : null,
+	        size: m[3] ? parseInt(m[3]) : null
+	      }
+	    : null
+	}
+
+	const kEnumerableProperty = Object.create(null);
+	kEnumerableProperty.enumerable = true;
+
+	util$6 = {
+	  kEnumerableProperty,
+	  nop,
+	  isDisturbed,
+	  isErrored,
+	  isReadable,
+	  toUSVString,
+	  isReadableAborted,
+	  isBlobLike,
+	  parseOrigin,
+	  parseURL,
+	  getServerName,
+	  isStream,
+	  isIterable,
+	  isAsyncIterable,
+	  isDestroyed,
+	  headerNameToString,
+	  parseRawHeaders,
+	  parseHeaders,
+	  parseKeepAliveTimeout,
+	  destroy,
+	  bodyLength,
+	  deepClone,
+	  ReadableStreamFrom,
+	  isBuffer,
+	  validateHandler,
+	  getSocketInfo,
+	  isFormDataLike,
+	  buildURL,
+	  throwIfAborted,
+	  addAbortListener,
+	  parseRangeHeader,
+	  nodeMajor,
+	  nodeMinor,
+	  nodeHasAutoSelectFamily: nodeMajor > 18 || (nodeMajor === 18 && nodeMinor >= 13),
+	  safeHTTPMethods: ['GET', 'HEAD', 'OPTIONS', 'TRACE']
+	};
+	return util$6;
 }
 
-function parseURL (url) {
-  if (typeof url === 'string') {
-    url = new URL(url);
+var timers;
+var hasRequiredTimers;
 
-    if (!/^https?:/.test(url.origin || url.protocol)) {
-      throw new InvalidArgumentError$l('Invalid URL protocol: the URL must start with `http:` or `https:`.')
-    }
+function requireTimers () {
+	if (hasRequiredTimers) return timers;
+	hasRequiredTimers = 1;
 
-    return url
-  }
+	let fastNow = Date.now();
+	let fastNowTimeout;
 
-  if (!url || typeof url !== 'object') {
-    throw new InvalidArgumentError$l('Invalid URL: The URL argument must be a non-null object.')
-  }
+	const fastTimers = [];
 
-  if (!/^https?:/.test(url.origin || url.protocol)) {
-    throw new InvalidArgumentError$l('Invalid URL protocol: the URL must start with `http:` or `https:`.')
-  }
+	function onTimeout () {
+	  fastNow = Date.now();
 
-  if (!(url instanceof URL)) {
-    if (url.port != null && url.port !== '' && !Number.isFinite(parseInt(url.port))) {
-      throw new InvalidArgumentError$l('Invalid URL: port must be a valid integer or a string representation of an integer.')
-    }
+	  let len = fastTimers.length;
+	  let idx = 0;
+	  while (idx < len) {
+	    const timer = fastTimers[idx];
 
-    if (url.path != null && typeof url.path !== 'string') {
-      throw new InvalidArgumentError$l('Invalid URL path: the path must be a string or null/undefined.')
-    }
+	    if (timer.state === 0) {
+	      timer.state = fastNow + timer.delay;
+	    } else if (timer.state > 0 && fastNow >= timer.state) {
+	      timer.state = -1;
+	      timer.callback(timer.opaque);
+	    }
 
-    if (url.pathname != null && typeof url.pathname !== 'string') {
-      throw new InvalidArgumentError$l('Invalid URL pathname: the pathname must be a string or null/undefined.')
-    }
+	    if (timer.state === -1) {
+	      timer.state = -2;
+	      if (idx !== len - 1) {
+	        fastTimers[idx] = fastTimers.pop();
+	      } else {
+	        fastTimers.pop();
+	      }
+	      len -= 1;
+	    } else {
+	      idx += 1;
+	    }
+	  }
 
-    if (url.hostname != null && typeof url.hostname !== 'string') {
-      throw new InvalidArgumentError$l('Invalid URL hostname: the hostname must be a string or null/undefined.')
-    }
+	  if (fastTimers.length > 0) {
+	    refreshTimeout();
+	  }
+	}
 
-    if (url.origin != null && typeof url.origin !== 'string') {
-      throw new InvalidArgumentError$l('Invalid URL origin: the origin must be a string or null/undefined.')
-    }
+	function refreshTimeout () {
+	  if (fastNowTimeout && fastNowTimeout.refresh) {
+	    fastNowTimeout.refresh();
+	  } else {
+	    clearTimeout(fastNowTimeout);
+	    fastNowTimeout = setTimeout(onTimeout, 1e3);
+	    if (fastNowTimeout.unref) {
+	      fastNowTimeout.unref();
+	    }
+	  }
+	}
 
-    const port = url.port != null
-      ? url.port
-      : (url.protocol === 'https:' ? 443 : 80);
-    let origin = url.origin != null
-      ? url.origin
-      : `${url.protocol}//${url.hostname}:${port}`;
-    let path = url.path != null
-      ? url.path
-      : `${url.pathname || ''}${url.search || ''}`;
+	class Timeout {
+	  constructor (callback, delay, opaque) {
+	    this.callback = callback;
+	    this.delay = delay;
+	    this.opaque = opaque;
 
-    if (origin.endsWith('/')) {
-      origin = origin.substring(0, origin.length - 1);
-    }
+	    //  -2 not in timer list
+	    //  -1 in timer list but inactive
+	    //   0 in timer list waiting for time
+	    // > 0 in timer list waiting for time to expire
+	    this.state = -2;
 
-    if (path && !path.startsWith('/')) {
-      path = `/${path}`;
-    }
-    // new URL(path, origin) is unsafe when `path` contains an absolute URL
-    // From https://developer.mozilla.org/en-US/docs/Web/API/URL/URL:
-    // If first parameter is a relative URL, second param is required, and will be used as the base URL.
-    // If first parameter is an absolute URL, a given second param will be ignored.
-    url = new URL(origin + path);
-  }
+	    this.refresh();
+	  }
 
-  return url
+	  refresh () {
+	    if (this.state === -2) {
+	      fastTimers.push(this);
+	      if (!fastNowTimeout || fastTimers.length === 1) {
+	        refreshTimeout();
+	      }
+	    }
+
+	    this.state = 0;
+	  }
+
+	  clear () {
+	    this.state = -1;
+	  }
+	}
+
+	timers = {
+	  setTimeout (callback, delay, opaque) {
+	    return delay < 1e3
+	      ? setTimeout(callback, delay, opaque)
+	      : new Timeout(callback, delay, opaque)
+	  },
+	  clearTimeout (timeout) {
+	    if (timeout instanceof Timeout) {
+	      timeout.clear();
+	    } else {
+	      clearTimeout(timeout);
+	    }
+	  }
+	};
+	return timers;
 }
-
-function parseOrigin$1 (url) {
-  url = parseURL(url);
-
-  if (url.pathname !== '/' || url.search || url.hash) {
-    throw new InvalidArgumentError$l('invalid url')
-  }
-
-  return url
-}
-
-function getHostname (host) {
-  if (host[0] === '[') {
-    const idx = host.indexOf(']');
-
-    assert$9(idx !== -1);
-    return host.substring(1, idx)
-  }
-
-  const idx = host.indexOf(':');
-  if (idx === -1) return host
-
-  return host.substring(0, idx)
-}
-
-// IP addresses are not valid server names per RFC6066
-// > Currently, the only server names supported are DNS hostnames
-function getServerName (host) {
-  if (!host) {
-    return null
-  }
-
-  assert$9.strictEqual(typeof host, 'string');
-
-  const servername = getHostname(host);
-  if (net$2.isIP(servername)) {
-    return ''
-  }
-
-  return servername
-}
-
-function deepClone (obj) {
-  return JSON.parse(JSON.stringify(obj))
-}
-
-function isAsyncIterable (obj) {
-  return !!(obj != null && typeof obj[Symbol.asyncIterator] === 'function')
-}
-
-function isIterable (obj) {
-  return !!(obj != null && (typeof obj[Symbol.iterator] === 'function' || typeof obj[Symbol.asyncIterator] === 'function'))
-}
-
-function bodyLength (body) {
-  if (body == null) {
-    return 0
-  } else if (isStream(body)) {
-    const state = body._readableState;
-    return state && state.objectMode === false && state.ended === true && Number.isFinite(state.length)
-      ? state.length
-      : null
-  } else if (isBlobLike(body)) {
-    return body.size != null ? body.size : null
-  } else if (isBuffer(body)) {
-    return body.byteLength
-  }
-
-  return null
-}
-
-function isDestroyed (stream) {
-  return !stream || !!(stream.destroyed || stream[kDestroyed$1])
-}
-
-function isReadableAborted (stream) {
-  const state = stream && stream._readableState;
-  return isDestroyed(stream) && state && !state.endEmitted
-}
-
-function destroy (stream, err) {
-  if (stream == null || !isStream(stream) || isDestroyed(stream)) {
-    return
-  }
-
-  if (typeof stream.destroy === 'function') {
-    if (Object.getPrototypeOf(stream).constructor === IncomingMessage) {
-      // See: https://github.com/nodejs/node/pull/38505/files
-      stream.socket = null;
-    }
-
-    stream.destroy(err);
-  } else if (err) {
-    process.nextTick((stream, err) => {
-      stream.emit('error', err);
-    }, stream, err);
-  }
-
-  if (stream.destroyed !== true) {
-    stream[kDestroyed$1] = true;
-  }
-}
-
-const KEEPALIVE_TIMEOUT_EXPR = /timeout=(\d+)/;
-function parseKeepAliveTimeout (val) {
-  const m = val.toString().match(KEEPALIVE_TIMEOUT_EXPR);
-  return m ? parseInt(m[1], 10) * 1000 : null
-}
-
-/**
- * Retrieves a header name and returns its lowercase value.
- * @param {string | Buffer} value Header name
- * @returns {string}
- */
-function headerNameToString (value) {
-  return headerNameLowerCasedRecord[value] || value.toLowerCase()
-}
-
-function parseHeaders$1 (headers, obj = {}) {
-  // For H2 support
-  if (!Array.isArray(headers)) return headers
-
-  for (let i = 0; i < headers.length; i += 2) {
-    const key = headers[i].toString().toLowerCase();
-    let val = obj[key];
-
-    if (!val) {
-      if (Array.isArray(headers[i + 1])) {
-        obj[key] = headers[i + 1].map(x => x.toString('utf8'));
-      } else {
-        obj[key] = headers[i + 1].toString('utf8');
-      }
-    } else {
-      if (!Array.isArray(val)) {
-        val = [val];
-        obj[key] = val;
-      }
-      val.push(headers[i + 1].toString('utf8'));
-    }
-  }
-
-  // See https://github.com/nodejs/node/pull/46528
-  if ('content-length' in obj && 'content-disposition' in obj) {
-    obj['content-disposition'] = Buffer.from(obj['content-disposition']).toString('latin1');
-  }
-
-  return obj
-}
-
-function parseRawHeaders (headers) {
-  const ret = [];
-  let hasContentLength = false;
-  let contentDispositionIdx = -1;
-
-  for (let n = 0; n < headers.length; n += 2) {
-    const key = headers[n + 0].toString();
-    const val = headers[n + 1].toString('utf8');
-
-    if (key.length === 14 && (key === 'content-length' || key.toLowerCase() === 'content-length')) {
-      ret.push(key, val);
-      hasContentLength = true;
-    } else if (key.length === 19 && (key === 'content-disposition' || key.toLowerCase() === 'content-disposition')) {
-      contentDispositionIdx = ret.push(key, val) - 1;
-    } else {
-      ret.push(key, val);
-    }
-  }
-
-  // See https://github.com/nodejs/node/pull/46528
-  if (hasContentLength && contentDispositionIdx !== -1) {
-    ret[contentDispositionIdx] = Buffer.from(ret[contentDispositionIdx]).toString('latin1');
-  }
-
-  return ret
-}
-
-function isBuffer (buffer) {
-  // See, https://github.com/mcollina/undici/pull/319
-  return buffer instanceof Uint8Array || Buffer.isBuffer(buffer)
-}
-
-function validateHandler (handler, method, upgrade) {
-  if (!handler || typeof handler !== 'object') {
-    throw new InvalidArgumentError$l('handler must be an object')
-  }
-
-  if (typeof handler.onConnect !== 'function') {
-    throw new InvalidArgumentError$l('invalid onConnect method')
-  }
-
-  if (typeof handler.onError !== 'function') {
-    throw new InvalidArgumentError$l('invalid onError method')
-  }
-
-  if (typeof handler.onBodySent !== 'function' && handler.onBodySent !== undefined) {
-    throw new InvalidArgumentError$l('invalid onBodySent method')
-  }
-
-  if (upgrade || method === 'CONNECT') {
-    if (typeof handler.onUpgrade !== 'function') {
-      throw new InvalidArgumentError$l('invalid onUpgrade method')
-    }
-  } else {
-    if (typeof handler.onHeaders !== 'function') {
-      throw new InvalidArgumentError$l('invalid onHeaders method')
-    }
-
-    if (typeof handler.onData !== 'function') {
-      throw new InvalidArgumentError$l('invalid onData method')
-    }
-
-    if (typeof handler.onComplete !== 'function') {
-      throw new InvalidArgumentError$l('invalid onComplete method')
-    }
-  }
-}
-
-// A body is disturbed if it has been read from and it cannot
-// be re-used without losing state or data.
-function isDisturbed$1 (body) {
-  return !!(body && (
-    stream$1.isDisturbed
-      ? stream$1.isDisturbed(body) || body[kBodyUsed$1] // TODO (fix): Why is body[kBodyUsed] needed?
-      : body[kBodyUsed$1] ||
-        body.readableDidRead ||
-        (body._readableState && body._readableState.dataEmitted) ||
-        isReadableAborted(body)
-  ))
-}
-
-function isErrored (body) {
-  return !!(body && (
-    stream$1.isErrored
-      ? stream$1.isErrored(body)
-      : /state: 'errored'/.test(nodeUtil.inspect(body)
-      )))
-}
-
-function isReadable (body) {
-  return !!(body && (
-    stream$1.isReadable
-      ? stream$1.isReadable(body)
-      : /state: 'readable'/.test(nodeUtil.inspect(body)
-      )))
-}
-
-function getSocketInfo (socket) {
-  return {
-    localAddress: socket.localAddress,
-    localPort: socket.localPort,
-    remoteAddress: socket.remoteAddress,
-    remotePort: socket.remotePort,
-    remoteFamily: socket.remoteFamily,
-    timeout: socket.timeout,
-    bytesWritten: socket.bytesWritten,
-    bytesRead: socket.bytesRead
-  }
-}
-
-async function * convertIterableToBuffer (iterable) {
-  for await (const chunk of iterable) {
-    yield Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-  }
-}
-
-let ReadableStream;
-function ReadableStreamFrom$1 (iterable) {
-  if (!ReadableStream) {
-    ReadableStream = require$$13.ReadableStream;
-  }
-
-  if (ReadableStream.from) {
-    return ReadableStream.from(convertIterableToBuffer(iterable))
-  }
-
-  let iterator;
-  return new ReadableStream(
-    {
-      async start () {
-        iterator = iterable[Symbol.asyncIterator]();
-      },
-      async pull (controller) {
-        const { done, value } = await iterator.next();
-        if (done) {
-          queueMicrotask(() => {
-            controller.close();
-          });
-        } else {
-          const buf = Buffer.isBuffer(value) ? value : Buffer.from(value);
-          controller.enqueue(new Uint8Array(buf));
-        }
-        return controller.desiredSize > 0
-      },
-      async cancel (reason) {
-        await iterator.return();
-      }
-    },
-    0
-  )
-}
-
-// The chunk should be a FormData instance and contains
-// all the required methods.
-function isFormDataLike (object) {
-  return (
-    object &&
-    typeof object === 'object' &&
-    typeof object.append === 'function' &&
-    typeof object.delete === 'function' &&
-    typeof object.get === 'function' &&
-    typeof object.getAll === 'function' &&
-    typeof object.has === 'function' &&
-    typeof object.set === 'function' &&
-    object[Symbol.toStringTag] === 'FormData'
-  )
-}
-
-function throwIfAborted (signal) {
-  if (!signal) { return }
-  if (typeof signal.throwIfAborted === 'function') {
-    signal.throwIfAborted();
-  } else {
-    if (signal.aborted) {
-      // DOMException not available < v17.0.0
-      const err = new Error('The operation was aborted');
-      err.name = 'AbortError';
-      throw err
-    }
-  }
-}
-
-function addAbortListener$1 (signal, listener) {
-  if ('addEventListener' in signal) {
-    signal.addEventListener('abort', listener, { once: true });
-    return () => signal.removeEventListener('abort', listener)
-  }
-  signal.addListener('abort', listener);
-  return () => signal.removeListener('abort', listener)
-}
-
-const hasToWellFormed = !!String.prototype.toWellFormed;
-
-/**
- * @param {string} val
- */
-function toUSVString$2 (val) {
-  if (hasToWellFormed) {
-    return `${val}`.toWellFormed()
-  } else if (nodeUtil.toUSVString) {
-    return nodeUtil.toUSVString(val)
-  }
-
-  return `${val}`
-}
-
-// Parsed accordingly to RFC 9110
-// https://www.rfc-editor.org/rfc/rfc9110#field.content-range
-function parseRangeHeader$1 (range) {
-  if (range == null || range === '') return { start: 0, end: null, size: null }
-
-  const m = range ? range.match(/^bytes (\d+)-(\d+)\/(\d+)?$/) : null;
-  return m
-    ? {
-        start: parseInt(m[1]),
-        end: m[2] ? parseInt(m[2]) : null,
-        size: m[3] ? parseInt(m[3]) : null
-      }
-    : null
-}
-
-const kEnumerableProperty = Object.create(null);
-kEnumerableProperty.enumerable = true;
-
-var util$j = {
-  kEnumerableProperty,
-  nop: nop$1,
-  isDisturbed: isDisturbed$1,
-  isErrored,
-  isReadable,
-  toUSVString: toUSVString$2,
-  isReadableAborted,
-  isBlobLike,
-  parseOrigin: parseOrigin$1,
-  parseURL,
-  getServerName,
-  isStream,
-  isIterable,
-  isAsyncIterable,
-  isDestroyed,
-  headerNameToString,
-  parseRawHeaders,
-  parseHeaders: parseHeaders$1,
-  parseKeepAliveTimeout,
-  destroy,
-  bodyLength,
-  deepClone,
-  ReadableStreamFrom: ReadableStreamFrom$1,
-  isBuffer,
-  validateHandler,
-  getSocketInfo,
-  isFormDataLike,
-  buildURL: buildURL$2,
-  throwIfAborted,
-  addAbortListener: addAbortListener$1,
-  parseRangeHeader: parseRangeHeader$1,
-  nodeMajor,
-  nodeMinor,
-  nodeHasAutoSelectFamily: nodeMajor > 18 || (nodeMajor === 18 && nodeMinor >= 13),
-  safeHTTPMethods: ['GET', 'HEAD', 'OPTIONS', 'TRACE']
-};
-
-let fastNow = Date.now();
-let fastNowTimeout;
-
-const fastTimers = [];
-
-function onTimeout () {
-  fastNow = Date.now();
-
-  let len = fastTimers.length;
-  let idx = 0;
-  while (idx < len) {
-    const timer = fastTimers[idx];
-
-    if (timer.state === 0) {
-      timer.state = fastNow + timer.delay;
-    } else if (timer.state > 0 && fastNow >= timer.state) {
-      timer.state = -1;
-      timer.callback(timer.opaque);
-    }
-
-    if (timer.state === -1) {
-      timer.state = -2;
-      if (idx !== len - 1) {
-        fastTimers[idx] = fastTimers.pop();
-      } else {
-        fastTimers.pop();
-      }
-      len -= 1;
-    } else {
-      idx += 1;
-    }
-  }
-
-  if (fastTimers.length > 0) {
-    refreshTimeout();
-  }
-}
-
-function refreshTimeout () {
-  if (fastNowTimeout && fastNowTimeout.refresh) {
-    fastNowTimeout.refresh();
-  } else {
-    clearTimeout(fastNowTimeout);
-    fastNowTimeout = setTimeout(onTimeout, 1e3);
-    if (fastNowTimeout.unref) {
-      fastNowTimeout.unref();
-    }
-  }
-}
-
-class Timeout {
-  constructor (callback, delay, opaque) {
-    this.callback = callback;
-    this.delay = delay;
-    this.opaque = opaque;
-
-    //  -2 not in timer list
-    //  -1 in timer list but inactive
-    //   0 in timer list waiting for time
-    // > 0 in timer list waiting for time to expire
-    this.state = -2;
-
-    this.refresh();
-  }
-
-  refresh () {
-    if (this.state === -2) {
-      fastTimers.push(this);
-      if (!fastNowTimeout || fastTimers.length === 1) {
-        refreshTimeout();
-      }
-    }
-
-    this.state = 0;
-  }
-
-  clear () {
-    this.state = -1;
-  }
-}
-
-var timers$1 = {
-  setTimeout (callback, delay, opaque) {
-    return delay < 1e3
-      ? setTimeout(callback, delay, opaque)
-      : new Timeout(callback, delay, opaque)
-  },
-  clearTimeout (timeout) {
-    if (timeout instanceof Timeout) {
-      timeout.clear();
-    } else {
-      clearTimeout(timeout);
-    }
-  }
-};
 
 var main$1 = {exports: {}};
 
@@ -2265,7 +2356,7 @@ function requireSbmh () {
 	 * by Hongli Lai at: https://github.com/FooBarWidget/boyer-moore-horspool
 	 */
 	const EventEmitter = require$$0$2.EventEmitter;
-	const inherits = require$$1.inherits;
+	const inherits = require$$1$1.inherits;
 
 	function SBMH (needle) {
 	  if (typeof needle === 'string') {
@@ -2474,7 +2565,7 @@ function requirePartStream () {
 	if (hasRequiredPartStream) return PartStream_1;
 	hasRequiredPartStream = 1;
 
-	const inherits = require$$1.inherits;
+	const inherits = require$$1$1.inherits;
 	const ReadableStream = require$$0$4.Readable;
 
 	function PartStream (opts) {
@@ -2520,7 +2611,7 @@ function requireHeaderParser () {
 	hasRequiredHeaderParser = 1;
 
 	const EventEmitter = require$$0$2.EventEmitter;
-	const inherits = require$$1.inherits;
+	const inherits = require$$1$1.inherits;
 	const getLimit = requireGetLimit();
 
 	const StreamSearch = requireSbmh();
@@ -2628,7 +2719,7 @@ function requireDicer () {
 	hasRequiredDicer = 1;
 
 	const WritableStream = require$$0$4.Writable;
-	const inherits = require$$1.inherits;
+	const inherits = require$$1$1.inherits;
 
 	const StreamSearch = requireSbmh();
 
@@ -3001,7 +3092,7 @@ function requireMultipart () {
 	//     -- this will require modifications to utils.parseParams
 
 	const { Readable } = require$$0$4;
-	const { inherits } = require$$1;
+	const { inherits } = require$$1$1;
 
 	const Dicer = requireDicer();
 
@@ -3567,7 +3658,7 @@ function requireMain () {
 	hasRequiredMain = 1;
 
 	const WritableStream = require$$0$4.Writable;
-	const { inherits } = require$$1;
+	const { inherits } = require$$1$1;
 	const Dicer = requireDicer();
 
 	const MultipartParser = requireMultipart();
@@ -3652,11 +3743,11 @@ function requireMain () {
 	return main$1.exports;
 }
 
-var constants$4;
+var constants$3;
 var hasRequiredConstants$3;
 
 function requireConstants$3 () {
-	if (hasRequiredConstants$3) return constants$4;
+	if (hasRequiredConstants$3) return constants$3;
 	hasRequiredConstants$3 = 1;
 
 	const { MessageChannel, receiveMessageOnPort } = require$$0$6;
@@ -3783,7 +3874,7 @@ function requireConstants$3 () {
 	    return receiveMessageOnPort(channel.port2).message
 	  };
 
-	constants$4 = {
+	constants$3 = {
 	  DOMException,
 	  structuredClone,
 	  subresource,
@@ -3808,15 +3899,15 @@ function requireConstants$3 () {
 	  forbiddenMethodsSet,
 	  referrerPolicySet
 	};
-	return constants$4;
+	return constants$3;
 }
 
 var global$2;
-var hasRequiredGlobal;
+var hasRequiredGlobal$1;
 
-function requireGlobal () {
-	if (hasRequiredGlobal) return global$2;
-	hasRequiredGlobal = 1;
+function requireGlobal$1 () {
+	if (hasRequiredGlobal$1) return global$2;
+	hasRequiredGlobal$1 = 1;
 
 	// In case of breaking changes, increase the version
 	// number to avoid conflicts.
@@ -3859,17 +3950,17 @@ function requireGlobal () {
 	return global$2;
 }
 
-var util$i;
-var hasRequiredUtil$4;
+var util$5;
+var hasRequiredUtil$5;
 
-function requireUtil$4 () {
-	if (hasRequiredUtil$4) return util$i;
-	hasRequiredUtil$4 = 1;
+function requireUtil$5 () {
+	if (hasRequiredUtil$5) return util$5;
+	hasRequiredUtil$5 = 1;
 
 	const { redirectStatusSet, referrerPolicySet: referrerPolicyTokens, badPortsSet } = requireConstants$3();
-	const { getGlobalOrigin } = requireGlobal();
+	const { getGlobalOrigin } = requireGlobal$1();
 	const { performance } = require$$2$2;
-	const { isBlobLike, toUSVString, ReadableStreamFrom } = util$j;
+	const { isBlobLike, toUSVString, ReadableStreamFrom } = requireUtil$6();
 	const assert = require$$0$3;
 	const { isUint8Array } = require$$5;
 
@@ -4960,7 +5051,7 @@ function requireUtil$4 () {
 	 */
 	const hasOwn = Object.hasOwn || ((dict, key) => Object.prototype.hasOwnProperty.call(dict, key));
 
-	util$i = {
+	util$5 = {
 	  isAborted,
 	  isCancelled,
 	  createDeferredPromise,
@@ -5007,7 +5098,7 @@ function requireUtil$4 () {
 	  normalizeMethodRecord,
 	  parseMetadata
 	};
-	return util$i;
+	return util$5;
 }
 
 var symbols$3;
@@ -5035,8 +5126,8 @@ function requireWebidl () {
 	if (hasRequiredWebidl) return webidl_1;
 	hasRequiredWebidl = 1;
 
-	const { types } = require$$1;
-	const { hasOwn, toUSVString } = requireUtil$4();
+	const { types } = require$$1$1;
+	const { hasOwn, toUSVString } = requireUtil$5();
 
 	/** @type {import('../../types/webidl').Webidl} */
 	const webidl = {};
@@ -5690,7 +5781,7 @@ function requireDataURL () {
 	hasRequiredDataURL = 1;
 	const assert = require$$0$3;
 	const { atob } = require$$7;
-	const { isomorphicDecode } = requireUtil$4();
+	const { isomorphicDecode } = requireUtil$5();
 
 	const encoder = new TextEncoder();
 
@@ -6326,12 +6417,12 @@ function requireFile () {
 	hasRequiredFile = 1;
 
 	const { Blob, File: NativeFile } = require$$7;
-	const { types } = require$$1;
+	const { types } = require$$1$1;
 	const { kState } = requireSymbols$3();
-	const { isBlobLike } = requireUtil$4();
+	const { isBlobLike } = requireUtil$5();
 	const { webidl } = requireWebidl();
 	const { parseMIMEType, serializeAMimeType } = requireDataURL();
-	const { kEnumerableProperty } = util$j;
+	const { kEnumerableProperty } = requireUtil$6();
 	const encoder = new TextEncoder();
 
 	class File extends Blob {
@@ -6677,7 +6768,7 @@ function requireFormdata () {
 	if (hasRequiredFormdata) return formdata;
 	hasRequiredFormdata = 1;
 
-	const { isBlobLike, toUSVString, makeIterator } = requireUtil$4();
+	const { isBlobLike, toUSVString, makeIterator } = requireUtil$5();
 	const { kState } = requireSymbols$3();
 	const { File: UndiciFile, FileLike, isFileLike } = requireFile();
 	const { webidl } = requireWebidl();
@@ -6951,7 +7042,7 @@ function requireBody () {
 	hasRequiredBody = 1;
 
 	const Busboy = requireMain();
-	const util = util$j;
+	const util = requireUtil$6();
 	const {
 	  ReadableStreamFrom,
 	  isBlobLike,
@@ -6959,15 +7050,15 @@ function requireBody () {
 	  readableStreamClose,
 	  createDeferredPromise,
 	  fullyReadBody
-	} = requireUtil$4();
+	} = requireUtil$5();
 	const { FormData } = requireFormdata();
 	const { kState } = requireSymbols$3();
 	const { webidl } = requireWebidl();
 	const { DOMException, structuredClone } = requireConstants$3();
 	const { Blob, File: NativeFile } = require$$7;
-	const { kBodyUsed } = symbols$4;
+	const { kBodyUsed } = requireSymbols$4();
 	const assert = require$$0$3;
-	const { isErrored } = util$j;
+	const { isErrored } = requireUtil$6();
 	const { isUint8Array, isArrayBuffer } = require$$5;
 	const { File: UndiciFile } = requireFile();
 	const { parseMIMEType, serializeAMimeType } = requireDataURL();
@@ -7556,910 +7647,946 @@ function requireBody () {
 	return body;
 }
 
-const {
-  InvalidArgumentError: InvalidArgumentError$k,
-  NotSupportedError: NotSupportedError$1
-} = errors$1;
-const assert$8 = require$$0$3;
-const { kHTTP2BuildRequest: kHTTP2BuildRequest$1, kHTTP2CopyHeaders: kHTTP2CopyHeaders$1, kHTTP1BuildRequest: kHTTP1BuildRequest$1 } = symbols$4;
-const util$h = util$j;
+var request$1;
+var hasRequiredRequest$1;
 
-// tokenRegExp and headerCharRegex have been lifted from
-// https://github.com/nodejs/node/blob/main/lib/_http_common.js
+function requireRequest$1 () {
+	if (hasRequiredRequest$1) return request$1;
+	hasRequiredRequest$1 = 1;
 
-/**
- * Verifies that the given val is a valid HTTP token
- * per the rules defined in RFC 7230
- * See https://tools.ietf.org/html/rfc7230#section-3.2.6
- */
-const tokenRegExp = /^[\^_`a-zA-Z\-0-9!#$%&'*+.|~]+$/;
+	const {
+	  InvalidArgumentError,
+	  NotSupportedError
+	} = requireErrors();
+	const assert = require$$0$3;
+	const { kHTTP2BuildRequest, kHTTP2CopyHeaders, kHTTP1BuildRequest } = requireSymbols$4();
+	const util = requireUtil$6();
 
-/**
- * Matches if val contains an invalid field-vchar
- *  field-value    = *( field-content / obs-fold )
- *  field-content  = field-vchar [ 1*( SP / HTAB ) field-vchar ]
- *  field-vchar    = VCHAR / obs-text
- */
-const headerCharRegex = /[^\t\x20-\x7e\x80-\xff]/;
+	// tokenRegExp and headerCharRegex have been lifted from
+	// https://github.com/nodejs/node/blob/main/lib/_http_common.js
 
-// Verifies that a given path is valid does not contain control chars \x00 to \x20
-const invalidPathRegex = /[^\u0021-\u00ff]/;
+	/**
+	 * Verifies that the given val is a valid HTTP token
+	 * per the rules defined in RFC 7230
+	 * See https://tools.ietf.org/html/rfc7230#section-3.2.6
+	 */
+	const tokenRegExp = /^[\^_`a-zA-Z\-0-9!#$%&'*+.|~]+$/;
 
-const kHandler = Symbol('handler');
+	/**
+	 * Matches if val contains an invalid field-vchar
+	 *  field-value    = *( field-content / obs-fold )
+	 *  field-content  = field-vchar [ 1*( SP / HTAB ) field-vchar ]
+	 *  field-vchar    = VCHAR / obs-text
+	 */
+	const headerCharRegex = /[^\t\x20-\x7e\x80-\xff]/;
 
-const channels$1 = {};
+	// Verifies that a given path is valid does not contain control chars \x00 to \x20
+	const invalidPathRegex = /[^\u0021-\u00ff]/;
 
-let extractBody;
+	const kHandler = Symbol('handler');
 
-try {
-  const diagnosticsChannel = require('diagnostics_channel');
-  channels$1.create = diagnosticsChannel.channel('undici:request:create');
-  channels$1.bodySent = diagnosticsChannel.channel('undici:request:bodySent');
-  channels$1.headers = diagnosticsChannel.channel('undici:request:headers');
-  channels$1.trailers = diagnosticsChannel.channel('undici:request:trailers');
-  channels$1.error = diagnosticsChannel.channel('undici:request:error');
-} catch {
-  channels$1.create = { hasSubscribers: false };
-  channels$1.bodySent = { hasSubscribers: false };
-  channels$1.headers = { hasSubscribers: false };
-  channels$1.trailers = { hasSubscribers: false };
-  channels$1.error = { hasSubscribers: false };
+	const channels = {};
+
+	let extractBody;
+
+	try {
+	  const diagnosticsChannel = require('diagnostics_channel');
+	  channels.create = diagnosticsChannel.channel('undici:request:create');
+	  channels.bodySent = diagnosticsChannel.channel('undici:request:bodySent');
+	  channels.headers = diagnosticsChannel.channel('undici:request:headers');
+	  channels.trailers = diagnosticsChannel.channel('undici:request:trailers');
+	  channels.error = diagnosticsChannel.channel('undici:request:error');
+	} catch {
+	  channels.create = { hasSubscribers: false };
+	  channels.bodySent = { hasSubscribers: false };
+	  channels.headers = { hasSubscribers: false };
+	  channels.trailers = { hasSubscribers: false };
+	  channels.error = { hasSubscribers: false };
+	}
+
+	class Request {
+	  constructor (origin, {
+	    path,
+	    method,
+	    body,
+	    headers,
+	    query,
+	    idempotent,
+	    blocking,
+	    upgrade,
+	    headersTimeout,
+	    bodyTimeout,
+	    reset,
+	    throwOnError,
+	    expectContinue
+	  }, handler) {
+	    if (typeof path !== 'string') {
+	      throw new InvalidArgumentError('path must be a string')
+	    } else if (
+	      path[0] !== '/' &&
+	      !(path.startsWith('http://') || path.startsWith('https://')) &&
+	      method !== 'CONNECT'
+	    ) {
+	      throw new InvalidArgumentError('path must be an absolute URL or start with a slash')
+	    } else if (invalidPathRegex.exec(path) !== null) {
+	      throw new InvalidArgumentError('invalid request path')
+	    }
+
+	    if (typeof method !== 'string') {
+	      throw new InvalidArgumentError('method must be a string')
+	    } else if (tokenRegExp.exec(method) === null) {
+	      throw new InvalidArgumentError('invalid request method')
+	    }
+
+	    if (upgrade && typeof upgrade !== 'string') {
+	      throw new InvalidArgumentError('upgrade must be a string')
+	    }
+
+	    if (headersTimeout != null && (!Number.isFinite(headersTimeout) || headersTimeout < 0)) {
+	      throw new InvalidArgumentError('invalid headersTimeout')
+	    }
+
+	    if (bodyTimeout != null && (!Number.isFinite(bodyTimeout) || bodyTimeout < 0)) {
+	      throw new InvalidArgumentError('invalid bodyTimeout')
+	    }
+
+	    if (reset != null && typeof reset !== 'boolean') {
+	      throw new InvalidArgumentError('invalid reset')
+	    }
+
+	    if (expectContinue != null && typeof expectContinue !== 'boolean') {
+	      throw new InvalidArgumentError('invalid expectContinue')
+	    }
+
+	    this.headersTimeout = headersTimeout;
+
+	    this.bodyTimeout = bodyTimeout;
+
+	    this.throwOnError = throwOnError === true;
+
+	    this.method = method;
+
+	    this.abort = null;
+
+	    if (body == null) {
+	      this.body = null;
+	    } else if (util.isStream(body)) {
+	      this.body = body;
+
+	      const rState = this.body._readableState;
+	      if (!rState || !rState.autoDestroy) {
+	        this.endHandler = function autoDestroy () {
+	          util.destroy(this);
+	        };
+	        this.body.on('end', this.endHandler);
+	      }
+
+	      this.errorHandler = err => {
+	        if (this.abort) {
+	          this.abort(err);
+	        } else {
+	          this.error = err;
+	        }
+	      };
+	      this.body.on('error', this.errorHandler);
+	    } else if (util.isBuffer(body)) {
+	      this.body = body.byteLength ? body : null;
+	    } else if (ArrayBuffer.isView(body)) {
+	      this.body = body.buffer.byteLength ? Buffer.from(body.buffer, body.byteOffset, body.byteLength) : null;
+	    } else if (body instanceof ArrayBuffer) {
+	      this.body = body.byteLength ? Buffer.from(body) : null;
+	    } else if (typeof body === 'string') {
+	      this.body = body.length ? Buffer.from(body) : null;
+	    } else if (util.isFormDataLike(body) || util.isIterable(body) || util.isBlobLike(body)) {
+	      this.body = body;
+	    } else {
+	      throw new InvalidArgumentError('body must be a string, a Buffer, a Readable stream, an iterable, or an async iterable')
+	    }
+
+	    this.completed = false;
+
+	    this.aborted = false;
+
+	    this.upgrade = upgrade || null;
+
+	    this.path = query ? util.buildURL(path, query) : path;
+
+	    this.origin = origin;
+
+	    this.idempotent = idempotent == null
+	      ? method === 'HEAD' || method === 'GET'
+	      : idempotent;
+
+	    this.blocking = blocking == null ? false : blocking;
+
+	    this.reset = reset == null ? null : reset;
+
+	    this.host = null;
+
+	    this.contentLength = null;
+
+	    this.contentType = null;
+
+	    this.headers = '';
+
+	    // Only for H2
+	    this.expectContinue = expectContinue != null ? expectContinue : false;
+
+	    if (Array.isArray(headers)) {
+	      if (headers.length % 2 !== 0) {
+	        throw new InvalidArgumentError('headers array must be even')
+	      }
+	      for (let i = 0; i < headers.length; i += 2) {
+	        processHeader(this, headers[i], headers[i + 1]);
+	      }
+	    } else if (headers && typeof headers === 'object') {
+	      const keys = Object.keys(headers);
+	      for (let i = 0; i < keys.length; i++) {
+	        const key = keys[i];
+	        processHeader(this, key, headers[key]);
+	      }
+	    } else if (headers != null) {
+	      throw new InvalidArgumentError('headers must be an object or an array')
+	    }
+
+	    if (util.isFormDataLike(this.body)) {
+	      if (util.nodeMajor < 16 || (util.nodeMajor === 16 && util.nodeMinor < 8)) {
+	        throw new InvalidArgumentError('Form-Data bodies are only supported in node v16.8 and newer.')
+	      }
+
+	      if (!extractBody) {
+	        extractBody = requireBody().extractBody;
+	      }
+
+	      const [bodyStream, contentType] = extractBody(body);
+	      if (this.contentType == null) {
+	        this.contentType = contentType;
+	        this.headers += `content-type: ${contentType}\r\n`;
+	      }
+	      this.body = bodyStream.stream;
+	      this.contentLength = bodyStream.length;
+	    } else if (util.isBlobLike(body) && this.contentType == null && body.type) {
+	      this.contentType = body.type;
+	      this.headers += `content-type: ${body.type}\r\n`;
+	    }
+
+	    util.validateHandler(handler, method, upgrade);
+
+	    this.servername = util.getServerName(this.host);
+
+	    this[kHandler] = handler;
+
+	    if (channels.create.hasSubscribers) {
+	      channels.create.publish({ request: this });
+	    }
+	  }
+
+	  onBodySent (chunk) {
+	    if (this[kHandler].onBodySent) {
+	      try {
+	        return this[kHandler].onBodySent(chunk)
+	      } catch (err) {
+	        this.abort(err);
+	      }
+	    }
+	  }
+
+	  onRequestSent () {
+	    if (channels.bodySent.hasSubscribers) {
+	      channels.bodySent.publish({ request: this });
+	    }
+
+	    if (this[kHandler].onRequestSent) {
+	      try {
+	        return this[kHandler].onRequestSent()
+	      } catch (err) {
+	        this.abort(err);
+	      }
+	    }
+	  }
+
+	  onConnect (abort) {
+	    assert(!this.aborted);
+	    assert(!this.completed);
+
+	    if (this.error) {
+	      abort(this.error);
+	    } else {
+	      this.abort = abort;
+	      return this[kHandler].onConnect(abort)
+	    }
+	  }
+
+	  onHeaders (statusCode, headers, resume, statusText) {
+	    assert(!this.aborted);
+	    assert(!this.completed);
+
+	    if (channels.headers.hasSubscribers) {
+	      channels.headers.publish({ request: this, response: { statusCode, headers, statusText } });
+	    }
+
+	    try {
+	      return this[kHandler].onHeaders(statusCode, headers, resume, statusText)
+	    } catch (err) {
+	      this.abort(err);
+	    }
+	  }
+
+	  onData (chunk) {
+	    assert(!this.aborted);
+	    assert(!this.completed);
+
+	    try {
+	      return this[kHandler].onData(chunk)
+	    } catch (err) {
+	      this.abort(err);
+	      return false
+	    }
+	  }
+
+	  onUpgrade (statusCode, headers, socket) {
+	    assert(!this.aborted);
+	    assert(!this.completed);
+
+	    return this[kHandler].onUpgrade(statusCode, headers, socket)
+	  }
+
+	  onComplete (trailers) {
+	    this.onFinally();
+
+	    assert(!this.aborted);
+
+	    this.completed = true;
+	    if (channels.trailers.hasSubscribers) {
+	      channels.trailers.publish({ request: this, trailers });
+	    }
+
+	    try {
+	      return this[kHandler].onComplete(trailers)
+	    } catch (err) {
+	      // TODO (fix): This might be a bad idea?
+	      this.onError(err);
+	    }
+	  }
+
+	  onError (error) {
+	    this.onFinally();
+
+	    if (channels.error.hasSubscribers) {
+	      channels.error.publish({ request: this, error });
+	    }
+
+	    if (this.aborted) {
+	      return
+	    }
+	    this.aborted = true;
+
+	    return this[kHandler].onError(error)
+	  }
+
+	  onFinally () {
+	    if (this.errorHandler) {
+	      this.body.off('error', this.errorHandler);
+	      this.errorHandler = null;
+	    }
+
+	    if (this.endHandler) {
+	      this.body.off('end', this.endHandler);
+	      this.endHandler = null;
+	    }
+	  }
+
+	  // TODO: adjust to support H2
+	  addHeader (key, value) {
+	    processHeader(this, key, value);
+	    return this
+	  }
+
+	  static [kHTTP1BuildRequest] (origin, opts, handler) {
+	    // TODO: Migrate header parsing here, to make Requests
+	    // HTTP agnostic
+	    return new Request(origin, opts, handler)
+	  }
+
+	  static [kHTTP2BuildRequest] (origin, opts, handler) {
+	    const headers = opts.headers;
+	    opts = { ...opts, headers: null };
+
+	    const request = new Request(origin, opts, handler);
+
+	    request.headers = {};
+
+	    if (Array.isArray(headers)) {
+	      if (headers.length % 2 !== 0) {
+	        throw new InvalidArgumentError('headers array must be even')
+	      }
+	      for (let i = 0; i < headers.length; i += 2) {
+	        processHeader(request, headers[i], headers[i + 1], true);
+	      }
+	    } else if (headers && typeof headers === 'object') {
+	      const keys = Object.keys(headers);
+	      for (let i = 0; i < keys.length; i++) {
+	        const key = keys[i];
+	        processHeader(request, key, headers[key], true);
+	      }
+	    } else if (headers != null) {
+	      throw new InvalidArgumentError('headers must be an object or an array')
+	    }
+
+	    return request
+	  }
+
+	  static [kHTTP2CopyHeaders] (raw) {
+	    const rawHeaders = raw.split('\r\n');
+	    const headers = {};
+
+	    for (const header of rawHeaders) {
+	      const [key, value] = header.split(': ');
+
+	      if (value == null || value.length === 0) continue
+
+	      if (headers[key]) headers[key] += `,${value}`;
+	      else headers[key] = value;
+	    }
+
+	    return headers
+	  }
+	}
+
+	function processHeaderValue (key, val, skipAppend) {
+	  if (val && typeof val === 'object') {
+	    throw new InvalidArgumentError(`invalid ${key} header`)
+	  }
+
+	  val = val != null ? `${val}` : '';
+
+	  if (headerCharRegex.exec(val) !== null) {
+	    throw new InvalidArgumentError(`invalid ${key} header`)
+	  }
+
+	  return skipAppend ? val : `${key}: ${val}\r\n`
+	}
+
+	function processHeader (request, key, val, skipAppend = false) {
+	  if (val && (typeof val === 'object' && !Array.isArray(val))) {
+	    throw new InvalidArgumentError(`invalid ${key} header`)
+	  } else if (val === undefined) {
+	    return
+	  }
+
+	  if (
+	    request.host === null &&
+	    key.length === 4 &&
+	    key.toLowerCase() === 'host'
+	  ) {
+	    if (headerCharRegex.exec(val) !== null) {
+	      throw new InvalidArgumentError(`invalid ${key} header`)
+	    }
+	    // Consumed by Client
+	    request.host = val;
+	  } else if (
+	    request.contentLength === null &&
+	    key.length === 14 &&
+	    key.toLowerCase() === 'content-length'
+	  ) {
+	    request.contentLength = parseInt(val, 10);
+	    if (!Number.isFinite(request.contentLength)) {
+	      throw new InvalidArgumentError('invalid content-length header')
+	    }
+	  } else if (
+	    request.contentType === null &&
+	    key.length === 12 &&
+	    key.toLowerCase() === 'content-type'
+	  ) {
+	    request.contentType = val;
+	    if (skipAppend) request.headers[key] = processHeaderValue(key, val, skipAppend);
+	    else request.headers += processHeaderValue(key, val);
+	  } else if (
+	    key.length === 17 &&
+	    key.toLowerCase() === 'transfer-encoding'
+	  ) {
+	    throw new InvalidArgumentError('invalid transfer-encoding header')
+	  } else if (
+	    key.length === 10 &&
+	    key.toLowerCase() === 'connection'
+	  ) {
+	    const value = typeof val === 'string' ? val.toLowerCase() : null;
+	    if (value !== 'close' && value !== 'keep-alive') {
+	      throw new InvalidArgumentError('invalid connection header')
+	    } else if (value === 'close') {
+	      request.reset = true;
+	    }
+	  } else if (
+	    key.length === 10 &&
+	    key.toLowerCase() === 'keep-alive'
+	  ) {
+	    throw new InvalidArgumentError('invalid keep-alive header')
+	  } else if (
+	    key.length === 7 &&
+	    key.toLowerCase() === 'upgrade'
+	  ) {
+	    throw new InvalidArgumentError('invalid upgrade header')
+	  } else if (
+	    key.length === 6 &&
+	    key.toLowerCase() === 'expect'
+	  ) {
+	    throw new NotSupportedError('expect header not supported')
+	  } else if (tokenRegExp.exec(key) === null) {
+	    throw new InvalidArgumentError('invalid header key')
+	  } else {
+	    if (Array.isArray(val)) {
+	      for (let i = 0; i < val.length; i++) {
+	        if (skipAppend) {
+	          if (request.headers[key]) request.headers[key] += `,${processHeaderValue(key, val[i], skipAppend)}`;
+	          else request.headers[key] = processHeaderValue(key, val[i], skipAppend);
+	        } else {
+	          request.headers += processHeaderValue(key, val[i]);
+	        }
+	      }
+	    } else {
+	      if (skipAppend) request.headers[key] = processHeaderValue(key, val, skipAppend);
+	      else request.headers += processHeaderValue(key, val);
+	    }
+	  }
+	}
+
+	request$1 = Request;
+	return request$1;
 }
 
-let Request$1 = class Request {
-  constructor (origin, {
-    path,
-    method,
-    body,
-    headers,
-    query,
-    idempotent,
-    blocking,
-    upgrade,
-    headersTimeout,
-    bodyTimeout,
-    reset,
-    throwOnError,
-    expectContinue
-  }, handler) {
-    if (typeof path !== 'string') {
-      throw new InvalidArgumentError$k('path must be a string')
-    } else if (
-      path[0] !== '/' &&
-      !(path.startsWith('http://') || path.startsWith('https://')) &&
-      method !== 'CONNECT'
-    ) {
-      throw new InvalidArgumentError$k('path must be an absolute URL or start with a slash')
-    } else if (invalidPathRegex.exec(path) !== null) {
-      throw new InvalidArgumentError$k('invalid request path')
-    }
-
-    if (typeof method !== 'string') {
-      throw new InvalidArgumentError$k('method must be a string')
-    } else if (tokenRegExp.exec(method) === null) {
-      throw new InvalidArgumentError$k('invalid request method')
-    }
-
-    if (upgrade && typeof upgrade !== 'string') {
-      throw new InvalidArgumentError$k('upgrade must be a string')
-    }
-
-    if (headersTimeout != null && (!Number.isFinite(headersTimeout) || headersTimeout < 0)) {
-      throw new InvalidArgumentError$k('invalid headersTimeout')
-    }
-
-    if (bodyTimeout != null && (!Number.isFinite(bodyTimeout) || bodyTimeout < 0)) {
-      throw new InvalidArgumentError$k('invalid bodyTimeout')
-    }
-
-    if (reset != null && typeof reset !== 'boolean') {
-      throw new InvalidArgumentError$k('invalid reset')
-    }
-
-    if (expectContinue != null && typeof expectContinue !== 'boolean') {
-      throw new InvalidArgumentError$k('invalid expectContinue')
-    }
-
-    this.headersTimeout = headersTimeout;
-
-    this.bodyTimeout = bodyTimeout;
-
-    this.throwOnError = throwOnError === true;
-
-    this.method = method;
-
-    this.abort = null;
-
-    if (body == null) {
-      this.body = null;
-    } else if (util$h.isStream(body)) {
-      this.body = body;
-
-      const rState = this.body._readableState;
-      if (!rState || !rState.autoDestroy) {
-        this.endHandler = function autoDestroy () {
-          util$h.destroy(this);
-        };
-        this.body.on('end', this.endHandler);
-      }
-
-      this.errorHandler = err => {
-        if (this.abort) {
-          this.abort(err);
-        } else {
-          this.error = err;
-        }
-      };
-      this.body.on('error', this.errorHandler);
-    } else if (util$h.isBuffer(body)) {
-      this.body = body.byteLength ? body : null;
-    } else if (ArrayBuffer.isView(body)) {
-      this.body = body.buffer.byteLength ? Buffer.from(body.buffer, body.byteOffset, body.byteLength) : null;
-    } else if (body instanceof ArrayBuffer) {
-      this.body = body.byteLength ? Buffer.from(body) : null;
-    } else if (typeof body === 'string') {
-      this.body = body.length ? Buffer.from(body) : null;
-    } else if (util$h.isFormDataLike(body) || util$h.isIterable(body) || util$h.isBlobLike(body)) {
-      this.body = body;
-    } else {
-      throw new InvalidArgumentError$k('body must be a string, a Buffer, a Readable stream, an iterable, or an async iterable')
-    }
-
-    this.completed = false;
-
-    this.aborted = false;
-
-    this.upgrade = upgrade || null;
-
-    this.path = query ? util$h.buildURL(path, query) : path;
-
-    this.origin = origin;
-
-    this.idempotent = idempotent == null
-      ? method === 'HEAD' || method === 'GET'
-      : idempotent;
-
-    this.blocking = blocking == null ? false : blocking;
-
-    this.reset = reset == null ? null : reset;
-
-    this.host = null;
-
-    this.contentLength = null;
-
-    this.contentType = null;
-
-    this.headers = '';
-
-    // Only for H2
-    this.expectContinue = expectContinue != null ? expectContinue : false;
-
-    if (Array.isArray(headers)) {
-      if (headers.length % 2 !== 0) {
-        throw new InvalidArgumentError$k('headers array must be even')
-      }
-      for (let i = 0; i < headers.length; i += 2) {
-        processHeader(this, headers[i], headers[i + 1]);
-      }
-    } else if (headers && typeof headers === 'object') {
-      const keys = Object.keys(headers);
-      for (let i = 0; i < keys.length; i++) {
-        const key = keys[i];
-        processHeader(this, key, headers[key]);
-      }
-    } else if (headers != null) {
-      throw new InvalidArgumentError$k('headers must be an object or an array')
-    }
-
-    if (util$h.isFormDataLike(this.body)) {
-      if (util$h.nodeMajor < 16 || (util$h.nodeMajor === 16 && util$h.nodeMinor < 8)) {
-        throw new InvalidArgumentError$k('Form-Data bodies are only supported in node v16.8 and newer.')
-      }
-
-      if (!extractBody) {
-        extractBody = requireBody().extractBody;
-      }
-
-      const [bodyStream, contentType] = extractBody(body);
-      if (this.contentType == null) {
-        this.contentType = contentType;
-        this.headers += `content-type: ${contentType}\r\n`;
-      }
-      this.body = bodyStream.stream;
-      this.contentLength = bodyStream.length;
-    } else if (util$h.isBlobLike(body) && this.contentType == null && body.type) {
-      this.contentType = body.type;
-      this.headers += `content-type: ${body.type}\r\n`;
-    }
-
-    util$h.validateHandler(handler, method, upgrade);
-
-    this.servername = util$h.getServerName(this.host);
-
-    this[kHandler] = handler;
-
-    if (channels$1.create.hasSubscribers) {
-      channels$1.create.publish({ request: this });
-    }
-  }
-
-  onBodySent (chunk) {
-    if (this[kHandler].onBodySent) {
-      try {
-        return this[kHandler].onBodySent(chunk)
-      } catch (err) {
-        this.abort(err);
-      }
-    }
-  }
-
-  onRequestSent () {
-    if (channels$1.bodySent.hasSubscribers) {
-      channels$1.bodySent.publish({ request: this });
-    }
-
-    if (this[kHandler].onRequestSent) {
-      try {
-        return this[kHandler].onRequestSent()
-      } catch (err) {
-        this.abort(err);
-      }
-    }
-  }
-
-  onConnect (abort) {
-    assert$8(!this.aborted);
-    assert$8(!this.completed);
-
-    if (this.error) {
-      abort(this.error);
-    } else {
-      this.abort = abort;
-      return this[kHandler].onConnect(abort)
-    }
-  }
-
-  onHeaders (statusCode, headers, resume, statusText) {
-    assert$8(!this.aborted);
-    assert$8(!this.completed);
-
-    if (channels$1.headers.hasSubscribers) {
-      channels$1.headers.publish({ request: this, response: { statusCode, headers, statusText } });
-    }
-
-    try {
-      return this[kHandler].onHeaders(statusCode, headers, resume, statusText)
-    } catch (err) {
-      this.abort(err);
-    }
-  }
-
-  onData (chunk) {
-    assert$8(!this.aborted);
-    assert$8(!this.completed);
-
-    try {
-      return this[kHandler].onData(chunk)
-    } catch (err) {
-      this.abort(err);
-      return false
-    }
-  }
-
-  onUpgrade (statusCode, headers, socket) {
-    assert$8(!this.aborted);
-    assert$8(!this.completed);
-
-    return this[kHandler].onUpgrade(statusCode, headers, socket)
-  }
-
-  onComplete (trailers) {
-    this.onFinally();
-
-    assert$8(!this.aborted);
-
-    this.completed = true;
-    if (channels$1.trailers.hasSubscribers) {
-      channels$1.trailers.publish({ request: this, trailers });
-    }
-
-    try {
-      return this[kHandler].onComplete(trailers)
-    } catch (err) {
-      // TODO (fix): This might be a bad idea?
-      this.onError(err);
-    }
-  }
-
-  onError (error) {
-    this.onFinally();
-
-    if (channels$1.error.hasSubscribers) {
-      channels$1.error.publish({ request: this, error });
-    }
-
-    if (this.aborted) {
-      return
-    }
-    this.aborted = true;
-
-    return this[kHandler].onError(error)
-  }
-
-  onFinally () {
-    if (this.errorHandler) {
-      this.body.off('error', this.errorHandler);
-      this.errorHandler = null;
-    }
-
-    if (this.endHandler) {
-      this.body.off('end', this.endHandler);
-      this.endHandler = null;
-    }
-  }
-
-  // TODO: adjust to support H2
-  addHeader (key, value) {
-    processHeader(this, key, value);
-    return this
-  }
-
-  static [kHTTP1BuildRequest$1] (origin, opts, handler) {
-    // TODO: Migrate header parsing here, to make Requests
-    // HTTP agnostic
-    return new Request(origin, opts, handler)
-  }
-
-  static [kHTTP2BuildRequest$1] (origin, opts, handler) {
-    const headers = opts.headers;
-    opts = { ...opts, headers: null };
-
-    const request = new Request(origin, opts, handler);
-
-    request.headers = {};
-
-    if (Array.isArray(headers)) {
-      if (headers.length % 2 !== 0) {
-        throw new InvalidArgumentError$k('headers array must be even')
-      }
-      for (let i = 0; i < headers.length; i += 2) {
-        processHeader(request, headers[i], headers[i + 1], true);
-      }
-    } else if (headers && typeof headers === 'object') {
-      const keys = Object.keys(headers);
-      for (let i = 0; i < keys.length; i++) {
-        const key = keys[i];
-        processHeader(request, key, headers[key], true);
-      }
-    } else if (headers != null) {
-      throw new InvalidArgumentError$k('headers must be an object or an array')
-    }
-
-    return request
-  }
-
-  static [kHTTP2CopyHeaders$1] (raw) {
-    const rawHeaders = raw.split('\r\n');
-    const headers = {};
-
-    for (const header of rawHeaders) {
-      const [key, value] = header.split(': ');
-
-      if (value == null || value.length === 0) continue
-
-      if (headers[key]) headers[key] += `,${value}`;
-      else headers[key] = value;
-    }
-
-    return headers
-  }
-};
-
-function processHeaderValue (key, val, skipAppend) {
-  if (val && typeof val === 'object') {
-    throw new InvalidArgumentError$k(`invalid ${key} header`)
-  }
-
-  val = val != null ? `${val}` : '';
-
-  if (headerCharRegex.exec(val) !== null) {
-    throw new InvalidArgumentError$k(`invalid ${key} header`)
-  }
-
-  return skipAppend ? val : `${key}: ${val}\r\n`
+var dispatcher;
+var hasRequiredDispatcher;
+
+function requireDispatcher () {
+	if (hasRequiredDispatcher) return dispatcher;
+	hasRequiredDispatcher = 1;
+
+	const EventEmitter = require$$0$2;
+
+	class Dispatcher extends EventEmitter {
+	  dispatch () {
+	    throw new Error('not implemented')
+	  }
+
+	  close () {
+	    throw new Error('not implemented')
+	  }
+
+	  destroy () {
+	    throw new Error('not implemented')
+	  }
+	}
+
+	dispatcher = Dispatcher;
+	return dispatcher;
 }
 
-function processHeader (request, key, val, skipAppend = false) {
-  if (val && (typeof val === 'object' && !Array.isArray(val))) {
-    throw new InvalidArgumentError$k(`invalid ${key} header`)
-  } else if (val === undefined) {
-    return
-  }
+var dispatcherBase;
+var hasRequiredDispatcherBase;
 
-  if (
-    request.host === null &&
-    key.length === 4 &&
-    key.toLowerCase() === 'host'
-  ) {
-    if (headerCharRegex.exec(val) !== null) {
-      throw new InvalidArgumentError$k(`invalid ${key} header`)
-    }
-    // Consumed by Client
-    request.host = val;
-  } else if (
-    request.contentLength === null &&
-    key.length === 14 &&
-    key.toLowerCase() === 'content-length'
-  ) {
-    request.contentLength = parseInt(val, 10);
-    if (!Number.isFinite(request.contentLength)) {
-      throw new InvalidArgumentError$k('invalid content-length header')
-    }
-  } else if (
-    request.contentType === null &&
-    key.length === 12 &&
-    key.toLowerCase() === 'content-type'
-  ) {
-    request.contentType = val;
-    if (skipAppend) request.headers[key] = processHeaderValue(key, val, skipAppend);
-    else request.headers += processHeaderValue(key, val);
-  } else if (
-    key.length === 17 &&
-    key.toLowerCase() === 'transfer-encoding'
-  ) {
-    throw new InvalidArgumentError$k('invalid transfer-encoding header')
-  } else if (
-    key.length === 10 &&
-    key.toLowerCase() === 'connection'
-  ) {
-    const value = typeof val === 'string' ? val.toLowerCase() : null;
-    if (value !== 'close' && value !== 'keep-alive') {
-      throw new InvalidArgumentError$k('invalid connection header')
-    } else if (value === 'close') {
-      request.reset = true;
-    }
-  } else if (
-    key.length === 10 &&
-    key.toLowerCase() === 'keep-alive'
-  ) {
-    throw new InvalidArgumentError$k('invalid keep-alive header')
-  } else if (
-    key.length === 7 &&
-    key.toLowerCase() === 'upgrade'
-  ) {
-    throw new InvalidArgumentError$k('invalid upgrade header')
-  } else if (
-    key.length === 6 &&
-    key.toLowerCase() === 'expect'
-  ) {
-    throw new NotSupportedError$1('expect header not supported')
-  } else if (tokenRegExp.exec(key) === null) {
-    throw new InvalidArgumentError$k('invalid header key')
-  } else {
-    if (Array.isArray(val)) {
-      for (let i = 0; i < val.length; i++) {
-        if (skipAppend) {
-          if (request.headers[key]) request.headers[key] += `,${processHeaderValue(key, val[i], skipAppend)}`;
-          else request.headers[key] = processHeaderValue(key, val[i], skipAppend);
-        } else {
-          request.headers += processHeaderValue(key, val[i]);
-        }
-      }
-    } else {
-      if (skipAppend) request.headers[key] = processHeaderValue(key, val, skipAppend);
-      else request.headers += processHeaderValue(key, val);
-    }
-  }
+function requireDispatcherBase () {
+	if (hasRequiredDispatcherBase) return dispatcherBase;
+	hasRequiredDispatcherBase = 1;
+
+	const Dispatcher = requireDispatcher();
+	const {
+	  ClientDestroyedError,
+	  ClientClosedError,
+	  InvalidArgumentError
+	} = requireErrors();
+	const { kDestroy, kClose, kDispatch, kInterceptors } = requireSymbols$4();
+
+	const kDestroyed = Symbol('destroyed');
+	const kClosed = Symbol('closed');
+	const kOnDestroyed = Symbol('onDestroyed');
+	const kOnClosed = Symbol('onClosed');
+	const kInterceptedDispatch = Symbol('Intercepted Dispatch');
+
+	class DispatcherBase extends Dispatcher {
+	  constructor () {
+	    super();
+
+	    this[kDestroyed] = false;
+	    this[kOnDestroyed] = null;
+	    this[kClosed] = false;
+	    this[kOnClosed] = [];
+	  }
+
+	  get destroyed () {
+	    return this[kDestroyed]
+	  }
+
+	  get closed () {
+	    return this[kClosed]
+	  }
+
+	  get interceptors () {
+	    return this[kInterceptors]
+	  }
+
+	  set interceptors (newInterceptors) {
+	    if (newInterceptors) {
+	      for (let i = newInterceptors.length - 1; i >= 0; i--) {
+	        const interceptor = this[kInterceptors][i];
+	        if (typeof interceptor !== 'function') {
+	          throw new InvalidArgumentError('interceptor must be an function')
+	        }
+	      }
+	    }
+
+	    this[kInterceptors] = newInterceptors;
+	  }
+
+	  close (callback) {
+	    if (callback === undefined) {
+	      return new Promise((resolve, reject) => {
+	        this.close((err, data) => {
+	          return err ? reject(err) : resolve(data)
+	        });
+	      })
+	    }
+
+	    if (typeof callback !== 'function') {
+	      throw new InvalidArgumentError('invalid callback')
+	    }
+
+	    if (this[kDestroyed]) {
+	      queueMicrotask(() => callback(new ClientDestroyedError(), null));
+	      return
+	    }
+
+	    if (this[kClosed]) {
+	      if (this[kOnClosed]) {
+	        this[kOnClosed].push(callback);
+	      } else {
+	        queueMicrotask(() => callback(null, null));
+	      }
+	      return
+	    }
+
+	    this[kClosed] = true;
+	    this[kOnClosed].push(callback);
+
+	    const onClosed = () => {
+	      const callbacks = this[kOnClosed];
+	      this[kOnClosed] = null;
+	      for (let i = 0; i < callbacks.length; i++) {
+	        callbacks[i](null, null);
+	      }
+	    };
+
+	    // Should not error.
+	    this[kClose]()
+	      .then(() => this.destroy())
+	      .then(() => {
+	        queueMicrotask(onClosed);
+	      });
+	  }
+
+	  destroy (err, callback) {
+	    if (typeof err === 'function') {
+	      callback = err;
+	      err = null;
+	    }
+
+	    if (callback === undefined) {
+	      return new Promise((resolve, reject) => {
+	        this.destroy(err, (err, data) => {
+	          return err ? /* istanbul ignore next: should never error */ reject(err) : resolve(data)
+	        });
+	      })
+	    }
+
+	    if (typeof callback !== 'function') {
+	      throw new InvalidArgumentError('invalid callback')
+	    }
+
+	    if (this[kDestroyed]) {
+	      if (this[kOnDestroyed]) {
+	        this[kOnDestroyed].push(callback);
+	      } else {
+	        queueMicrotask(() => callback(null, null));
+	      }
+	      return
+	    }
+
+	    if (!err) {
+	      err = new ClientDestroyedError();
+	    }
+
+	    this[kDestroyed] = true;
+	    this[kOnDestroyed] = this[kOnDestroyed] || [];
+	    this[kOnDestroyed].push(callback);
+
+	    const onDestroyed = () => {
+	      const callbacks = this[kOnDestroyed];
+	      this[kOnDestroyed] = null;
+	      for (let i = 0; i < callbacks.length; i++) {
+	        callbacks[i](null, null);
+	      }
+	    };
+
+	    // Should not error.
+	    this[kDestroy](err).then(() => {
+	      queueMicrotask(onDestroyed);
+	    });
+	  }
+
+	  [kInterceptedDispatch] (opts, handler) {
+	    if (!this[kInterceptors] || this[kInterceptors].length === 0) {
+	      this[kInterceptedDispatch] = this[kDispatch];
+	      return this[kDispatch](opts, handler)
+	    }
+
+	    let dispatch = this[kDispatch].bind(this);
+	    for (let i = this[kInterceptors].length - 1; i >= 0; i--) {
+	      dispatch = this[kInterceptors][i](dispatch);
+	    }
+	    this[kInterceptedDispatch] = dispatch;
+	    return dispatch(opts, handler)
+	  }
+
+	  dispatch (opts, handler) {
+	    if (!handler || typeof handler !== 'object') {
+	      throw new InvalidArgumentError('handler must be an object')
+	    }
+
+	    try {
+	      if (!opts || typeof opts !== 'object') {
+	        throw new InvalidArgumentError('opts must be an object.')
+	      }
+
+	      if (this[kDestroyed] || this[kOnDestroyed]) {
+	        throw new ClientDestroyedError()
+	      }
+
+	      if (this[kClosed]) {
+	        throw new ClientClosedError()
+	      }
+
+	      return this[kInterceptedDispatch](opts, handler)
+	    } catch (err) {
+	      if (typeof handler.onError !== 'function') {
+	        throw new InvalidArgumentError('invalid onError method')
+	      }
+
+	      handler.onError(err);
+
+	      return false
+	    }
+	  }
+	}
+
+	dispatcherBase = DispatcherBase;
+	return dispatcherBase;
 }
 
-var request$3 = Request$1;
+var connect;
+var hasRequiredConnect;
 
-const EventEmitter = require$$0$2;
+function requireConnect () {
+	if (hasRequiredConnect) return connect;
+	hasRequiredConnect = 1;
 
-let Dispatcher$3 = class Dispatcher extends EventEmitter {
-  dispatch () {
-    throw new Error('not implemented')
-  }
+	const net = require$$0$5;
+	const assert = require$$0$3;
+	const util = requireUtil$6();
+	const { InvalidArgumentError, ConnectTimeoutError } = requireErrors();
 
-  close () {
-    throw new Error('not implemented')
-  }
+	let tls; // include tls conditionally since it is not always available
 
-  destroy () {
-    throw new Error('not implemented')
-  }
-};
+	// TODO: session re-use does not wait for the first
+	// connection to resolve the session and might therefore
+	// resolve the same servername multiple times even when
+	// re-use is enabled.
 
-var dispatcher = Dispatcher$3;
+	let SessionCache;
+	// FIXME: remove workaround when the Node bug is fixed
+	// https://github.com/nodejs/node/issues/49344#issuecomment-1741776308
+	if (commonjsGlobal.FinalizationRegistry && !process.env.NODE_V8_COVERAGE) {
+	  SessionCache = class WeakSessionCache {
+	    constructor (maxCachedSessions) {
+	      this._maxCachedSessions = maxCachedSessions;
+	      this._sessionCache = new Map();
+	      this._sessionRegistry = new commonjsGlobal.FinalizationRegistry((key) => {
+	        if (this._sessionCache.size < this._maxCachedSessions) {
+	          return
+	        }
 
-const Dispatcher$2 = dispatcher;
-const {
-  ClientDestroyedError: ClientDestroyedError$1,
-  ClientClosedError,
-  InvalidArgumentError: InvalidArgumentError$j
-} = errors$1;
-const { kDestroy: kDestroy$4, kClose: kClose$6, kDispatch: kDispatch$3, kInterceptors: kInterceptors$5 } = symbols$4;
+	        const ref = this._sessionCache.get(key);
+	        if (ref !== undefined && ref.deref() === undefined) {
+	          this._sessionCache.delete(key);
+	        }
+	      });
+	    }
 
-const kDestroyed = Symbol('destroyed');
-const kClosed = Symbol('closed');
-const kOnDestroyed = Symbol('onDestroyed');
-const kOnClosed = Symbol('onClosed');
-const kInterceptedDispatch = Symbol('Intercepted Dispatch');
+	    get (sessionKey) {
+	      const ref = this._sessionCache.get(sessionKey);
+	      return ref ? ref.deref() : null
+	    }
 
-let DispatcherBase$4 = class DispatcherBase extends Dispatcher$2 {
-  constructor () {
-    super();
+	    set (sessionKey, session) {
+	      if (this._maxCachedSessions === 0) {
+	        return
+	      }
 
-    this[kDestroyed] = false;
-    this[kOnDestroyed] = null;
-    this[kClosed] = false;
-    this[kOnClosed] = [];
-  }
+	      this._sessionCache.set(sessionKey, new WeakRef(session));
+	      this._sessionRegistry.register(session, sessionKey);
+	    }
+	  };
+	} else {
+	  SessionCache = class SimpleSessionCache {
+	    constructor (maxCachedSessions) {
+	      this._maxCachedSessions = maxCachedSessions;
+	      this._sessionCache = new Map();
+	    }
 
-  get destroyed () {
-    return this[kDestroyed]
-  }
+	    get (sessionKey) {
+	      return this._sessionCache.get(sessionKey)
+	    }
 
-  get closed () {
-    return this[kClosed]
-  }
+	    set (sessionKey, session) {
+	      if (this._maxCachedSessions === 0) {
+	        return
+	      }
 
-  get interceptors () {
-    return this[kInterceptors$5]
-  }
+	      if (this._sessionCache.size >= this._maxCachedSessions) {
+	        // remove the oldest session
+	        const { value: oldestKey } = this._sessionCache.keys().next();
+	        this._sessionCache.delete(oldestKey);
+	      }
 
-  set interceptors (newInterceptors) {
-    if (newInterceptors) {
-      for (let i = newInterceptors.length - 1; i >= 0; i--) {
-        const interceptor = this[kInterceptors$5][i];
-        if (typeof interceptor !== 'function') {
-          throw new InvalidArgumentError$j('interceptor must be an function')
-        }
-      }
-    }
+	      this._sessionCache.set(sessionKey, session);
+	    }
+	  };
+	}
 
-    this[kInterceptors$5] = newInterceptors;
-  }
+	function buildConnector ({ allowH2, maxCachedSessions, socketPath, timeout, ...opts }) {
+	  if (maxCachedSessions != null && (!Number.isInteger(maxCachedSessions) || maxCachedSessions < 0)) {
+	    throw new InvalidArgumentError('maxCachedSessions must be a positive integer or zero')
+	  }
 
-  close (callback) {
-    if (callback === undefined) {
-      return new Promise((resolve, reject) => {
-        this.close((err, data) => {
-          return err ? reject(err) : resolve(data)
-        });
-      })
-    }
+	  const options = { path: socketPath, ...opts };
+	  const sessionCache = new SessionCache(maxCachedSessions == null ? 100 : maxCachedSessions);
+	  timeout = timeout == null ? 10e3 : timeout;
+	  allowH2 = allowH2 != null ? allowH2 : false;
+	  return function connect ({ hostname, host, protocol, port, servername, localAddress, httpSocket }, callback) {
+	    let socket;
+	    if (protocol === 'https:') {
+	      if (!tls) {
+	        tls = require$$1;
+	      }
+	      servername = servername || options.servername || util.getServerName(host) || null;
 
-    if (typeof callback !== 'function') {
-      throw new InvalidArgumentError$j('invalid callback')
-    }
+	      const sessionKey = servername || hostname;
+	      const session = sessionCache.get(sessionKey) || null;
 
-    if (this[kDestroyed]) {
-      queueMicrotask(() => callback(new ClientDestroyedError$1(), null));
-      return
-    }
+	      assert(sessionKey);
 
-    if (this[kClosed]) {
-      if (this[kOnClosed]) {
-        this[kOnClosed].push(callback);
-      } else {
-        queueMicrotask(() => callback(null, null));
-      }
-      return
-    }
+	      socket = tls.connect({
+	        highWaterMark: 16384, // TLS in node can't have bigger HWM anyway...
+	        ...options,
+	        servername,
+	        session,
+	        localAddress,
+	        // TODO(HTTP/2): Add support for h2c
+	        ALPNProtocols: allowH2 ? ['http/1.1', 'h2'] : ['http/1.1'],
+	        socket: httpSocket, // upgrade socket connection
+	        port: port || 443,
+	        host: hostname
+	      });
 
-    this[kClosed] = true;
-    this[kOnClosed].push(callback);
+	      socket
+	        .on('session', function (session) {
+	          // TODO (fix): Can a session become invalid once established? Don't think so?
+	          sessionCache.set(sessionKey, session);
+	        });
+	    } else {
+	      assert(!httpSocket, 'httpSocket can only be sent on TLS update');
+	      socket = net.connect({
+	        highWaterMark: 64 * 1024, // Same as nodejs fs streams.
+	        ...options,
+	        localAddress,
+	        port: port || 80,
+	        host: hostname
+	      });
+	    }
 
-    const onClosed = () => {
-      const callbacks = this[kOnClosed];
-      this[kOnClosed] = null;
-      for (let i = 0; i < callbacks.length; i++) {
-        callbacks[i](null, null);
-      }
-    };
+	    // Set TCP keep alive options on the socket here instead of in connect() for the case of assigning the socket
+	    if (options.keepAlive == null || options.keepAlive) {
+	      const keepAliveInitialDelay = options.keepAliveInitialDelay === undefined ? 60e3 : options.keepAliveInitialDelay;
+	      socket.setKeepAlive(true, keepAliveInitialDelay);
+	    }
 
-    // Should not error.
-    this[kClose$6]()
-      .then(() => this.destroy())
-      .then(() => {
-        queueMicrotask(onClosed);
-      });
-  }
+	    const cancelTimeout = setupTimeout(() => onConnectTimeout(socket), timeout);
 
-  destroy (err, callback) {
-    if (typeof err === 'function') {
-      callback = err;
-      err = null;
-    }
+	    socket
+	      .setNoDelay(true)
+	      .once(protocol === 'https:' ? 'secureConnect' : 'connect', function () {
+	        cancelTimeout();
 
-    if (callback === undefined) {
-      return new Promise((resolve, reject) => {
-        this.destroy(err, (err, data) => {
-          return err ? /* istanbul ignore next: should never error */ reject(err) : resolve(data)
-        });
-      })
-    }
+	        if (callback) {
+	          const cb = callback;
+	          callback = null;
+	          cb(null, this);
+	        }
+	      })
+	      .on('error', function (err) {
+	        cancelTimeout();
 
-    if (typeof callback !== 'function') {
-      throw new InvalidArgumentError$j('invalid callback')
-    }
+	        if (callback) {
+	          const cb = callback;
+	          callback = null;
+	          cb(err);
+	        }
+	      });
 
-    if (this[kDestroyed]) {
-      if (this[kOnDestroyed]) {
-        this[kOnDestroyed].push(callback);
-      } else {
-        queueMicrotask(() => callback(null, null));
-      }
-      return
-    }
+	    return socket
+	  }
+	}
 
-    if (!err) {
-      err = new ClientDestroyedError$1();
-    }
+	function setupTimeout (onConnectTimeout, timeout) {
+	  if (!timeout) {
+	    return () => {}
+	  }
 
-    this[kDestroyed] = true;
-    this[kOnDestroyed] = this[kOnDestroyed] || [];
-    this[kOnDestroyed].push(callback);
+	  let s1 = null;
+	  let s2 = null;
+	  const timeoutId = setTimeout(() => {
+	    // setImmediate is added to make sure that we priotorise socket error events over timeouts
+	    s1 = setImmediate(() => {
+	      if (process.platform === 'win32') {
+	        // Windows needs an extra setImmediate probably due to implementation differences in the socket logic
+	        s2 = setImmediate(() => onConnectTimeout());
+	      } else {
+	        onConnectTimeout();
+	      }
+	    });
+	  }, timeout);
+	  return () => {
+	    clearTimeout(timeoutId);
+	    clearImmediate(s1);
+	    clearImmediate(s2);
+	  }
+	}
 
-    const onDestroyed = () => {
-      const callbacks = this[kOnDestroyed];
-      this[kOnDestroyed] = null;
-      for (let i = 0; i < callbacks.length; i++) {
-        callbacks[i](null, null);
-      }
-    };
+	function onConnectTimeout (socket) {
+	  util.destroy(socket, new ConnectTimeoutError());
+	}
 
-    // Should not error.
-    this[kDestroy$4](err).then(() => {
-      queueMicrotask(onDestroyed);
-    });
-  }
-
-  [kInterceptedDispatch] (opts, handler) {
-    if (!this[kInterceptors$5] || this[kInterceptors$5].length === 0) {
-      this[kInterceptedDispatch] = this[kDispatch$3];
-      return this[kDispatch$3](opts, handler)
-    }
-
-    let dispatch = this[kDispatch$3].bind(this);
-    for (let i = this[kInterceptors$5].length - 1; i >= 0; i--) {
-      dispatch = this[kInterceptors$5][i](dispatch);
-    }
-    this[kInterceptedDispatch] = dispatch;
-    return dispatch(opts, handler)
-  }
-
-  dispatch (opts, handler) {
-    if (!handler || typeof handler !== 'object') {
-      throw new InvalidArgumentError$j('handler must be an object')
-    }
-
-    try {
-      if (!opts || typeof opts !== 'object') {
-        throw new InvalidArgumentError$j('opts must be an object.')
-      }
-
-      if (this[kDestroyed] || this[kOnDestroyed]) {
-        throw new ClientDestroyedError$1()
-      }
-
-      if (this[kClosed]) {
-        throw new ClientClosedError()
-      }
-
-      return this[kInterceptedDispatch](opts, handler)
-    } catch (err) {
-      if (typeof handler.onError !== 'function') {
-        throw new InvalidArgumentError$j('invalid onError method')
-      }
-
-      handler.onError(err);
-
-      return false
-    }
-  }
-};
-
-var dispatcherBase = DispatcherBase$4;
-
-const net$1 = require$$0$5;
-const assert$7 = require$$0$3;
-const util$g = util$j;
-const { InvalidArgumentError: InvalidArgumentError$i, ConnectTimeoutError } = errors$1;
-
-let tls; // include tls conditionally since it is not always available
-
-// TODO: session re-use does not wait for the first
-// connection to resolve the session and might therefore
-// resolve the same servername multiple times even when
-// re-use is enabled.
-
-let SessionCache;
-// FIXME: remove workaround when the Node bug is fixed
-// https://github.com/nodejs/node/issues/49344#issuecomment-1741776308
-if (commonjsGlobal.FinalizationRegistry && !process.env.NODE_V8_COVERAGE) {
-  SessionCache = class WeakSessionCache {
-    constructor (maxCachedSessions) {
-      this._maxCachedSessions = maxCachedSessions;
-      this._sessionCache = new Map();
-      this._sessionRegistry = new commonjsGlobal.FinalizationRegistry((key) => {
-        if (this._sessionCache.size < this._maxCachedSessions) {
-          return
-        }
-
-        const ref = this._sessionCache.get(key);
-        if (ref !== undefined && ref.deref() === undefined) {
-          this._sessionCache.delete(key);
-        }
-      });
-    }
-
-    get (sessionKey) {
-      const ref = this._sessionCache.get(sessionKey);
-      return ref ? ref.deref() : null
-    }
-
-    set (sessionKey, session) {
-      if (this._maxCachedSessions === 0) {
-        return
-      }
-
-      this._sessionCache.set(sessionKey, new WeakRef(session));
-      this._sessionRegistry.register(session, sessionKey);
-    }
-  };
-} else {
-  SessionCache = class SimpleSessionCache {
-    constructor (maxCachedSessions) {
-      this._maxCachedSessions = maxCachedSessions;
-      this._sessionCache = new Map();
-    }
-
-    get (sessionKey) {
-      return this._sessionCache.get(sessionKey)
-    }
-
-    set (sessionKey, session) {
-      if (this._maxCachedSessions === 0) {
-        return
-      }
-
-      if (this._sessionCache.size >= this._maxCachedSessions) {
-        // remove the oldest session
-        const { value: oldestKey } = this._sessionCache.keys().next();
-        this._sessionCache.delete(oldestKey);
-      }
-
-      this._sessionCache.set(sessionKey, session);
-    }
-  };
+	connect = buildConnector;
+	return connect;
 }
 
-function buildConnector$4 ({ allowH2, maxCachedSessions, socketPath, timeout, ...opts }) {
-  if (maxCachedSessions != null && (!Number.isInteger(maxCachedSessions) || maxCachedSessions < 0)) {
-    throw new InvalidArgumentError$i('maxCachedSessions must be a positive integer or zero')
-  }
-
-  const options = { path: socketPath, ...opts };
-  const sessionCache = new SessionCache(maxCachedSessions == null ? 100 : maxCachedSessions);
-  timeout = timeout == null ? 10e3 : timeout;
-  allowH2 = allowH2 != null ? allowH2 : false;
-  return function connect ({ hostname, host, protocol, port, servername, localAddress, httpSocket }, callback) {
-    let socket;
-    if (protocol === 'https:') {
-      if (!tls) {
-        tls = require$$1$1;
-      }
-      servername = servername || options.servername || util$g.getServerName(host) || null;
-
-      const sessionKey = servername || hostname;
-      const session = sessionCache.get(sessionKey) || null;
-
-      assert$7(sessionKey);
-
-      socket = tls.connect({
-        highWaterMark: 16384, // TLS in node can't have bigger HWM anyway...
-        ...options,
-        servername,
-        session,
-        localAddress,
-        // TODO(HTTP/2): Add support for h2c
-        ALPNProtocols: allowH2 ? ['http/1.1', 'h2'] : ['http/1.1'],
-        socket: httpSocket, // upgrade socket connection
-        port: port || 443,
-        host: hostname
-      });
-
-      socket
-        .on('session', function (session) {
-          // TODO (fix): Can a session become invalid once established? Don't think so?
-          sessionCache.set(sessionKey, session);
-        });
-    } else {
-      assert$7(!httpSocket, 'httpSocket can only be sent on TLS update');
-      socket = net$1.connect({
-        highWaterMark: 64 * 1024, // Same as nodejs fs streams.
-        ...options,
-        localAddress,
-        port: port || 80,
-        host: hostname
-      });
-    }
-
-    // Set TCP keep alive options on the socket here instead of in connect() for the case of assigning the socket
-    if (options.keepAlive == null || options.keepAlive) {
-      const keepAliveInitialDelay = options.keepAliveInitialDelay === undefined ? 60e3 : options.keepAliveInitialDelay;
-      socket.setKeepAlive(true, keepAliveInitialDelay);
-    }
-
-    const cancelTimeout = setupTimeout(() => onConnectTimeout(socket), timeout);
-
-    socket
-      .setNoDelay(true)
-      .once(protocol === 'https:' ? 'secureConnect' : 'connect', function () {
-        cancelTimeout();
-
-        if (callback) {
-          const cb = callback;
-          callback = null;
-          cb(null, this);
-        }
-      })
-      .on('error', function (err) {
-        cancelTimeout();
-
-        if (callback) {
-          const cb = callback;
-          callback = null;
-          cb(err);
-        }
-      });
-
-    return socket
-  }
-}
-
-function setupTimeout (onConnectTimeout, timeout) {
-  if (!timeout) {
-    return () => {}
-  }
-
-  let s1 = null;
-  let s2 = null;
-  const timeoutId = setTimeout(() => {
-    // setImmediate is added to make sure that we priotorise socket error events over timeouts
-    s1 = setImmediate(() => {
-      if (process.platform === 'win32') {
-        // Windows needs an extra setImmediate probably due to implementation differences in the socket logic
-        s2 = setImmediate(() => onConnectTimeout());
-      } else {
-        onConnectTimeout();
-      }
-    });
-  }, timeout);
-  return () => {
-    clearTimeout(timeoutId);
-    clearImmediate(s1);
-    clearImmediate(s2);
-  }
-}
-
-function onConnectTimeout (socket) {
-  util$g.destroy(socket, new ConnectTimeoutError());
-}
-
-var connect$2 = buildConnector$4;
-
-var constants$3 = {};
+var constants$2 = {};
 
 var utils$2 = {};
 
-var hasRequiredUtils;
+var hasRequiredUtils$2;
 
-function requireUtils () {
-	if (hasRequiredUtils) return utils$2;
-	hasRequiredUtils = 1;
+function requireUtils$2 () {
+	if (hasRequiredUtils$2) return utils$2;
+	hasRequiredUtils$2 = 1;
 	Object.defineProperty(utils$2, "__esModule", { value: true });
 	utils$2.enumToMap = void 0;
 	function enumToMap(obj) {
@@ -8480,12 +8607,12 @@ function requireUtils () {
 var hasRequiredConstants$2;
 
 function requireConstants$2 () {
-	if (hasRequiredConstants$2) return constants$3;
+	if (hasRequiredConstants$2) return constants$2;
 	hasRequiredConstants$2 = 1;
 	(function (exports) {
 		Object.defineProperty(exports, "__esModule", { value: true });
 		exports.SPECIAL_HEADERS = exports.HEADER_STATE = exports.MINOR = exports.MAJOR = exports.CONNECTION_TOKEN_CHARS = exports.HEADER_CHARS = exports.TOKEN = exports.STRICT_TOKEN = exports.HEX = exports.URL_CHAR = exports.STRICT_URL_CHAR = exports.USERINFO_CHARS = exports.MARK = exports.ALPHANUM = exports.NUM = exports.HEX_MAP = exports.NUM_MAP = exports.ALPHA = exports.FINISH = exports.H_METHOD_MAP = exports.METHOD_MAP = exports.METHODS_RTSP = exports.METHODS_ICE = exports.METHODS_HTTP = exports.METHODS = exports.LENIENT_FLAGS = exports.FLAGS = exports.TYPE = exports.ERROR = void 0;
-		const utils_1 = requireUtils();
+		const utils_1 = requireUtils$2();
 		(function (ERROR) {
 		    ERROR[ERROR["OK"] = 0] = "OK";
 		    ERROR[ERROR["INTERNAL"] = 1] = "INTERNAL";
@@ -8754,231 +8881,249 @@ function requireConstants$2 () {
 		    'upgrade': HEADER_STATE.UPGRADE,
 		};
 		
-	} (constants$3));
-	return constants$3;
+	} (constants$2));
+	return constants$2;
 }
 
-const util$f = util$j;
-const { kBodyUsed } = symbols$4;
-const assert$6 = require$$0$3;
-const { InvalidArgumentError: InvalidArgumentError$h } = errors$1;
-const EE = require$$0$2;
+var RedirectHandler_1;
+var hasRequiredRedirectHandler;
 
-const redirectableStatusCodes = [300, 301, 302, 303, 307, 308];
+function requireRedirectHandler () {
+	if (hasRequiredRedirectHandler) return RedirectHandler_1;
+	hasRequiredRedirectHandler = 1;
 
-const kBody$1 = Symbol('body');
+	const util = requireUtil$6();
+	const { kBodyUsed } = requireSymbols$4();
+	const assert = require$$0$3;
+	const { InvalidArgumentError } = requireErrors();
+	const EE = require$$0$2;
 
-class BodyAsyncIterable {
-  constructor (body) {
-    this[kBody$1] = body;
-    this[kBodyUsed] = false;
-  }
+	const redirectableStatusCodes = [300, 301, 302, 303, 307, 308];
 
-  async * [Symbol.asyncIterator] () {
-    assert$6(!this[kBodyUsed], 'disturbed');
-    this[kBodyUsed] = true;
-    yield * this[kBody$1];
-  }
+	const kBody = Symbol('body');
+
+	class BodyAsyncIterable {
+	  constructor (body) {
+	    this[kBody] = body;
+	    this[kBodyUsed] = false;
+	  }
+
+	  async * [Symbol.asyncIterator] () {
+	    assert(!this[kBodyUsed], 'disturbed');
+	    this[kBodyUsed] = true;
+	    yield * this[kBody];
+	  }
+	}
+
+	class RedirectHandler {
+	  constructor (dispatch, maxRedirections, opts, handler) {
+	    if (maxRedirections != null && (!Number.isInteger(maxRedirections) || maxRedirections < 0)) {
+	      throw new InvalidArgumentError('maxRedirections must be a positive number')
+	    }
+
+	    util.validateHandler(handler, opts.method, opts.upgrade);
+
+	    this.dispatch = dispatch;
+	    this.location = null;
+	    this.abort = null;
+	    this.opts = { ...opts, maxRedirections: 0 }; // opts must be a copy
+	    this.maxRedirections = maxRedirections;
+	    this.handler = handler;
+	    this.history = [];
+
+	    if (util.isStream(this.opts.body)) {
+	      // TODO (fix): Provide some way for the user to cache the file to e.g. /tmp
+	      // so that it can be dispatched again?
+	      // TODO (fix): Do we need 100-expect support to provide a way to do this properly?
+	      if (util.bodyLength(this.opts.body) === 0) {
+	        this.opts.body
+	          .on('data', function () {
+	            assert(false);
+	          });
+	      }
+
+	      if (typeof this.opts.body.readableDidRead !== 'boolean') {
+	        this.opts.body[kBodyUsed] = false;
+	        EE.prototype.on.call(this.opts.body, 'data', function () {
+	          this[kBodyUsed] = true;
+	        });
+	      }
+	    } else if (this.opts.body && typeof this.opts.body.pipeTo === 'function') {
+	      // TODO (fix): We can't access ReadableStream internal state
+	      // to determine whether or not it has been disturbed. This is just
+	      // a workaround.
+	      this.opts.body = new BodyAsyncIterable(this.opts.body);
+	    } else if (
+	      this.opts.body &&
+	      typeof this.opts.body !== 'string' &&
+	      !ArrayBuffer.isView(this.opts.body) &&
+	      util.isIterable(this.opts.body)
+	    ) {
+	      // TODO: Should we allow re-using iterable if !this.opts.idempotent
+	      // or through some other flag?
+	      this.opts.body = new BodyAsyncIterable(this.opts.body);
+	    }
+	  }
+
+	  onConnect (abort) {
+	    this.abort = abort;
+	    this.handler.onConnect(abort, { history: this.history });
+	  }
+
+	  onUpgrade (statusCode, headers, socket) {
+	    this.handler.onUpgrade(statusCode, headers, socket);
+	  }
+
+	  onError (error) {
+	    this.handler.onError(error);
+	  }
+
+	  onHeaders (statusCode, headers, resume, statusText) {
+	    this.location = this.history.length >= this.maxRedirections || util.isDisturbed(this.opts.body)
+	      ? null
+	      : parseLocation(statusCode, headers);
+
+	    if (this.opts.origin) {
+	      this.history.push(new URL(this.opts.path, this.opts.origin));
+	    }
+
+	    if (!this.location) {
+	      return this.handler.onHeaders(statusCode, headers, resume, statusText)
+	    }
+
+	    const { origin, pathname, search } = util.parseURL(new URL(this.location, this.opts.origin && new URL(this.opts.path, this.opts.origin)));
+	    const path = search ? `${pathname}${search}` : pathname;
+
+	    // Remove headers referring to the original URL.
+	    // By default it is Host only, unless it's a 303 (see below), which removes also all Content-* headers.
+	    // https://tools.ietf.org/html/rfc7231#section-6.4
+	    this.opts.headers = cleanRequestHeaders(this.opts.headers, statusCode === 303, this.opts.origin !== origin);
+	    this.opts.path = path;
+	    this.opts.origin = origin;
+	    this.opts.maxRedirections = 0;
+	    this.opts.query = null;
+
+	    // https://tools.ietf.org/html/rfc7231#section-6.4.4
+	    // In case of HTTP 303, always replace method to be either HEAD or GET
+	    if (statusCode === 303 && this.opts.method !== 'HEAD') {
+	      this.opts.method = 'GET';
+	      this.opts.body = null;
+	    }
+	  }
+
+	  onData (chunk) {
+	    if (this.location) ; else {
+	      return this.handler.onData(chunk)
+	    }
+	  }
+
+	  onComplete (trailers) {
+	    if (this.location) {
+	      /*
+	        https://tools.ietf.org/html/rfc7231#section-6.4
+
+	        TLDR: undici always ignores 3xx response trailers as they are not expected in case of redirections
+	        and neither are useful if present.
+
+	        See comment on onData method above for more detailed informations.
+	      */
+
+	      this.location = null;
+	      this.abort = null;
+
+	      this.dispatch(this.opts, this);
+	    } else {
+	      this.handler.onComplete(trailers);
+	    }
+	  }
+
+	  onBodySent (chunk) {
+	    if (this.handler.onBodySent) {
+	      this.handler.onBodySent(chunk);
+	    }
+	  }
+	}
+
+	function parseLocation (statusCode, headers) {
+	  if (redirectableStatusCodes.indexOf(statusCode) === -1) {
+	    return null
+	  }
+
+	  for (let i = 0; i < headers.length; i += 2) {
+	    if (headers[i].toString().toLowerCase() === 'location') {
+	      return headers[i + 1]
+	    }
+	  }
+	}
+
+	// https://tools.ietf.org/html/rfc7231#section-6.4.4
+	function shouldRemoveHeader (header, removeContent, unknownOrigin) {
+	  if (header.length === 4) {
+	    return util.headerNameToString(header) === 'host'
+	  }
+	  if (removeContent && util.headerNameToString(header).startsWith('content-')) {
+	    return true
+	  }
+	  if (unknownOrigin && (header.length === 13 || header.length === 6 || header.length === 19)) {
+	    const name = util.headerNameToString(header);
+	    return name === 'authorization' || name === 'cookie' || name === 'proxy-authorization'
+	  }
+	  return false
+	}
+
+	// https://tools.ietf.org/html/rfc7231#section-6.4
+	function cleanRequestHeaders (headers, removeContent, unknownOrigin) {
+	  const ret = [];
+	  if (Array.isArray(headers)) {
+	    for (let i = 0; i < headers.length; i += 2) {
+	      if (!shouldRemoveHeader(headers[i], removeContent, unknownOrigin)) {
+	        ret.push(headers[i], headers[i + 1]);
+	      }
+	    }
+	  } else if (headers && typeof headers === 'object') {
+	    for (const key of Object.keys(headers)) {
+	      if (!shouldRemoveHeader(key, removeContent, unknownOrigin)) {
+	        ret.push(key, headers[key]);
+	      }
+	    }
+	  } else {
+	    assert(headers == null, 'headers must be an object or an array');
+	  }
+	  return ret
+	}
+
+	RedirectHandler_1 = RedirectHandler;
+	return RedirectHandler_1;
 }
 
-let RedirectHandler$2 = class RedirectHandler {
-  constructor (dispatch, maxRedirections, opts, handler) {
-    if (maxRedirections != null && (!Number.isInteger(maxRedirections) || maxRedirections < 0)) {
-      throw new InvalidArgumentError$h('maxRedirections must be a positive number')
-    }
+var redirectInterceptor;
+var hasRequiredRedirectInterceptor;
 
-    util$f.validateHandler(handler, opts.method, opts.upgrade);
+function requireRedirectInterceptor () {
+	if (hasRequiredRedirectInterceptor) return redirectInterceptor;
+	hasRequiredRedirectInterceptor = 1;
 
-    this.dispatch = dispatch;
-    this.location = null;
-    this.abort = null;
-    this.opts = { ...opts, maxRedirections: 0 }; // opts must be a copy
-    this.maxRedirections = maxRedirections;
-    this.handler = handler;
-    this.history = [];
+	const RedirectHandler = requireRedirectHandler();
 
-    if (util$f.isStream(this.opts.body)) {
-      // TODO (fix): Provide some way for the user to cache the file to e.g. /tmp
-      // so that it can be dispatched again?
-      // TODO (fix): Do we need 100-expect support to provide a way to do this properly?
-      if (util$f.bodyLength(this.opts.body) === 0) {
-        this.opts.body
-          .on('data', function () {
-            assert$6(false);
-          });
-      }
+	function createRedirectInterceptor ({ maxRedirections: defaultMaxRedirections }) {
+	  return (dispatch) => {
+	    return function Intercept (opts, handler) {
+	      const { maxRedirections = defaultMaxRedirections } = opts;
 
-      if (typeof this.opts.body.readableDidRead !== 'boolean') {
-        this.opts.body[kBodyUsed] = false;
-        EE.prototype.on.call(this.opts.body, 'data', function () {
-          this[kBodyUsed] = true;
-        });
-      }
-    } else if (this.opts.body && typeof this.opts.body.pipeTo === 'function') {
-      // TODO (fix): We can't access ReadableStream internal state
-      // to determine whether or not it has been disturbed. This is just
-      // a workaround.
-      this.opts.body = new BodyAsyncIterable(this.opts.body);
-    } else if (
-      this.opts.body &&
-      typeof this.opts.body !== 'string' &&
-      !ArrayBuffer.isView(this.opts.body) &&
-      util$f.isIterable(this.opts.body)
-    ) {
-      // TODO: Should we allow re-using iterable if !this.opts.idempotent
-      // or through some other flag?
-      this.opts.body = new BodyAsyncIterable(this.opts.body);
-    }
-  }
+	      if (!maxRedirections) {
+	        return dispatch(opts, handler)
+	      }
 
-  onConnect (abort) {
-    this.abort = abort;
-    this.handler.onConnect(abort, { history: this.history });
-  }
+	      const redirectHandler = new RedirectHandler(dispatch, maxRedirections, opts, handler);
+	      opts = { ...opts, maxRedirections: 0 }; // Stop sub dispatcher from also redirecting.
+	      return dispatch(opts, redirectHandler)
+	    }
+	  }
+	}
 
-  onUpgrade (statusCode, headers, socket) {
-    this.handler.onUpgrade(statusCode, headers, socket);
-  }
-
-  onError (error) {
-    this.handler.onError(error);
-  }
-
-  onHeaders (statusCode, headers, resume, statusText) {
-    this.location = this.history.length >= this.maxRedirections || util$f.isDisturbed(this.opts.body)
-      ? null
-      : parseLocation(statusCode, headers);
-
-    if (this.opts.origin) {
-      this.history.push(new URL(this.opts.path, this.opts.origin));
-    }
-
-    if (!this.location) {
-      return this.handler.onHeaders(statusCode, headers, resume, statusText)
-    }
-
-    const { origin, pathname, search } = util$f.parseURL(new URL(this.location, this.opts.origin && new URL(this.opts.path, this.opts.origin)));
-    const path = search ? `${pathname}${search}` : pathname;
-
-    // Remove headers referring to the original URL.
-    // By default it is Host only, unless it's a 303 (see below), which removes also all Content-* headers.
-    // https://tools.ietf.org/html/rfc7231#section-6.4
-    this.opts.headers = cleanRequestHeaders(this.opts.headers, statusCode === 303, this.opts.origin !== origin);
-    this.opts.path = path;
-    this.opts.origin = origin;
-    this.opts.maxRedirections = 0;
-    this.opts.query = null;
-
-    // https://tools.ietf.org/html/rfc7231#section-6.4.4
-    // In case of HTTP 303, always replace method to be either HEAD or GET
-    if (statusCode === 303 && this.opts.method !== 'HEAD') {
-      this.opts.method = 'GET';
-      this.opts.body = null;
-    }
-  }
-
-  onData (chunk) {
-    if (this.location) ; else {
-      return this.handler.onData(chunk)
-    }
-  }
-
-  onComplete (trailers) {
-    if (this.location) {
-      /*
-        https://tools.ietf.org/html/rfc7231#section-6.4
-
-        TLDR: undici always ignores 3xx response trailers as they are not expected in case of redirections
-        and neither are useful if present.
-
-        See comment on onData method above for more detailed informations.
-      */
-
-      this.location = null;
-      this.abort = null;
-
-      this.dispatch(this.opts, this);
-    } else {
-      this.handler.onComplete(trailers);
-    }
-  }
-
-  onBodySent (chunk) {
-    if (this.handler.onBodySent) {
-      this.handler.onBodySent(chunk);
-    }
-  }
-};
-
-function parseLocation (statusCode, headers) {
-  if (redirectableStatusCodes.indexOf(statusCode) === -1) {
-    return null
-  }
-
-  for (let i = 0; i < headers.length; i += 2) {
-    if (headers[i].toString().toLowerCase() === 'location') {
-      return headers[i + 1]
-    }
-  }
+	redirectInterceptor = createRedirectInterceptor;
+	return redirectInterceptor;
 }
-
-// https://tools.ietf.org/html/rfc7231#section-6.4.4
-function shouldRemoveHeader (header, removeContent, unknownOrigin) {
-  if (header.length === 4) {
-    return util$f.headerNameToString(header) === 'host'
-  }
-  if (removeContent && util$f.headerNameToString(header).startsWith('content-')) {
-    return true
-  }
-  if (unknownOrigin && (header.length === 13 || header.length === 6 || header.length === 19)) {
-    const name = util$f.headerNameToString(header);
-    return name === 'authorization' || name === 'cookie' || name === 'proxy-authorization'
-  }
-  return false
-}
-
-// https://tools.ietf.org/html/rfc7231#section-6.4
-function cleanRequestHeaders (headers, removeContent, unknownOrigin) {
-  const ret = [];
-  if (Array.isArray(headers)) {
-    for (let i = 0; i < headers.length; i += 2) {
-      if (!shouldRemoveHeader(headers[i], removeContent, unknownOrigin)) {
-        ret.push(headers[i], headers[i + 1]);
-      }
-    }
-  } else if (headers && typeof headers === 'object') {
-    for (const key of Object.keys(headers)) {
-      if (!shouldRemoveHeader(key, removeContent, unknownOrigin)) {
-        ret.push(key, headers[key]);
-      }
-    }
-  } else {
-    assert$6(headers == null, 'headers must be an object or an array');
-  }
-  return ret
-}
-
-var RedirectHandler_1 = RedirectHandler$2;
-
-const RedirectHandler$1 = RedirectHandler_1;
-
-function createRedirectInterceptor$3 ({ maxRedirections: defaultMaxRedirections }) {
-  return (dispatch) => {
-    return function Intercept (opts, handler) {
-      const { maxRedirections = defaultMaxRedirections } = opts;
-
-      if (!maxRedirections) {
-        return dispatch(opts, handler)
-      }
-
-      const redirectHandler = new RedirectHandler$1(dispatch, maxRedirections, opts, handler);
-      opts = { ...opts, maxRedirections: 0 }; // Stop sub dispatcher from also redirecting.
-      return dispatch(opts, redirectHandler)
-    }
-  }
-}
-
-var redirectInterceptor = createRedirectInterceptor$3;
 
 var llhttpWasm;
 var hasRequiredLlhttpWasm;
@@ -9000,5927 +9145,6188 @@ function requireLlhttp_simdWasm () {
 	return llhttp_simdWasm;
 }
 
-/* global WebAssembly */
+var client;
+var hasRequiredClient;
 
-const assert$5 = require$$0$3;
-const net = require$$0$5;
-const http$1 = require$$2$1;
-const { pipeline: pipeline$1 } = require$$0$4;
-const util$e = util$j;
-const timers = timers$1;
-const Request = request$3;
-const DispatcherBase$3 = dispatcherBase;
-const {
-  RequestContentLengthMismatchError,
-  ResponseContentLengthMismatchError,
-  InvalidArgumentError: InvalidArgumentError$g,
-  RequestAbortedError: RequestAbortedError$8,
-  HeadersTimeoutError,
-  HeadersOverflowError,
-  SocketError: SocketError$2,
-  InformationalError,
-  BodyTimeoutError,
-  HTTPParserError,
-  ResponseExceededMaxSizeError,
-  ClientDestroyedError
-} = errors$1;
-const buildConnector$3 = connect$2;
-const {
-  kUrl: kUrl$3,
-  kReset,
-  kServerName,
-  kClient: kClient$1,
-  kBusy: kBusy$1,
-  kParser,
-  kConnect,
-  kBlocking,
-  kResuming,
-  kRunning: kRunning$3,
-  kPending: kPending$2,
-  kSize: kSize$4,
-  kWriting,
-  kQueue: kQueue$1,
-  kConnected: kConnected$5,
-  kConnecting,
-  kNeedDrain: kNeedDrain$3,
-  kNoRef,
-  kKeepAliveDefaultTimeout,
-  kHostHeader,
-  kPendingIdx,
-  kRunningIdx,
-  kError,
-  kPipelining,
-  kSocket,
-  kKeepAliveTimeoutValue,
-  kMaxHeadersSize,
-  kKeepAliveMaxTimeout,
-  kKeepAliveTimeoutThreshold,
-  kHeadersTimeout,
-  kBodyTimeout,
-  kStrictContentLength,
-  kConnector,
-  kMaxRedirections: kMaxRedirections$1,
-  kMaxRequests,
-  kCounter,
-  kClose: kClose$5,
-  kDestroy: kDestroy$3,
-  kDispatch: kDispatch$2,
-  kInterceptors: kInterceptors$4,
-  kLocalAddress,
-  kMaxResponseSize,
-  kHTTPConnVersion,
-  // HTTP2
-  kHost,
-  kHTTP2Session,
-  kHTTP2SessionState,
-  kHTTP2BuildRequest,
-  kHTTP2CopyHeaders,
-  kHTTP1BuildRequest
-} = symbols$4;
+function requireClient () {
+	if (hasRequiredClient) return client;
+	hasRequiredClient = 1;
 
-/** @type {import('http2')} */
-let http2;
-try {
-  http2 = require('http2');
-} catch {
-  // @ts-ignore
-  http2 = { constants: {} };
+	/* global WebAssembly */
+
+	const assert = require$$0$3;
+	const net = require$$0$5;
+	const http = require$$2$1;
+	const { pipeline } = require$$0$4;
+	const util = requireUtil$6();
+	const timers = requireTimers();
+	const Request = requireRequest$1();
+	const DispatcherBase = requireDispatcherBase();
+	const {
+	  RequestContentLengthMismatchError,
+	  ResponseContentLengthMismatchError,
+	  InvalidArgumentError,
+	  RequestAbortedError,
+	  HeadersTimeoutError,
+	  HeadersOverflowError,
+	  SocketError,
+	  InformationalError,
+	  BodyTimeoutError,
+	  HTTPParserError,
+	  ResponseExceededMaxSizeError,
+	  ClientDestroyedError
+	} = requireErrors();
+	const buildConnector = requireConnect();
+	const {
+	  kUrl,
+	  kReset,
+	  kServerName,
+	  kClient,
+	  kBusy,
+	  kParser,
+	  kConnect,
+	  kBlocking,
+	  kResuming,
+	  kRunning,
+	  kPending,
+	  kSize,
+	  kWriting,
+	  kQueue,
+	  kConnected,
+	  kConnecting,
+	  kNeedDrain,
+	  kNoRef,
+	  kKeepAliveDefaultTimeout,
+	  kHostHeader,
+	  kPendingIdx,
+	  kRunningIdx,
+	  kError,
+	  kPipelining,
+	  kSocket,
+	  kKeepAliveTimeoutValue,
+	  kMaxHeadersSize,
+	  kKeepAliveMaxTimeout,
+	  kKeepAliveTimeoutThreshold,
+	  kHeadersTimeout,
+	  kBodyTimeout,
+	  kStrictContentLength,
+	  kConnector,
+	  kMaxRedirections,
+	  kMaxRequests,
+	  kCounter,
+	  kClose,
+	  kDestroy,
+	  kDispatch,
+	  kInterceptors,
+	  kLocalAddress,
+	  kMaxResponseSize,
+	  kHTTPConnVersion,
+	  // HTTP2
+	  kHost,
+	  kHTTP2Session,
+	  kHTTP2SessionState,
+	  kHTTP2BuildRequest,
+	  kHTTP2CopyHeaders,
+	  kHTTP1BuildRequest
+	} = requireSymbols$4();
+
+	/** @type {import('http2')} */
+	let http2;
+	try {
+	  http2 = require('http2');
+	} catch {
+	  // @ts-ignore
+	  http2 = { constants: {} };
+	}
+
+	const {
+	  constants: {
+	    HTTP2_HEADER_AUTHORITY,
+	    HTTP2_HEADER_METHOD,
+	    HTTP2_HEADER_PATH,
+	    HTTP2_HEADER_SCHEME,
+	    HTTP2_HEADER_CONTENT_LENGTH,
+	    HTTP2_HEADER_EXPECT,
+	    HTTP2_HEADER_STATUS
+	  }
+	} = http2;
+
+	// Experimental
+	let h2ExperimentalWarned = false;
+
+	const FastBuffer = Buffer[Symbol.species];
+
+	const kClosedResolve = Symbol('kClosedResolve');
+
+	const channels = {};
+
+	try {
+	  const diagnosticsChannel = require('diagnostics_channel');
+	  channels.sendHeaders = diagnosticsChannel.channel('undici:client:sendHeaders');
+	  channels.beforeConnect = diagnosticsChannel.channel('undici:client:beforeConnect');
+	  channels.connectError = diagnosticsChannel.channel('undici:client:connectError');
+	  channels.connected = diagnosticsChannel.channel('undici:client:connected');
+	} catch {
+	  channels.sendHeaders = { hasSubscribers: false };
+	  channels.beforeConnect = { hasSubscribers: false };
+	  channels.connectError = { hasSubscribers: false };
+	  channels.connected = { hasSubscribers: false };
+	}
+
+	/**
+	 * @type {import('../types/client').default}
+	 */
+	class Client extends DispatcherBase {
+	  /**
+	   *
+	   * @param {string|URL} url
+	   * @param {import('../types/client').Client.Options} options
+	   */
+	  constructor (url, {
+	    interceptors,
+	    maxHeaderSize,
+	    headersTimeout,
+	    socketTimeout,
+	    requestTimeout,
+	    connectTimeout,
+	    bodyTimeout,
+	    idleTimeout,
+	    keepAlive,
+	    keepAliveTimeout,
+	    maxKeepAliveTimeout,
+	    keepAliveMaxTimeout,
+	    keepAliveTimeoutThreshold,
+	    socketPath,
+	    pipelining,
+	    tls,
+	    strictContentLength,
+	    maxCachedSessions,
+	    maxRedirections,
+	    connect,
+	    maxRequestsPerClient,
+	    localAddress,
+	    maxResponseSize,
+	    autoSelectFamily,
+	    autoSelectFamilyAttemptTimeout,
+	    // h2
+	    allowH2,
+	    maxConcurrentStreams
+	  } = {}) {
+	    super();
+
+	    if (keepAlive !== undefined) {
+	      throw new InvalidArgumentError('unsupported keepAlive, use pipelining=0 instead')
+	    }
+
+	    if (socketTimeout !== undefined) {
+	      throw new InvalidArgumentError('unsupported socketTimeout, use headersTimeout & bodyTimeout instead')
+	    }
+
+	    if (requestTimeout !== undefined) {
+	      throw new InvalidArgumentError('unsupported requestTimeout, use headersTimeout & bodyTimeout instead')
+	    }
+
+	    if (idleTimeout !== undefined) {
+	      throw new InvalidArgumentError('unsupported idleTimeout, use keepAliveTimeout instead')
+	    }
+
+	    if (maxKeepAliveTimeout !== undefined) {
+	      throw new InvalidArgumentError('unsupported maxKeepAliveTimeout, use keepAliveMaxTimeout instead')
+	    }
+
+	    if (maxHeaderSize != null && !Number.isFinite(maxHeaderSize)) {
+	      throw new InvalidArgumentError('invalid maxHeaderSize')
+	    }
+
+	    if (socketPath != null && typeof socketPath !== 'string') {
+	      throw new InvalidArgumentError('invalid socketPath')
+	    }
+
+	    if (connectTimeout != null && (!Number.isFinite(connectTimeout) || connectTimeout < 0)) {
+	      throw new InvalidArgumentError('invalid connectTimeout')
+	    }
+
+	    if (keepAliveTimeout != null && (!Number.isFinite(keepAliveTimeout) || keepAliveTimeout <= 0)) {
+	      throw new InvalidArgumentError('invalid keepAliveTimeout')
+	    }
+
+	    if (keepAliveMaxTimeout != null && (!Number.isFinite(keepAliveMaxTimeout) || keepAliveMaxTimeout <= 0)) {
+	      throw new InvalidArgumentError('invalid keepAliveMaxTimeout')
+	    }
+
+	    if (keepAliveTimeoutThreshold != null && !Number.isFinite(keepAliveTimeoutThreshold)) {
+	      throw new InvalidArgumentError('invalid keepAliveTimeoutThreshold')
+	    }
+
+	    if (headersTimeout != null && (!Number.isInteger(headersTimeout) || headersTimeout < 0)) {
+	      throw new InvalidArgumentError('headersTimeout must be a positive integer or zero')
+	    }
+
+	    if (bodyTimeout != null && (!Number.isInteger(bodyTimeout) || bodyTimeout < 0)) {
+	      throw new InvalidArgumentError('bodyTimeout must be a positive integer or zero')
+	    }
+
+	    if (connect != null && typeof connect !== 'function' && typeof connect !== 'object') {
+	      throw new InvalidArgumentError('connect must be a function or an object')
+	    }
+
+	    if (maxRedirections != null && (!Number.isInteger(maxRedirections) || maxRedirections < 0)) {
+	      throw new InvalidArgumentError('maxRedirections must be a positive number')
+	    }
+
+	    if (maxRequestsPerClient != null && (!Number.isInteger(maxRequestsPerClient) || maxRequestsPerClient < 0)) {
+	      throw new InvalidArgumentError('maxRequestsPerClient must be a positive number')
+	    }
+
+	    if (localAddress != null && (typeof localAddress !== 'string' || net.isIP(localAddress) === 0)) {
+	      throw new InvalidArgumentError('localAddress must be valid string IP address')
+	    }
+
+	    if (maxResponseSize != null && (!Number.isInteger(maxResponseSize) || maxResponseSize < -1)) {
+	      throw new InvalidArgumentError('maxResponseSize must be a positive number')
+	    }
+
+	    if (
+	      autoSelectFamilyAttemptTimeout != null &&
+	      (!Number.isInteger(autoSelectFamilyAttemptTimeout) || autoSelectFamilyAttemptTimeout < -1)
+	    ) {
+	      throw new InvalidArgumentError('autoSelectFamilyAttemptTimeout must be a positive number')
+	    }
+
+	    // h2
+	    if (allowH2 != null && typeof allowH2 !== 'boolean') {
+	      throw new InvalidArgumentError('allowH2 must be a valid boolean value')
+	    }
+
+	    if (maxConcurrentStreams != null && (typeof maxConcurrentStreams !== 'number' || maxConcurrentStreams < 1)) {
+	      throw new InvalidArgumentError('maxConcurrentStreams must be a possitive integer, greater than 0')
+	    }
+
+	    if (typeof connect !== 'function') {
+	      connect = buildConnector({
+	        ...tls,
+	        maxCachedSessions,
+	        allowH2,
+	        socketPath,
+	        timeout: connectTimeout,
+	        ...(util.nodeHasAutoSelectFamily && autoSelectFamily ? { autoSelectFamily, autoSelectFamilyAttemptTimeout } : undefined),
+	        ...connect
+	      });
+	    }
+
+	    this[kInterceptors] = interceptors && interceptors.Client && Array.isArray(interceptors.Client)
+	      ? interceptors.Client
+	      : [createRedirectInterceptor({ maxRedirections })];
+	    this[kUrl] = util.parseOrigin(url);
+	    this[kConnector] = connect;
+	    this[kSocket] = null;
+	    this[kPipelining] = pipelining != null ? pipelining : 1;
+	    this[kMaxHeadersSize] = maxHeaderSize || http.maxHeaderSize;
+	    this[kKeepAliveDefaultTimeout] = keepAliveTimeout == null ? 4e3 : keepAliveTimeout;
+	    this[kKeepAliveMaxTimeout] = keepAliveMaxTimeout == null ? 600e3 : keepAliveMaxTimeout;
+	    this[kKeepAliveTimeoutThreshold] = keepAliveTimeoutThreshold == null ? 1e3 : keepAliveTimeoutThreshold;
+	    this[kKeepAliveTimeoutValue] = this[kKeepAliveDefaultTimeout];
+	    this[kServerName] = null;
+	    this[kLocalAddress] = localAddress != null ? localAddress : null;
+	    this[kResuming] = 0; // 0, idle, 1, scheduled, 2 resuming
+	    this[kNeedDrain] = 0; // 0, idle, 1, scheduled, 2 resuming
+	    this[kHostHeader] = `host: ${this[kUrl].hostname}${this[kUrl].port ? `:${this[kUrl].port}` : ''}\r\n`;
+	    this[kBodyTimeout] = bodyTimeout != null ? bodyTimeout : 300e3;
+	    this[kHeadersTimeout] = headersTimeout != null ? headersTimeout : 300e3;
+	    this[kStrictContentLength] = strictContentLength == null ? true : strictContentLength;
+	    this[kMaxRedirections] = maxRedirections;
+	    this[kMaxRequests] = maxRequestsPerClient;
+	    this[kClosedResolve] = null;
+	    this[kMaxResponseSize] = maxResponseSize > -1 ? maxResponseSize : -1;
+	    this[kHTTPConnVersion] = 'h1';
+
+	    // HTTP/2
+	    this[kHTTP2Session] = null;
+	    this[kHTTP2SessionState] = !allowH2
+	      ? null
+	      : {
+	        // streams: null, // Fixed queue of streams - For future support of `push`
+	          openStreams: 0, // Keep track of them to decide wether or not unref the session
+	          maxConcurrentStreams: maxConcurrentStreams != null ? maxConcurrentStreams : 100 // Max peerConcurrentStreams for a Node h2 server
+	        };
+	    this[kHost] = `${this[kUrl].hostname}${this[kUrl].port ? `:${this[kUrl].port}` : ''}`;
+
+	    // kQueue is built up of 3 sections separated by
+	    // the kRunningIdx and kPendingIdx indices.
+	    // |   complete   |   running   |   pending   |
+	    //                ^ kRunningIdx ^ kPendingIdx ^ kQueue.length
+	    // kRunningIdx points to the first running element.
+	    // kPendingIdx points to the first pending element.
+	    // This implements a fast queue with an amortized
+	    // time of O(1).
+
+	    this[kQueue] = [];
+	    this[kRunningIdx] = 0;
+	    this[kPendingIdx] = 0;
+	  }
+
+	  get pipelining () {
+	    return this[kPipelining]
+	  }
+
+	  set pipelining (value) {
+	    this[kPipelining] = value;
+	    resume(this, true);
+	  }
+
+	  get [kPending] () {
+	    return this[kQueue].length - this[kPendingIdx]
+	  }
+
+	  get [kRunning] () {
+	    return this[kPendingIdx] - this[kRunningIdx]
+	  }
+
+	  get [kSize] () {
+	    return this[kQueue].length - this[kRunningIdx]
+	  }
+
+	  get [kConnected] () {
+	    return !!this[kSocket] && !this[kConnecting] && !this[kSocket].destroyed
+	  }
+
+	  get [kBusy] () {
+	    const socket = this[kSocket];
+	    return (
+	      (socket && (socket[kReset] || socket[kWriting] || socket[kBlocking])) ||
+	      (this[kSize] >= (this[kPipelining] || 1)) ||
+	      this[kPending] > 0
+	    )
+	  }
+
+	  /* istanbul ignore: only used for test */
+	  [kConnect] (cb) {
+	    connect(this);
+	    this.once('connect', cb);
+	  }
+
+	  [kDispatch] (opts, handler) {
+	    const origin = opts.origin || this[kUrl].origin;
+
+	    const request = this[kHTTPConnVersion] === 'h2'
+	      ? Request[kHTTP2BuildRequest](origin, opts, handler)
+	      : Request[kHTTP1BuildRequest](origin, opts, handler);
+
+	    this[kQueue].push(request);
+	    if (this[kResuming]) ; else if (util.bodyLength(request.body) == null && util.isIterable(request.body)) {
+	      // Wait a tick in case stream/iterator is ended in the same tick.
+	      this[kResuming] = 1;
+	      process.nextTick(resume, this);
+	    } else {
+	      resume(this, true);
+	    }
+
+	    if (this[kResuming] && this[kNeedDrain] !== 2 && this[kBusy]) {
+	      this[kNeedDrain] = 2;
+	    }
+
+	    return this[kNeedDrain] < 2
+	  }
+
+	  async [kClose] () {
+	    // TODO: for H2 we need to gracefully flush the remaining enqueued
+	    // request and close each stream.
+	    return new Promise((resolve) => {
+	      if (!this[kSize]) {
+	        resolve(null);
+	      } else {
+	        this[kClosedResolve] = resolve;
+	      }
+	    })
+	  }
+
+	  async [kDestroy] (err) {
+	    return new Promise((resolve) => {
+	      const requests = this[kQueue].splice(this[kPendingIdx]);
+	      for (let i = 0; i < requests.length; i++) {
+	        const request = requests[i];
+	        errorRequest(this, request, err);
+	      }
+
+	      const callback = () => {
+	        if (this[kClosedResolve]) {
+	          // TODO (fix): Should we error here with ClientDestroyedError?
+	          this[kClosedResolve]();
+	          this[kClosedResolve] = null;
+	        }
+	        resolve();
+	      };
+
+	      if (this[kHTTP2Session] != null) {
+	        util.destroy(this[kHTTP2Session], err);
+	        this[kHTTP2Session] = null;
+	        this[kHTTP2SessionState] = null;
+	      }
+
+	      if (!this[kSocket]) {
+	        queueMicrotask(callback);
+	      } else {
+	        util.destroy(this[kSocket].on('close', callback), err);
+	      }
+
+	      resume(this);
+	    })
+	  }
+	}
+
+	function onHttp2SessionError (err) {
+	  assert(err.code !== 'ERR_TLS_CERT_ALTNAME_INVALID');
+
+	  this[kSocket][kError] = err;
+
+	  onError(this[kClient], err);
+	}
+
+	function onHttp2FrameError (type, code, id) {
+	  const err = new InformationalError(`HTTP/2: "frameError" received - type ${type}, code ${code}`);
+
+	  if (id === 0) {
+	    this[kSocket][kError] = err;
+	    onError(this[kClient], err);
+	  }
+	}
+
+	function onHttp2SessionEnd () {
+	  util.destroy(this, new SocketError('other side closed'));
+	  util.destroy(this[kSocket], new SocketError('other side closed'));
+	}
+
+	function onHTTP2GoAway (code) {
+	  const client = this[kClient];
+	  const err = new InformationalError(`HTTP/2: "GOAWAY" frame received with code ${code}`);
+	  client[kSocket] = null;
+	  client[kHTTP2Session] = null;
+
+	  if (client.destroyed) {
+	    assert(this[kPending] === 0);
+
+	    // Fail entire queue.
+	    const requests = client[kQueue].splice(client[kRunningIdx]);
+	    for (let i = 0; i < requests.length; i++) {
+	      const request = requests[i];
+	      errorRequest(this, request, err);
+	    }
+	  } else if (client[kRunning] > 0) {
+	    // Fail head of pipeline.
+	    const request = client[kQueue][client[kRunningIdx]];
+	    client[kQueue][client[kRunningIdx]++] = null;
+
+	    errorRequest(client, request, err);
+	  }
+
+	  client[kPendingIdx] = client[kRunningIdx];
+
+	  assert(client[kRunning] === 0);
+
+	  client.emit('disconnect',
+	    client[kUrl],
+	    [client],
+	    err
+	  );
+
+	  resume(client);
+	}
+
+	const constants = requireConstants$2();
+	const createRedirectInterceptor = requireRedirectInterceptor();
+	const EMPTY_BUF = Buffer.alloc(0);
+
+	async function lazyllhttp () {
+	  const llhttpWasmData = process.env.JEST_WORKER_ID ? requireLlhttpWasm() : undefined;
+
+	  let mod;
+	  try {
+	    mod = await WebAssembly.compile(Buffer.from(requireLlhttp_simdWasm(), 'base64'));
+	  } catch (e) {
+	    /* istanbul ignore next */
+
+	    // We could check if the error was caused by the simd option not
+	    // being enabled, but the occurring of this other error
+	    // * https://github.com/emscripten-core/emscripten/issues/11495
+	    // got me to remove that check to avoid breaking Node 12.
+	    mod = await WebAssembly.compile(Buffer.from(llhttpWasmData || requireLlhttpWasm(), 'base64'));
+	  }
+
+	  return await WebAssembly.instantiate(mod, {
+	    env: {
+	      /* eslint-disable camelcase */
+
+	      wasm_on_url: (p, at, len) => {
+	        /* istanbul ignore next */
+	        return 0
+	      },
+	      wasm_on_status: (p, at, len) => {
+	        assert.strictEqual(currentParser.ptr, p);
+	        const start = at - currentBufferPtr + currentBufferRef.byteOffset;
+	        return currentParser.onStatus(new FastBuffer(currentBufferRef.buffer, start, len)) || 0
+	      },
+	      wasm_on_message_begin: (p) => {
+	        assert.strictEqual(currentParser.ptr, p);
+	        return currentParser.onMessageBegin() || 0
+	      },
+	      wasm_on_header_field: (p, at, len) => {
+	        assert.strictEqual(currentParser.ptr, p);
+	        const start = at - currentBufferPtr + currentBufferRef.byteOffset;
+	        return currentParser.onHeaderField(new FastBuffer(currentBufferRef.buffer, start, len)) || 0
+	      },
+	      wasm_on_header_value: (p, at, len) => {
+	        assert.strictEqual(currentParser.ptr, p);
+	        const start = at - currentBufferPtr + currentBufferRef.byteOffset;
+	        return currentParser.onHeaderValue(new FastBuffer(currentBufferRef.buffer, start, len)) || 0
+	      },
+	      wasm_on_headers_complete: (p, statusCode, upgrade, shouldKeepAlive) => {
+	        assert.strictEqual(currentParser.ptr, p);
+	        return currentParser.onHeadersComplete(statusCode, Boolean(upgrade), Boolean(shouldKeepAlive)) || 0
+	      },
+	      wasm_on_body: (p, at, len) => {
+	        assert.strictEqual(currentParser.ptr, p);
+	        const start = at - currentBufferPtr + currentBufferRef.byteOffset;
+	        return currentParser.onBody(new FastBuffer(currentBufferRef.buffer, start, len)) || 0
+	      },
+	      wasm_on_message_complete: (p) => {
+	        assert.strictEqual(currentParser.ptr, p);
+	        return currentParser.onMessageComplete() || 0
+	      }
+
+	      /* eslint-enable camelcase */
+	    }
+	  })
+	}
+
+	let llhttpInstance = null;
+	let llhttpPromise = lazyllhttp();
+	llhttpPromise.catch();
+
+	let currentParser = null;
+	let currentBufferRef = null;
+	let currentBufferSize = 0;
+	let currentBufferPtr = null;
+
+	const TIMEOUT_HEADERS = 1;
+	const TIMEOUT_BODY = 2;
+	const TIMEOUT_IDLE = 3;
+
+	class Parser {
+	  constructor (client, socket, { exports }) {
+	    assert(Number.isFinite(client[kMaxHeadersSize]) && client[kMaxHeadersSize] > 0);
+
+	    this.llhttp = exports;
+	    this.ptr = this.llhttp.llhttp_alloc(constants.TYPE.RESPONSE);
+	    this.client = client;
+	    this.socket = socket;
+	    this.timeout = null;
+	    this.timeoutValue = null;
+	    this.timeoutType = null;
+	    this.statusCode = null;
+	    this.statusText = '';
+	    this.upgrade = false;
+	    this.headers = [];
+	    this.headersSize = 0;
+	    this.headersMaxSize = client[kMaxHeadersSize];
+	    this.shouldKeepAlive = false;
+	    this.paused = false;
+	    this.resume = this.resume.bind(this);
+
+	    this.bytesRead = 0;
+
+	    this.keepAlive = '';
+	    this.contentLength = '';
+	    this.connection = '';
+	    this.maxResponseSize = client[kMaxResponseSize];
+	  }
+
+	  setTimeout (value, type) {
+	    this.timeoutType = type;
+	    if (value !== this.timeoutValue) {
+	      timers.clearTimeout(this.timeout);
+	      if (value) {
+	        this.timeout = timers.setTimeout(onParserTimeout, value, this);
+	        // istanbul ignore else: only for jest
+	        if (this.timeout.unref) {
+	          this.timeout.unref();
+	        }
+	      } else {
+	        this.timeout = null;
+	      }
+	      this.timeoutValue = value;
+	    } else if (this.timeout) {
+	      // istanbul ignore else: only for jest
+	      if (this.timeout.refresh) {
+	        this.timeout.refresh();
+	      }
+	    }
+	  }
+
+	  resume () {
+	    if (this.socket.destroyed || !this.paused) {
+	      return
+	    }
+
+	    assert(this.ptr != null);
+	    assert(currentParser == null);
+
+	    this.llhttp.llhttp_resume(this.ptr);
+
+	    assert(this.timeoutType === TIMEOUT_BODY);
+	    if (this.timeout) {
+	      // istanbul ignore else: only for jest
+	      if (this.timeout.refresh) {
+	        this.timeout.refresh();
+	      }
+	    }
+
+	    this.paused = false;
+	    this.execute(this.socket.read() || EMPTY_BUF); // Flush parser.
+	    this.readMore();
+	  }
+
+	  readMore () {
+	    while (!this.paused && this.ptr) {
+	      const chunk = this.socket.read();
+	      if (chunk === null) {
+	        break
+	      }
+	      this.execute(chunk);
+	    }
+	  }
+
+	  execute (data) {
+	    assert(this.ptr != null);
+	    assert(currentParser == null);
+	    assert(!this.paused);
+
+	    const { socket, llhttp } = this;
+
+	    if (data.length > currentBufferSize) {
+	      if (currentBufferPtr) {
+	        llhttp.free(currentBufferPtr);
+	      }
+	      currentBufferSize = Math.ceil(data.length / 4096) * 4096;
+	      currentBufferPtr = llhttp.malloc(currentBufferSize);
+	    }
+
+	    new Uint8Array(llhttp.memory.buffer, currentBufferPtr, currentBufferSize).set(data);
+
+	    // Call `execute` on the wasm parser.
+	    // We pass the `llhttp_parser` pointer address, the pointer address of buffer view data,
+	    // and finally the length of bytes to parse.
+	    // The return value is an error code or `constants.ERROR.OK`.
+	    try {
+	      let ret;
+
+	      try {
+	        currentBufferRef = data;
+	        currentParser = this;
+	        ret = llhttp.llhttp_execute(this.ptr, currentBufferPtr, data.length);
+	        /* eslint-disable-next-line no-useless-catch */
+	      } catch (err) {
+	        /* istanbul ignore next: difficult to make a test case for */
+	        throw err
+	      } finally {
+	        currentParser = null;
+	        currentBufferRef = null;
+	      }
+
+	      const offset = llhttp.llhttp_get_error_pos(this.ptr) - currentBufferPtr;
+
+	      if (ret === constants.ERROR.PAUSED_UPGRADE) {
+	        this.onUpgrade(data.slice(offset));
+	      } else if (ret === constants.ERROR.PAUSED) {
+	        this.paused = true;
+	        socket.unshift(data.slice(offset));
+	      } else if (ret !== constants.ERROR.OK) {
+	        const ptr = llhttp.llhttp_get_error_reason(this.ptr);
+	        let message = '';
+	        /* istanbul ignore else: difficult to make a test case for */
+	        if (ptr) {
+	          const len = new Uint8Array(llhttp.memory.buffer, ptr).indexOf(0);
+	          message =
+	            'Response does not match the HTTP/1.1 protocol (' +
+	            Buffer.from(llhttp.memory.buffer, ptr, len).toString() +
+	            ')';
+	        }
+	        throw new HTTPParserError(message, constants.ERROR[ret], data.slice(offset))
+	      }
+	    } catch (err) {
+	      util.destroy(socket, err);
+	    }
+	  }
+
+	  destroy () {
+	    assert(this.ptr != null);
+	    assert(currentParser == null);
+
+	    this.llhttp.llhttp_free(this.ptr);
+	    this.ptr = null;
+
+	    timers.clearTimeout(this.timeout);
+	    this.timeout = null;
+	    this.timeoutValue = null;
+	    this.timeoutType = null;
+
+	    this.paused = false;
+	  }
+
+	  onStatus (buf) {
+	    this.statusText = buf.toString();
+	  }
+
+	  onMessageBegin () {
+	    const { socket, client } = this;
+
+	    /* istanbul ignore next: difficult to make a test case for */
+	    if (socket.destroyed) {
+	      return -1
+	    }
+
+	    const request = client[kQueue][client[kRunningIdx]];
+	    if (!request) {
+	      return -1
+	    }
+	  }
+
+	  onHeaderField (buf) {
+	    const len = this.headers.length;
+
+	    if ((len & 1) === 0) {
+	      this.headers.push(buf);
+	    } else {
+	      this.headers[len - 1] = Buffer.concat([this.headers[len - 1], buf]);
+	    }
+
+	    this.trackHeader(buf.length);
+	  }
+
+	  onHeaderValue (buf) {
+	    let len = this.headers.length;
+
+	    if ((len & 1) === 1) {
+	      this.headers.push(buf);
+	      len += 1;
+	    } else {
+	      this.headers[len - 1] = Buffer.concat([this.headers[len - 1], buf]);
+	    }
+
+	    const key = this.headers[len - 2];
+	    if (key.length === 10 && key.toString().toLowerCase() === 'keep-alive') {
+	      this.keepAlive += buf.toString();
+	    } else if (key.length === 10 && key.toString().toLowerCase() === 'connection') {
+	      this.connection += buf.toString();
+	    } else if (key.length === 14 && key.toString().toLowerCase() === 'content-length') {
+	      this.contentLength += buf.toString();
+	    }
+
+	    this.trackHeader(buf.length);
+	  }
+
+	  trackHeader (len) {
+	    this.headersSize += len;
+	    if (this.headersSize >= this.headersMaxSize) {
+	      util.destroy(this.socket, new HeadersOverflowError());
+	    }
+	  }
+
+	  onUpgrade (head) {
+	    const { upgrade, client, socket, headers, statusCode } = this;
+
+	    assert(upgrade);
+
+	    const request = client[kQueue][client[kRunningIdx]];
+	    assert(request);
+
+	    assert(!socket.destroyed);
+	    assert(socket === client[kSocket]);
+	    assert(!this.paused);
+	    assert(request.upgrade || request.method === 'CONNECT');
+
+	    this.statusCode = null;
+	    this.statusText = '';
+	    this.shouldKeepAlive = null;
+
+	    assert(this.headers.length % 2 === 0);
+	    this.headers = [];
+	    this.headersSize = 0;
+
+	    socket.unshift(head);
+
+	    socket[kParser].destroy();
+	    socket[kParser] = null;
+
+	    socket[kClient] = null;
+	    socket[kError] = null;
+	    socket
+	      .removeListener('error', onSocketError)
+	      .removeListener('readable', onSocketReadable)
+	      .removeListener('end', onSocketEnd)
+	      .removeListener('close', onSocketClose);
+
+	    client[kSocket] = null;
+	    client[kQueue][client[kRunningIdx]++] = null;
+	    client.emit('disconnect', client[kUrl], [client], new InformationalError('upgrade'));
+
+	    try {
+	      request.onUpgrade(statusCode, headers, socket);
+	    } catch (err) {
+	      util.destroy(socket, err);
+	    }
+
+	    resume(client);
+	  }
+
+	  onHeadersComplete (statusCode, upgrade, shouldKeepAlive) {
+	    const { client, socket, headers, statusText } = this;
+
+	    /* istanbul ignore next: difficult to make a test case for */
+	    if (socket.destroyed) {
+	      return -1
+	    }
+
+	    const request = client[kQueue][client[kRunningIdx]];
+
+	    /* istanbul ignore next: difficult to make a test case for */
+	    if (!request) {
+	      return -1
+	    }
+
+	    assert(!this.upgrade);
+	    assert(this.statusCode < 200);
+
+	    if (statusCode === 100) {
+	      util.destroy(socket, new SocketError('bad response', util.getSocketInfo(socket)));
+	      return -1
+	    }
+
+	    /* this can only happen if server is misbehaving */
+	    if (upgrade && !request.upgrade) {
+	      util.destroy(socket, new SocketError('bad upgrade', util.getSocketInfo(socket)));
+	      return -1
+	    }
+
+	    assert.strictEqual(this.timeoutType, TIMEOUT_HEADERS);
+
+	    this.statusCode = statusCode;
+	    this.shouldKeepAlive = (
+	      shouldKeepAlive ||
+	      // Override llhttp value which does not allow keepAlive for HEAD.
+	      (request.method === 'HEAD' && !socket[kReset] && this.connection.toLowerCase() === 'keep-alive')
+	    );
+
+	    if (this.statusCode >= 200) {
+	      const bodyTimeout = request.bodyTimeout != null
+	        ? request.bodyTimeout
+	        : client[kBodyTimeout];
+	      this.setTimeout(bodyTimeout, TIMEOUT_BODY);
+	    } else if (this.timeout) {
+	      // istanbul ignore else: only for jest
+	      if (this.timeout.refresh) {
+	        this.timeout.refresh();
+	      }
+	    }
+
+	    if (request.method === 'CONNECT') {
+	      assert(client[kRunning] === 1);
+	      this.upgrade = true;
+	      return 2
+	    }
+
+	    if (upgrade) {
+	      assert(client[kRunning] === 1);
+	      this.upgrade = true;
+	      return 2
+	    }
+
+	    assert(this.headers.length % 2 === 0);
+	    this.headers = [];
+	    this.headersSize = 0;
+
+	    if (this.shouldKeepAlive && client[kPipelining]) {
+	      const keepAliveTimeout = this.keepAlive ? util.parseKeepAliveTimeout(this.keepAlive) : null;
+
+	      if (keepAliveTimeout != null) {
+	        const timeout = Math.min(
+	          keepAliveTimeout - client[kKeepAliveTimeoutThreshold],
+	          client[kKeepAliveMaxTimeout]
+	        );
+	        if (timeout <= 0) {
+	          socket[kReset] = true;
+	        } else {
+	          client[kKeepAliveTimeoutValue] = timeout;
+	        }
+	      } else {
+	        client[kKeepAliveTimeoutValue] = client[kKeepAliveDefaultTimeout];
+	      }
+	    } else {
+	      // Stop more requests from being dispatched.
+	      socket[kReset] = true;
+	    }
+
+	    const pause = request.onHeaders(statusCode, headers, this.resume, statusText) === false;
+
+	    if (request.aborted) {
+	      return -1
+	    }
+
+	    if (request.method === 'HEAD') {
+	      return 1
+	    }
+
+	    if (statusCode < 200) {
+	      return 1
+	    }
+
+	    if (socket[kBlocking]) {
+	      socket[kBlocking] = false;
+	      resume(client);
+	    }
+
+	    return pause ? constants.ERROR.PAUSED : 0
+	  }
+
+	  onBody (buf) {
+	    const { client, socket, statusCode, maxResponseSize } = this;
+
+	    if (socket.destroyed) {
+	      return -1
+	    }
+
+	    const request = client[kQueue][client[kRunningIdx]];
+	    assert(request);
+
+	    assert.strictEqual(this.timeoutType, TIMEOUT_BODY);
+	    if (this.timeout) {
+	      // istanbul ignore else: only for jest
+	      if (this.timeout.refresh) {
+	        this.timeout.refresh();
+	      }
+	    }
+
+	    assert(statusCode >= 200);
+
+	    if (maxResponseSize > -1 && this.bytesRead + buf.length > maxResponseSize) {
+	      util.destroy(socket, new ResponseExceededMaxSizeError());
+	      return -1
+	    }
+
+	    this.bytesRead += buf.length;
+
+	    if (request.onData(buf) === false) {
+	      return constants.ERROR.PAUSED
+	    }
+	  }
+
+	  onMessageComplete () {
+	    const { client, socket, statusCode, upgrade, headers, contentLength, bytesRead, shouldKeepAlive } = this;
+
+	    if (socket.destroyed && (!statusCode || shouldKeepAlive)) {
+	      return -1
+	    }
+
+	    if (upgrade) {
+	      return
+	    }
+
+	    const request = client[kQueue][client[kRunningIdx]];
+	    assert(request);
+
+	    assert(statusCode >= 100);
+
+	    this.statusCode = null;
+	    this.statusText = '';
+	    this.bytesRead = 0;
+	    this.contentLength = '';
+	    this.keepAlive = '';
+	    this.connection = '';
+
+	    assert(this.headers.length % 2 === 0);
+	    this.headers = [];
+	    this.headersSize = 0;
+
+	    if (statusCode < 200) {
+	      return
+	    }
+
+	    /* istanbul ignore next: should be handled by llhttp? */
+	    if (request.method !== 'HEAD' && contentLength && bytesRead !== parseInt(contentLength, 10)) {
+	      util.destroy(socket, new ResponseContentLengthMismatchError());
+	      return -1
+	    }
+
+	    request.onComplete(headers);
+
+	    client[kQueue][client[kRunningIdx]++] = null;
+
+	    if (socket[kWriting]) {
+	      assert.strictEqual(client[kRunning], 0);
+	      // Response completed before request.
+	      util.destroy(socket, new InformationalError('reset'));
+	      return constants.ERROR.PAUSED
+	    } else if (!shouldKeepAlive) {
+	      util.destroy(socket, new InformationalError('reset'));
+	      return constants.ERROR.PAUSED
+	    } else if (socket[kReset] && client[kRunning] === 0) {
+	      // Destroy socket once all requests have completed.
+	      // The request at the tail of the pipeline is the one
+	      // that requested reset and no further requests should
+	      // have been queued since then.
+	      util.destroy(socket, new InformationalError('reset'));
+	      return constants.ERROR.PAUSED
+	    } else if (client[kPipelining] === 1) {
+	      // We must wait a full event loop cycle to reuse this socket to make sure
+	      // that non-spec compliant servers are not closing the connection even if they
+	      // said they won't.
+	      setImmediate(resume, client);
+	    } else {
+	      resume(client);
+	    }
+	  }
+	}
+
+	function onParserTimeout (parser) {
+	  const { socket, timeoutType, client } = parser;
+
+	  /* istanbul ignore else */
+	  if (timeoutType === TIMEOUT_HEADERS) {
+	    if (!socket[kWriting] || socket.writableNeedDrain || client[kRunning] > 1) {
+	      assert(!parser.paused, 'cannot be paused while waiting for headers');
+	      util.destroy(socket, new HeadersTimeoutError());
+	    }
+	  } else if (timeoutType === TIMEOUT_BODY) {
+	    if (!parser.paused) {
+	      util.destroy(socket, new BodyTimeoutError());
+	    }
+	  } else if (timeoutType === TIMEOUT_IDLE) {
+	    assert(client[kRunning] === 0 && client[kKeepAliveTimeoutValue]);
+	    util.destroy(socket, new InformationalError('socket idle timeout'));
+	  }
+	}
+
+	function onSocketReadable () {
+	  const { [kParser]: parser } = this;
+	  if (parser) {
+	    parser.readMore();
+	  }
+	}
+
+	function onSocketError (err) {
+	  const { [kClient]: client, [kParser]: parser } = this;
+
+	  assert(err.code !== 'ERR_TLS_CERT_ALTNAME_INVALID');
+
+	  if (client[kHTTPConnVersion] !== 'h2') {
+	    // On Mac OS, we get an ECONNRESET even if there is a full body to be forwarded
+	    // to the user.
+	    if (err.code === 'ECONNRESET' && parser.statusCode && !parser.shouldKeepAlive) {
+	      // We treat all incoming data so for as a valid response.
+	      parser.onMessageComplete();
+	      return
+	    }
+	  }
+
+	  this[kError] = err;
+
+	  onError(this[kClient], err);
+	}
+
+	function onError (client, err) {
+	  if (
+	    client[kRunning] === 0 &&
+	    err.code !== 'UND_ERR_INFO' &&
+	    err.code !== 'UND_ERR_SOCKET'
+	  ) {
+	    // Error is not caused by running request and not a recoverable
+	    // socket error.
+
+	    assert(client[kPendingIdx] === client[kRunningIdx]);
+
+	    const requests = client[kQueue].splice(client[kRunningIdx]);
+	    for (let i = 0; i < requests.length; i++) {
+	      const request = requests[i];
+	      errorRequest(client, request, err);
+	    }
+	    assert(client[kSize] === 0);
+	  }
+	}
+
+	function onSocketEnd () {
+	  const { [kParser]: parser, [kClient]: client } = this;
+
+	  if (client[kHTTPConnVersion] !== 'h2') {
+	    if (parser.statusCode && !parser.shouldKeepAlive) {
+	      // We treat all incoming data so far as a valid response.
+	      parser.onMessageComplete();
+	      return
+	    }
+	  }
+
+	  util.destroy(this, new SocketError('other side closed', util.getSocketInfo(this)));
+	}
+
+	function onSocketClose () {
+	  const { [kClient]: client, [kParser]: parser } = this;
+
+	  if (client[kHTTPConnVersion] === 'h1' && parser) {
+	    if (!this[kError] && parser.statusCode && !parser.shouldKeepAlive) {
+	      // We treat all incoming data so far as a valid response.
+	      parser.onMessageComplete();
+	    }
+
+	    this[kParser].destroy();
+	    this[kParser] = null;
+	  }
+
+	  const err = this[kError] || new SocketError('closed', util.getSocketInfo(this));
+
+	  client[kSocket] = null;
+
+	  if (client.destroyed) {
+	    assert(client[kPending] === 0);
+
+	    // Fail entire queue.
+	    const requests = client[kQueue].splice(client[kRunningIdx]);
+	    for (let i = 0; i < requests.length; i++) {
+	      const request = requests[i];
+	      errorRequest(client, request, err);
+	    }
+	  } else if (client[kRunning] > 0 && err.code !== 'UND_ERR_INFO') {
+	    // Fail head of pipeline.
+	    const request = client[kQueue][client[kRunningIdx]];
+	    client[kQueue][client[kRunningIdx]++] = null;
+
+	    errorRequest(client, request, err);
+	  }
+
+	  client[kPendingIdx] = client[kRunningIdx];
+
+	  assert(client[kRunning] === 0);
+
+	  client.emit('disconnect', client[kUrl], [client], err);
+
+	  resume(client);
+	}
+
+	async function connect (client) {
+	  assert(!client[kConnecting]);
+	  assert(!client[kSocket]);
+
+	  let { host, hostname, protocol, port } = client[kUrl];
+
+	  // Resolve ipv6
+	  if (hostname[0] === '[') {
+	    const idx = hostname.indexOf(']');
+
+	    assert(idx !== -1);
+	    const ip = hostname.substring(1, idx);
+
+	    assert(net.isIP(ip));
+	    hostname = ip;
+	  }
+
+	  client[kConnecting] = true;
+
+	  if (channels.beforeConnect.hasSubscribers) {
+	    channels.beforeConnect.publish({
+	      connectParams: {
+	        host,
+	        hostname,
+	        protocol,
+	        port,
+	        servername: client[kServerName],
+	        localAddress: client[kLocalAddress]
+	      },
+	      connector: client[kConnector]
+	    });
+	  }
+
+	  try {
+	    const socket = await new Promise((resolve, reject) => {
+	      client[kConnector]({
+	        host,
+	        hostname,
+	        protocol,
+	        port,
+	        servername: client[kServerName],
+	        localAddress: client[kLocalAddress]
+	      }, (err, socket) => {
+	        if (err) {
+	          reject(err);
+	        } else {
+	          resolve(socket);
+	        }
+	      });
+	    });
+
+	    if (client.destroyed) {
+	      util.destroy(socket.on('error', () => {}), new ClientDestroyedError());
+	      return
+	    }
+
+	    client[kConnecting] = false;
+
+	    assert(socket);
+
+	    const isH2 = socket.alpnProtocol === 'h2';
+	    if (isH2) {
+	      if (!h2ExperimentalWarned) {
+	        h2ExperimentalWarned = true;
+	        process.emitWarning('H2 support is experimental, expect them to change at any time.', {
+	          code: 'UNDICI-H2'
+	        });
+	      }
+
+	      const session = http2.connect(client[kUrl], {
+	        createConnection: () => socket,
+	        peerMaxConcurrentStreams: client[kHTTP2SessionState].maxConcurrentStreams
+	      });
+
+	      client[kHTTPConnVersion] = 'h2';
+	      session[kClient] = client;
+	      session[kSocket] = socket;
+	      session.on('error', onHttp2SessionError);
+	      session.on('frameError', onHttp2FrameError);
+	      session.on('end', onHttp2SessionEnd);
+	      session.on('goaway', onHTTP2GoAway);
+	      session.on('close', onSocketClose);
+	      session.unref();
+
+	      client[kHTTP2Session] = session;
+	      socket[kHTTP2Session] = session;
+	    } else {
+	      if (!llhttpInstance) {
+	        llhttpInstance = await llhttpPromise;
+	        llhttpPromise = null;
+	      }
+
+	      socket[kNoRef] = false;
+	      socket[kWriting] = false;
+	      socket[kReset] = false;
+	      socket[kBlocking] = false;
+	      socket[kParser] = new Parser(client, socket, llhttpInstance);
+	    }
+
+	    socket[kCounter] = 0;
+	    socket[kMaxRequests] = client[kMaxRequests];
+	    socket[kClient] = client;
+	    socket[kError] = null;
+
+	    socket
+	      .on('error', onSocketError)
+	      .on('readable', onSocketReadable)
+	      .on('end', onSocketEnd)
+	      .on('close', onSocketClose);
+
+	    client[kSocket] = socket;
+
+	    if (channels.connected.hasSubscribers) {
+	      channels.connected.publish({
+	        connectParams: {
+	          host,
+	          hostname,
+	          protocol,
+	          port,
+	          servername: client[kServerName],
+	          localAddress: client[kLocalAddress]
+	        },
+	        connector: client[kConnector],
+	        socket
+	      });
+	    }
+	    client.emit('connect', client[kUrl], [client]);
+	  } catch (err) {
+	    if (client.destroyed) {
+	      return
+	    }
+
+	    client[kConnecting] = false;
+
+	    if (channels.connectError.hasSubscribers) {
+	      channels.connectError.publish({
+	        connectParams: {
+	          host,
+	          hostname,
+	          protocol,
+	          port,
+	          servername: client[kServerName],
+	          localAddress: client[kLocalAddress]
+	        },
+	        connector: client[kConnector],
+	        error: err
+	      });
+	    }
+
+	    if (err.code === 'ERR_TLS_CERT_ALTNAME_INVALID') {
+	      assert(client[kRunning] === 0);
+	      while (client[kPending] > 0 && client[kQueue][client[kPendingIdx]].servername === client[kServerName]) {
+	        const request = client[kQueue][client[kPendingIdx]++];
+	        errorRequest(client, request, err);
+	      }
+	    } else {
+	      onError(client, err);
+	    }
+
+	    client.emit('connectionError', client[kUrl], [client], err);
+	  }
+
+	  resume(client);
+	}
+
+	function emitDrain (client) {
+	  client[kNeedDrain] = 0;
+	  client.emit('drain', client[kUrl], [client]);
+	}
+
+	function resume (client, sync) {
+	  if (client[kResuming] === 2) {
+	    return
+	  }
+
+	  client[kResuming] = 2;
+
+	  _resume(client, sync);
+	  client[kResuming] = 0;
+
+	  if (client[kRunningIdx] > 256) {
+	    client[kQueue].splice(0, client[kRunningIdx]);
+	    client[kPendingIdx] -= client[kRunningIdx];
+	    client[kRunningIdx] = 0;
+	  }
+	}
+
+	function _resume (client, sync) {
+	  while (true) {
+	    if (client.destroyed) {
+	      assert(client[kPending] === 0);
+	      return
+	    }
+
+	    if (client[kClosedResolve] && !client[kSize]) {
+	      client[kClosedResolve]();
+	      client[kClosedResolve] = null;
+	      return
+	    }
+
+	    const socket = client[kSocket];
+
+	    if (socket && !socket.destroyed && socket.alpnProtocol !== 'h2') {
+	      if (client[kSize] === 0) {
+	        if (!socket[kNoRef] && socket.unref) {
+	          socket.unref();
+	          socket[kNoRef] = true;
+	        }
+	      } else if (socket[kNoRef] && socket.ref) {
+	        socket.ref();
+	        socket[kNoRef] = false;
+	      }
+
+	      if (client[kSize] === 0) {
+	        if (socket[kParser].timeoutType !== TIMEOUT_IDLE) {
+	          socket[kParser].setTimeout(client[kKeepAliveTimeoutValue], TIMEOUT_IDLE);
+	        }
+	      } else if (client[kRunning] > 0 && socket[kParser].statusCode < 200) {
+	        if (socket[kParser].timeoutType !== TIMEOUT_HEADERS) {
+	          const request = client[kQueue][client[kRunningIdx]];
+	          const headersTimeout = request.headersTimeout != null
+	            ? request.headersTimeout
+	            : client[kHeadersTimeout];
+	          socket[kParser].setTimeout(headersTimeout, TIMEOUT_HEADERS);
+	        }
+	      }
+	    }
+
+	    if (client[kBusy]) {
+	      client[kNeedDrain] = 2;
+	    } else if (client[kNeedDrain] === 2) {
+	      if (sync) {
+	        client[kNeedDrain] = 1;
+	        process.nextTick(emitDrain, client);
+	      } else {
+	        emitDrain(client);
+	      }
+	      continue
+	    }
+
+	    if (client[kPending] === 0) {
+	      return
+	    }
+
+	    if (client[kRunning] >= (client[kPipelining] || 1)) {
+	      return
+	    }
+
+	    const request = client[kQueue][client[kPendingIdx]];
+
+	    if (client[kUrl].protocol === 'https:' && client[kServerName] !== request.servername) {
+	      if (client[kRunning] > 0) {
+	        return
+	      }
+
+	      client[kServerName] = request.servername;
+
+	      if (socket && socket.servername !== request.servername) {
+	        util.destroy(socket, new InformationalError('servername changed'));
+	        return
+	      }
+	    }
+
+	    if (client[kConnecting]) {
+	      return
+	    }
+
+	    if (!socket && !client[kHTTP2Session]) {
+	      connect(client);
+	      return
+	    }
+
+	    if (socket.destroyed || socket[kWriting] || socket[kReset] || socket[kBlocking]) {
+	      return
+	    }
+
+	    if (client[kRunning] > 0 && !request.idempotent) {
+	      // Non-idempotent request cannot be retried.
+	      // Ensure that no other requests are inflight and
+	      // could cause failure.
+	      return
+	    }
+
+	    if (client[kRunning] > 0 && (request.upgrade || request.method === 'CONNECT')) {
+	      // Don't dispatch an upgrade until all preceding requests have completed.
+	      // A misbehaving server might upgrade the connection before all pipelined
+	      // request has completed.
+	      return
+	    }
+
+	    if (client[kRunning] > 0 && util.bodyLength(request.body) !== 0 &&
+	      (util.isStream(request.body) || util.isAsyncIterable(request.body))) {
+	      // Request with stream or iterator body can error while other requests
+	      // are inflight and indirectly error those as well.
+	      // Ensure this doesn't happen by waiting for inflight
+	      // to complete before dispatching.
+
+	      // Request with stream or iterator body cannot be retried.
+	      // Ensure that no other requests are inflight and
+	      // could cause failure.
+	      return
+	    }
+
+	    if (!request.aborted && write(client, request)) {
+	      client[kPendingIdx]++;
+	    } else {
+	      client[kQueue].splice(client[kPendingIdx], 1);
+	    }
+	  }
+	}
+
+	// https://www.rfc-editor.org/rfc/rfc7230#section-3.3.2
+	function shouldSendContentLength (method) {
+	  return method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS' && method !== 'TRACE' && method !== 'CONNECT'
+	}
+
+	function write (client, request) {
+	  if (client[kHTTPConnVersion] === 'h2') {
+	    writeH2(client, client[kHTTP2Session], request);
+	    return
+	  }
+
+	  const { body, method, path, host, upgrade, headers, blocking, reset } = request;
+
+	  // https://tools.ietf.org/html/rfc7231#section-4.3.1
+	  // https://tools.ietf.org/html/rfc7231#section-4.3.2
+	  // https://tools.ietf.org/html/rfc7231#section-4.3.5
+
+	  // Sending a payload body on a request that does not
+	  // expect it can cause undefined behavior on some
+	  // servers and corrupt connection state. Do not
+	  // re-use the connection for further requests.
+
+	  const expectsPayload = (
+	    method === 'PUT' ||
+	    method === 'POST' ||
+	    method === 'PATCH'
+	  );
+
+	  if (body && typeof body.read === 'function') {
+	    // Try to read EOF in order to get length.
+	    body.read(0);
+	  }
+
+	  const bodyLength = util.bodyLength(body);
+
+	  let contentLength = bodyLength;
+
+	  if (contentLength === null) {
+	    contentLength = request.contentLength;
+	  }
+
+	  if (contentLength === 0 && !expectsPayload) {
+	    // https://tools.ietf.org/html/rfc7230#section-3.3.2
+	    // A user agent SHOULD NOT send a Content-Length header field when
+	    // the request message does not contain a payload body and the method
+	    // semantics do not anticipate such a body.
+
+	    contentLength = null;
+	  }
+
+	  // https://github.com/nodejs/undici/issues/2046
+	  // A user agent may send a Content-Length header with 0 value, this should be allowed.
+	  if (shouldSendContentLength(method) && contentLength > 0 && request.contentLength !== null && request.contentLength !== contentLength) {
+	    if (client[kStrictContentLength]) {
+	      errorRequest(client, request, new RequestContentLengthMismatchError());
+	      return false
+	    }
+
+	    process.emitWarning(new RequestContentLengthMismatchError());
+	  }
+
+	  const socket = client[kSocket];
+
+	  try {
+	    request.onConnect((err) => {
+	      if (request.aborted || request.completed) {
+	        return
+	      }
+
+	      errorRequest(client, request, err || new RequestAbortedError());
+
+	      util.destroy(socket, new InformationalError('aborted'));
+	    });
+	  } catch (err) {
+	    errorRequest(client, request, err);
+	  }
+
+	  if (request.aborted) {
+	    return false
+	  }
+
+	  if (method === 'HEAD') {
+	    // https://github.com/mcollina/undici/issues/258
+	    // Close after a HEAD request to interop with misbehaving servers
+	    // that may send a body in the response.
+
+	    socket[kReset] = true;
+	  }
+
+	  if (upgrade || method === 'CONNECT') {
+	    // On CONNECT or upgrade, block pipeline from dispatching further
+	    // requests on this connection.
+
+	    socket[kReset] = true;
+	  }
+
+	  if (reset != null) {
+	    socket[kReset] = reset;
+	  }
+
+	  if (client[kMaxRequests] && socket[kCounter]++ >= client[kMaxRequests]) {
+	    socket[kReset] = true;
+	  }
+
+	  if (blocking) {
+	    socket[kBlocking] = true;
+	  }
+
+	  let header = `${method} ${path} HTTP/1.1\r\n`;
+
+	  if (typeof host === 'string') {
+	    header += `host: ${host}\r\n`;
+	  } else {
+	    header += client[kHostHeader];
+	  }
+
+	  if (upgrade) {
+	    header += `connection: upgrade\r\nupgrade: ${upgrade}\r\n`;
+	  } else if (client[kPipelining] && !socket[kReset]) {
+	    header += 'connection: keep-alive\r\n';
+	  } else {
+	    header += 'connection: close\r\n';
+	  }
+
+	  if (headers) {
+	    header += headers;
+	  }
+
+	  if (channels.sendHeaders.hasSubscribers) {
+	    channels.sendHeaders.publish({ request, headers: header, socket });
+	  }
+
+	  /* istanbul ignore else: assertion */
+	  if (!body || bodyLength === 0) {
+	    if (contentLength === 0) {
+	      socket.write(`${header}content-length: 0\r\n\r\n`, 'latin1');
+	    } else {
+	      assert(contentLength === null, 'no body must not have content length');
+	      socket.write(`${header}\r\n`, 'latin1');
+	    }
+	    request.onRequestSent();
+	  } else if (util.isBuffer(body)) {
+	    assert(contentLength === body.byteLength, 'buffer body must have content length');
+
+	    socket.cork();
+	    socket.write(`${header}content-length: ${contentLength}\r\n\r\n`, 'latin1');
+	    socket.write(body);
+	    socket.uncork();
+	    request.onBodySent(body);
+	    request.onRequestSent();
+	    if (!expectsPayload) {
+	      socket[kReset] = true;
+	    }
+	  } else if (util.isBlobLike(body)) {
+	    if (typeof body.stream === 'function') {
+	      writeIterable({ body: body.stream(), client, request, socket, contentLength, header, expectsPayload });
+	    } else {
+	      writeBlob({ body, client, request, socket, contentLength, header, expectsPayload });
+	    }
+	  } else if (util.isStream(body)) {
+	    writeStream({ body, client, request, socket, contentLength, header, expectsPayload });
+	  } else if (util.isIterable(body)) {
+	    writeIterable({ body, client, request, socket, contentLength, header, expectsPayload });
+	  } else {
+	    assert(false);
+	  }
+
+	  return true
+	}
+
+	function writeH2 (client, session, request) {
+	  const { body, method, path, host, upgrade, expectContinue, signal, headers: reqHeaders } = request;
+
+	  let headers;
+	  if (typeof reqHeaders === 'string') headers = Request[kHTTP2CopyHeaders](reqHeaders.trim());
+	  else headers = reqHeaders;
+
+	  if (upgrade) {
+	    errorRequest(client, request, new Error('Upgrade not supported for H2'));
+	    return false
+	  }
+
+	  try {
+	    // TODO(HTTP/2): Should we call onConnect immediately or on stream ready event?
+	    request.onConnect((err) => {
+	      if (request.aborted || request.completed) {
+	        return
+	      }
+
+	      errorRequest(client, request, err || new RequestAbortedError());
+	    });
+	  } catch (err) {
+	    errorRequest(client, request, err);
+	  }
+
+	  if (request.aborted) {
+	    return false
+	  }
+
+	  /** @type {import('node:http2').ClientHttp2Stream} */
+	  let stream;
+	  const h2State = client[kHTTP2SessionState];
+
+	  headers[HTTP2_HEADER_AUTHORITY] = host || client[kHost];
+	  headers[HTTP2_HEADER_METHOD] = method;
+
+	  if (method === 'CONNECT') {
+	    session.ref();
+	    // we are already connected, streams are pending, first request
+	    // will create a new stream. We trigger a request to create the stream and wait until
+	    // `ready` event is triggered
+	    // We disabled endStream to allow the user to write to the stream
+	    stream = session.request(headers, { endStream: false, signal });
+
+	    if (stream.id && !stream.pending) {
+	      request.onUpgrade(null, null, stream);
+	      ++h2State.openStreams;
+	    } else {
+	      stream.once('ready', () => {
+	        request.onUpgrade(null, null, stream);
+	        ++h2State.openStreams;
+	      });
+	    }
+
+	    stream.once('close', () => {
+	      h2State.openStreams -= 1;
+	      // TODO(HTTP/2): unref only if current streams count is 0
+	      if (h2State.openStreams === 0) session.unref();
+	    });
+
+	    return true
+	  }
+
+	  // https://tools.ietf.org/html/rfc7540#section-8.3
+	  // :path and :scheme headers must be omited when sending CONNECT
+
+	  headers[HTTP2_HEADER_PATH] = path;
+	  headers[HTTP2_HEADER_SCHEME] = 'https';
+
+	  // https://tools.ietf.org/html/rfc7231#section-4.3.1
+	  // https://tools.ietf.org/html/rfc7231#section-4.3.2
+	  // https://tools.ietf.org/html/rfc7231#section-4.3.5
+
+	  // Sending a payload body on a request that does not
+	  // expect it can cause undefined behavior on some
+	  // servers and corrupt connection state. Do not
+	  // re-use the connection for further requests.
+
+	  const expectsPayload = (
+	    method === 'PUT' ||
+	    method === 'POST' ||
+	    method === 'PATCH'
+	  );
+
+	  if (body && typeof body.read === 'function') {
+	    // Try to read EOF in order to get length.
+	    body.read(0);
+	  }
+
+	  let contentLength = util.bodyLength(body);
+
+	  if (contentLength == null) {
+	    contentLength = request.contentLength;
+	  }
+
+	  if (contentLength === 0 || !expectsPayload) {
+	    // https://tools.ietf.org/html/rfc7230#section-3.3.2
+	    // A user agent SHOULD NOT send a Content-Length header field when
+	    // the request message does not contain a payload body and the method
+	    // semantics do not anticipate such a body.
+
+	    contentLength = null;
+	  }
+
+	  // https://github.com/nodejs/undici/issues/2046
+	  // A user agent may send a Content-Length header with 0 value, this should be allowed.
+	  if (shouldSendContentLength(method) && contentLength > 0 && request.contentLength != null && request.contentLength !== contentLength) {
+	    if (client[kStrictContentLength]) {
+	      errorRequest(client, request, new RequestContentLengthMismatchError());
+	      return false
+	    }
+
+	    process.emitWarning(new RequestContentLengthMismatchError());
+	  }
+
+	  if (contentLength != null) {
+	    assert(body, 'no body must not have content length');
+	    headers[HTTP2_HEADER_CONTENT_LENGTH] = `${contentLength}`;
+	  }
+
+	  session.ref();
+
+	  const shouldEndStream = method === 'GET' || method === 'HEAD';
+	  if (expectContinue) {
+	    headers[HTTP2_HEADER_EXPECT] = '100-continue';
+	    stream = session.request(headers, { endStream: shouldEndStream, signal });
+
+	    stream.once('continue', writeBodyH2);
+	  } else {
+	    stream = session.request(headers, {
+	      endStream: shouldEndStream,
+	      signal
+	    });
+	    writeBodyH2();
+	  }
+
+	  // Increment counter as we have new several streams open
+	  ++h2State.openStreams;
+
+	  stream.once('response', headers => {
+	    const { [HTTP2_HEADER_STATUS]: statusCode, ...realHeaders } = headers;
+
+	    if (request.onHeaders(Number(statusCode), realHeaders, stream.resume.bind(stream), '') === false) {
+	      stream.pause();
+	    }
+	  });
+
+	  stream.once('end', () => {
+	    request.onComplete([]);
+	  });
+
+	  stream.on('data', (chunk) => {
+	    if (request.onData(chunk) === false) {
+	      stream.pause();
+	    }
+	  });
+
+	  stream.once('close', () => {
+	    h2State.openStreams -= 1;
+	    // TODO(HTTP/2): unref only if current streams count is 0
+	    if (h2State.openStreams === 0) {
+	      session.unref();
+	    }
+	  });
+
+	  stream.once('error', function (err) {
+	    if (client[kHTTP2Session] && !client[kHTTP2Session].destroyed && !this.closed && !this.destroyed) {
+	      h2State.streams -= 1;
+	      util.destroy(stream, err);
+	    }
+	  });
+
+	  stream.once('frameError', (type, code) => {
+	    const err = new InformationalError(`HTTP/2: "frameError" received - type ${type}, code ${code}`);
+	    errorRequest(client, request, err);
+
+	    if (client[kHTTP2Session] && !client[kHTTP2Session].destroyed && !this.closed && !this.destroyed) {
+	      h2State.streams -= 1;
+	      util.destroy(stream, err);
+	    }
+	  });
+
+	  // stream.on('aborted', () => {
+	  //   // TODO(HTTP/2): Support aborted
+	  // })
+
+	  // stream.on('timeout', () => {
+	  //   // TODO(HTTP/2): Support timeout
+	  // })
+
+	  // stream.on('push', headers => {
+	  //   // TODO(HTTP/2): Suppor push
+	  // })
+
+	  // stream.on('trailers', headers => {
+	  //   // TODO(HTTP/2): Support trailers
+	  // })
+
+	  return true
+
+	  function writeBodyH2 () {
+	    /* istanbul ignore else: assertion */
+	    if (!body) {
+	      request.onRequestSent();
+	    } else if (util.isBuffer(body)) {
+	      assert(contentLength === body.byteLength, 'buffer body must have content length');
+	      stream.cork();
+	      stream.write(body);
+	      stream.uncork();
+	      stream.end();
+	      request.onBodySent(body);
+	      request.onRequestSent();
+	    } else if (util.isBlobLike(body)) {
+	      if (typeof body.stream === 'function') {
+	        writeIterable({
+	          client,
+	          request,
+	          contentLength,
+	          h2stream: stream,
+	          expectsPayload,
+	          body: body.stream(),
+	          socket: client[kSocket],
+	          header: ''
+	        });
+	      } else {
+	        writeBlob({
+	          body,
+	          client,
+	          request,
+	          contentLength,
+	          expectsPayload,
+	          h2stream: stream,
+	          header: '',
+	          socket: client[kSocket]
+	        });
+	      }
+	    } else if (util.isStream(body)) {
+	      writeStream({
+	        body,
+	        client,
+	        request,
+	        contentLength,
+	        expectsPayload,
+	        socket: client[kSocket],
+	        h2stream: stream,
+	        header: ''
+	      });
+	    } else if (util.isIterable(body)) {
+	      writeIterable({
+	        body,
+	        client,
+	        request,
+	        contentLength,
+	        expectsPayload,
+	        header: '',
+	        h2stream: stream,
+	        socket: client[kSocket]
+	      });
+	    } else {
+	      assert(false);
+	    }
+	  }
+	}
+
+	function writeStream ({ h2stream, body, client, request, socket, contentLength, header, expectsPayload }) {
+	  assert(contentLength !== 0 || client[kRunning] === 0, 'stream body cannot be pipelined');
+
+	  if (client[kHTTPConnVersion] === 'h2') {
+	    // For HTTP/2, is enough to pipe the stream
+	    const pipe = pipeline(
+	      body,
+	      h2stream,
+	      (err) => {
+	        if (err) {
+	          util.destroy(body, err);
+	          util.destroy(h2stream, err);
+	        } else {
+	          request.onRequestSent();
+	        }
+	      }
+	    );
+
+	    pipe.on('data', onPipeData);
+	    pipe.once('end', () => {
+	      pipe.removeListener('data', onPipeData);
+	      util.destroy(pipe);
+	    });
+
+	    function onPipeData (chunk) {
+	      request.onBodySent(chunk);
+	    }
+
+	    return
+	  }
+
+	  let finished = false;
+
+	  const writer = new AsyncWriter({ socket, request, contentLength, client, expectsPayload, header });
+
+	  const onData = function (chunk) {
+	    if (finished) {
+	      return
+	    }
+
+	    try {
+	      if (!writer.write(chunk) && this.pause) {
+	        this.pause();
+	      }
+	    } catch (err) {
+	      util.destroy(this, err);
+	    }
+	  };
+	  const onDrain = function () {
+	    if (finished) {
+	      return
+	    }
+
+	    if (body.resume) {
+	      body.resume();
+	    }
+	  };
+	  const onAbort = function () {
+	    if (finished) {
+	      return
+	    }
+	    const err = new RequestAbortedError();
+	    queueMicrotask(() => onFinished(err));
+	  };
+	  const onFinished = function (err) {
+	    if (finished) {
+	      return
+	    }
+
+	    finished = true;
+
+	    assert(socket.destroyed || (socket[kWriting] && client[kRunning] <= 1));
+
+	    socket
+	      .off('drain', onDrain)
+	      .off('error', onFinished);
+
+	    body
+	      .removeListener('data', onData)
+	      .removeListener('end', onFinished)
+	      .removeListener('error', onFinished)
+	      .removeListener('close', onAbort);
+
+	    if (!err) {
+	      try {
+	        writer.end();
+	      } catch (er) {
+	        err = er;
+	      }
+	    }
+
+	    writer.destroy(err);
+
+	    if (err && (err.code !== 'UND_ERR_INFO' || err.message !== 'reset')) {
+	      util.destroy(body, err);
+	    } else {
+	      util.destroy(body);
+	    }
+	  };
+
+	  body
+	    .on('data', onData)
+	    .on('end', onFinished)
+	    .on('error', onFinished)
+	    .on('close', onAbort);
+
+	  if (body.resume) {
+	    body.resume();
+	  }
+
+	  socket
+	    .on('drain', onDrain)
+	    .on('error', onFinished);
+	}
+
+	async function writeBlob ({ h2stream, body, client, request, socket, contentLength, header, expectsPayload }) {
+	  assert(contentLength === body.size, 'blob body must have content length');
+
+	  const isH2 = client[kHTTPConnVersion] === 'h2';
+	  try {
+	    if (contentLength != null && contentLength !== body.size) {
+	      throw new RequestContentLengthMismatchError()
+	    }
+
+	    const buffer = Buffer.from(await body.arrayBuffer());
+
+	    if (isH2) {
+	      h2stream.cork();
+	      h2stream.write(buffer);
+	      h2stream.uncork();
+	    } else {
+	      socket.cork();
+	      socket.write(`${header}content-length: ${contentLength}\r\n\r\n`, 'latin1');
+	      socket.write(buffer);
+	      socket.uncork();
+	    }
+
+	    request.onBodySent(buffer);
+	    request.onRequestSent();
+
+	    if (!expectsPayload) {
+	      socket[kReset] = true;
+	    }
+
+	    resume(client);
+	  } catch (err) {
+	    util.destroy(isH2 ? h2stream : socket, err);
+	  }
+	}
+
+	async function writeIterable ({ h2stream, body, client, request, socket, contentLength, header, expectsPayload }) {
+	  assert(contentLength !== 0 || client[kRunning] === 0, 'iterator body cannot be pipelined');
+
+	  let callback = null;
+	  function onDrain () {
+	    if (callback) {
+	      const cb = callback;
+	      callback = null;
+	      cb();
+	    }
+	  }
+
+	  const waitForDrain = () => new Promise((resolve, reject) => {
+	    assert(callback === null);
+
+	    if (socket[kError]) {
+	      reject(socket[kError]);
+	    } else {
+	      callback = resolve;
+	    }
+	  });
+
+	  if (client[kHTTPConnVersion] === 'h2') {
+	    h2stream
+	      .on('close', onDrain)
+	      .on('drain', onDrain);
+
+	    try {
+	      // It's up to the user to somehow abort the async iterable.
+	      for await (const chunk of body) {
+	        if (socket[kError]) {
+	          throw socket[kError]
+	        }
+
+	        const res = h2stream.write(chunk);
+	        request.onBodySent(chunk);
+	        if (!res) {
+	          await waitForDrain();
+	        }
+	      }
+	    } catch (err) {
+	      h2stream.destroy(err);
+	    } finally {
+	      request.onRequestSent();
+	      h2stream.end();
+	      h2stream
+	        .off('close', onDrain)
+	        .off('drain', onDrain);
+	    }
+
+	    return
+	  }
+
+	  socket
+	    .on('close', onDrain)
+	    .on('drain', onDrain);
+
+	  const writer = new AsyncWriter({ socket, request, contentLength, client, expectsPayload, header });
+	  try {
+	    // It's up to the user to somehow abort the async iterable.
+	    for await (const chunk of body) {
+	      if (socket[kError]) {
+	        throw socket[kError]
+	      }
+
+	      if (!writer.write(chunk)) {
+	        await waitForDrain();
+	      }
+	    }
+
+	    writer.end();
+	  } catch (err) {
+	    writer.destroy(err);
+	  } finally {
+	    socket
+	      .off('close', onDrain)
+	      .off('drain', onDrain);
+	  }
+	}
+
+	class AsyncWriter {
+	  constructor ({ socket, request, contentLength, client, expectsPayload, header }) {
+	    this.socket = socket;
+	    this.request = request;
+	    this.contentLength = contentLength;
+	    this.client = client;
+	    this.bytesWritten = 0;
+	    this.expectsPayload = expectsPayload;
+	    this.header = header;
+
+	    socket[kWriting] = true;
+	  }
+
+	  write (chunk) {
+	    const { socket, request, contentLength, client, bytesWritten, expectsPayload, header } = this;
+
+	    if (socket[kError]) {
+	      throw socket[kError]
+	    }
+
+	    if (socket.destroyed) {
+	      return false
+	    }
+
+	    const len = Buffer.byteLength(chunk);
+	    if (!len) {
+	      return true
+	    }
+
+	    // We should defer writing chunks.
+	    if (contentLength !== null && bytesWritten + len > contentLength) {
+	      if (client[kStrictContentLength]) {
+	        throw new RequestContentLengthMismatchError()
+	      }
+
+	      process.emitWarning(new RequestContentLengthMismatchError());
+	    }
+
+	    socket.cork();
+
+	    if (bytesWritten === 0) {
+	      if (!expectsPayload) {
+	        socket[kReset] = true;
+	      }
+
+	      if (contentLength === null) {
+	        socket.write(`${header}transfer-encoding: chunked\r\n`, 'latin1');
+	      } else {
+	        socket.write(`${header}content-length: ${contentLength}\r\n\r\n`, 'latin1');
+	      }
+	    }
+
+	    if (contentLength === null) {
+	      socket.write(`\r\n${len.toString(16)}\r\n`, 'latin1');
+	    }
+
+	    this.bytesWritten += len;
+
+	    const ret = socket.write(chunk);
+
+	    socket.uncork();
+
+	    request.onBodySent(chunk);
+
+	    if (!ret) {
+	      if (socket[kParser].timeout && socket[kParser].timeoutType === TIMEOUT_HEADERS) {
+	        // istanbul ignore else: only for jest
+	        if (socket[kParser].timeout.refresh) {
+	          socket[kParser].timeout.refresh();
+	        }
+	      }
+	    }
+
+	    return ret
+	  }
+
+	  end () {
+	    const { socket, contentLength, client, bytesWritten, expectsPayload, header, request } = this;
+	    request.onRequestSent();
+
+	    socket[kWriting] = false;
+
+	    if (socket[kError]) {
+	      throw socket[kError]
+	    }
+
+	    if (socket.destroyed) {
+	      return
+	    }
+
+	    if (bytesWritten === 0) {
+	      if (expectsPayload) {
+	        // https://tools.ietf.org/html/rfc7230#section-3.3.2
+	        // A user agent SHOULD send a Content-Length in a request message when
+	        // no Transfer-Encoding is sent and the request method defines a meaning
+	        // for an enclosed payload body.
+
+	        socket.write(`${header}content-length: 0\r\n\r\n`, 'latin1');
+	      } else {
+	        socket.write(`${header}\r\n`, 'latin1');
+	      }
+	    } else if (contentLength === null) {
+	      socket.write('\r\n0\r\n\r\n', 'latin1');
+	    }
+
+	    if (contentLength !== null && bytesWritten !== contentLength) {
+	      if (client[kStrictContentLength]) {
+	        throw new RequestContentLengthMismatchError()
+	      } else {
+	        process.emitWarning(new RequestContentLengthMismatchError());
+	      }
+	    }
+
+	    if (socket[kParser].timeout && socket[kParser].timeoutType === TIMEOUT_HEADERS) {
+	      // istanbul ignore else: only for jest
+	      if (socket[kParser].timeout.refresh) {
+	        socket[kParser].timeout.refresh();
+	      }
+	    }
+
+	    resume(client);
+	  }
+
+	  destroy (err) {
+	    const { socket, client } = this;
+
+	    socket[kWriting] = false;
+
+	    if (err) {
+	      assert(client[kRunning] <= 1, 'pipeline should only contain this request');
+	      util.destroy(socket, err);
+	    }
+	  }
+	}
+
+	function errorRequest (client, request, err) {
+	  try {
+	    request.onError(err);
+	    assert(request.aborted);
+	  } catch (err) {
+	    client.emit('error', err);
+	  }
+	}
+
+	client = Client;
+	return client;
 }
-
-const {
-  constants: {
-    HTTP2_HEADER_AUTHORITY,
-    HTTP2_HEADER_METHOD,
-    HTTP2_HEADER_PATH,
-    HTTP2_HEADER_SCHEME,
-    HTTP2_HEADER_CONTENT_LENGTH,
-    HTTP2_HEADER_EXPECT,
-    HTTP2_HEADER_STATUS
-  }
-} = http2;
-
-// Experimental
-let h2ExperimentalWarned = false;
-
-const FastBuffer = Buffer[Symbol.species];
-
-const kClosedResolve$1 = Symbol('kClosedResolve');
-
-const channels = {};
-
-try {
-  const diagnosticsChannel = require('diagnostics_channel');
-  channels.sendHeaders = diagnosticsChannel.channel('undici:client:sendHeaders');
-  channels.beforeConnect = diagnosticsChannel.channel('undici:client:beforeConnect');
-  channels.connectError = diagnosticsChannel.channel('undici:client:connectError');
-  channels.connected = diagnosticsChannel.channel('undici:client:connected');
-} catch {
-  channels.sendHeaders = { hasSubscribers: false };
-  channels.beforeConnect = { hasSubscribers: false };
-  channels.connectError = { hasSubscribers: false };
-  channels.connected = { hasSubscribers: false };
-}
-
-/**
- * @type {import('../types/client').default}
- */
-let Client$4 = class Client extends DispatcherBase$3 {
-  /**
-   *
-   * @param {string|URL} url
-   * @param {import('../types/client').Client.Options} options
-   */
-  constructor (url, {
-    interceptors,
-    maxHeaderSize,
-    headersTimeout,
-    socketTimeout,
-    requestTimeout,
-    connectTimeout,
-    bodyTimeout,
-    idleTimeout,
-    keepAlive,
-    keepAliveTimeout,
-    maxKeepAliveTimeout,
-    keepAliveMaxTimeout,
-    keepAliveTimeoutThreshold,
-    socketPath,
-    pipelining,
-    tls,
-    strictContentLength,
-    maxCachedSessions,
-    maxRedirections,
-    connect,
-    maxRequestsPerClient,
-    localAddress,
-    maxResponseSize,
-    autoSelectFamily,
-    autoSelectFamilyAttemptTimeout,
-    // h2
-    allowH2,
-    maxConcurrentStreams
-  } = {}) {
-    super();
-
-    if (keepAlive !== undefined) {
-      throw new InvalidArgumentError$g('unsupported keepAlive, use pipelining=0 instead')
-    }
-
-    if (socketTimeout !== undefined) {
-      throw new InvalidArgumentError$g('unsupported socketTimeout, use headersTimeout & bodyTimeout instead')
-    }
-
-    if (requestTimeout !== undefined) {
-      throw new InvalidArgumentError$g('unsupported requestTimeout, use headersTimeout & bodyTimeout instead')
-    }
-
-    if (idleTimeout !== undefined) {
-      throw new InvalidArgumentError$g('unsupported idleTimeout, use keepAliveTimeout instead')
-    }
-
-    if (maxKeepAliveTimeout !== undefined) {
-      throw new InvalidArgumentError$g('unsupported maxKeepAliveTimeout, use keepAliveMaxTimeout instead')
-    }
-
-    if (maxHeaderSize != null && !Number.isFinite(maxHeaderSize)) {
-      throw new InvalidArgumentError$g('invalid maxHeaderSize')
-    }
-
-    if (socketPath != null && typeof socketPath !== 'string') {
-      throw new InvalidArgumentError$g('invalid socketPath')
-    }
-
-    if (connectTimeout != null && (!Number.isFinite(connectTimeout) || connectTimeout < 0)) {
-      throw new InvalidArgumentError$g('invalid connectTimeout')
-    }
-
-    if (keepAliveTimeout != null && (!Number.isFinite(keepAliveTimeout) || keepAliveTimeout <= 0)) {
-      throw new InvalidArgumentError$g('invalid keepAliveTimeout')
-    }
-
-    if (keepAliveMaxTimeout != null && (!Number.isFinite(keepAliveMaxTimeout) || keepAliveMaxTimeout <= 0)) {
-      throw new InvalidArgumentError$g('invalid keepAliveMaxTimeout')
-    }
-
-    if (keepAliveTimeoutThreshold != null && !Number.isFinite(keepAliveTimeoutThreshold)) {
-      throw new InvalidArgumentError$g('invalid keepAliveTimeoutThreshold')
-    }
-
-    if (headersTimeout != null && (!Number.isInteger(headersTimeout) || headersTimeout < 0)) {
-      throw new InvalidArgumentError$g('headersTimeout must be a positive integer or zero')
-    }
-
-    if (bodyTimeout != null && (!Number.isInteger(bodyTimeout) || bodyTimeout < 0)) {
-      throw new InvalidArgumentError$g('bodyTimeout must be a positive integer or zero')
-    }
-
-    if (connect != null && typeof connect !== 'function' && typeof connect !== 'object') {
-      throw new InvalidArgumentError$g('connect must be a function or an object')
-    }
-
-    if (maxRedirections != null && (!Number.isInteger(maxRedirections) || maxRedirections < 0)) {
-      throw new InvalidArgumentError$g('maxRedirections must be a positive number')
-    }
-
-    if (maxRequestsPerClient != null && (!Number.isInteger(maxRequestsPerClient) || maxRequestsPerClient < 0)) {
-      throw new InvalidArgumentError$g('maxRequestsPerClient must be a positive number')
-    }
-
-    if (localAddress != null && (typeof localAddress !== 'string' || net.isIP(localAddress) === 0)) {
-      throw new InvalidArgumentError$g('localAddress must be valid string IP address')
-    }
-
-    if (maxResponseSize != null && (!Number.isInteger(maxResponseSize) || maxResponseSize < -1)) {
-      throw new InvalidArgumentError$g('maxResponseSize must be a positive number')
-    }
-
-    if (
-      autoSelectFamilyAttemptTimeout != null &&
-      (!Number.isInteger(autoSelectFamilyAttemptTimeout) || autoSelectFamilyAttemptTimeout < -1)
-    ) {
-      throw new InvalidArgumentError$g('autoSelectFamilyAttemptTimeout must be a positive number')
-    }
-
-    // h2
-    if (allowH2 != null && typeof allowH2 !== 'boolean') {
-      throw new InvalidArgumentError$g('allowH2 must be a valid boolean value')
-    }
-
-    if (maxConcurrentStreams != null && (typeof maxConcurrentStreams !== 'number' || maxConcurrentStreams < 1)) {
-      throw new InvalidArgumentError$g('maxConcurrentStreams must be a possitive integer, greater than 0')
-    }
-
-    if (typeof connect !== 'function') {
-      connect = buildConnector$3({
-        ...tls,
-        maxCachedSessions,
-        allowH2,
-        socketPath,
-        timeout: connectTimeout,
-        ...(util$e.nodeHasAutoSelectFamily && autoSelectFamily ? { autoSelectFamily, autoSelectFamilyAttemptTimeout } : undefined),
-        ...connect
-      });
-    }
-
-    this[kInterceptors$4] = interceptors && interceptors.Client && Array.isArray(interceptors.Client)
-      ? interceptors.Client
-      : [createRedirectInterceptor$2({ maxRedirections })];
-    this[kUrl$3] = util$e.parseOrigin(url);
-    this[kConnector] = connect;
-    this[kSocket] = null;
-    this[kPipelining] = pipelining != null ? pipelining : 1;
-    this[kMaxHeadersSize] = maxHeaderSize || http$1.maxHeaderSize;
-    this[kKeepAliveDefaultTimeout] = keepAliveTimeout == null ? 4e3 : keepAliveTimeout;
-    this[kKeepAliveMaxTimeout] = keepAliveMaxTimeout == null ? 600e3 : keepAliveMaxTimeout;
-    this[kKeepAliveTimeoutThreshold] = keepAliveTimeoutThreshold == null ? 1e3 : keepAliveTimeoutThreshold;
-    this[kKeepAliveTimeoutValue] = this[kKeepAliveDefaultTimeout];
-    this[kServerName] = null;
-    this[kLocalAddress] = localAddress != null ? localAddress : null;
-    this[kResuming] = 0; // 0, idle, 1, scheduled, 2 resuming
-    this[kNeedDrain$3] = 0; // 0, idle, 1, scheduled, 2 resuming
-    this[kHostHeader] = `host: ${this[kUrl$3].hostname}${this[kUrl$3].port ? `:${this[kUrl$3].port}` : ''}\r\n`;
-    this[kBodyTimeout] = bodyTimeout != null ? bodyTimeout : 300e3;
-    this[kHeadersTimeout] = headersTimeout != null ? headersTimeout : 300e3;
-    this[kStrictContentLength] = strictContentLength == null ? true : strictContentLength;
-    this[kMaxRedirections$1] = maxRedirections;
-    this[kMaxRequests] = maxRequestsPerClient;
-    this[kClosedResolve$1] = null;
-    this[kMaxResponseSize] = maxResponseSize > -1 ? maxResponseSize : -1;
-    this[kHTTPConnVersion] = 'h1';
-
-    // HTTP/2
-    this[kHTTP2Session] = null;
-    this[kHTTP2SessionState] = !allowH2
-      ? null
-      : {
-        // streams: null, // Fixed queue of streams - For future support of `push`
-          openStreams: 0, // Keep track of them to decide wether or not unref the session
-          maxConcurrentStreams: maxConcurrentStreams != null ? maxConcurrentStreams : 100 // Max peerConcurrentStreams for a Node h2 server
-        };
-    this[kHost] = `${this[kUrl$3].hostname}${this[kUrl$3].port ? `:${this[kUrl$3].port}` : ''}`;
-
-    // kQueue is built up of 3 sections separated by
-    // the kRunningIdx and kPendingIdx indices.
-    // |   complete   |   running   |   pending   |
-    //                ^ kRunningIdx ^ kPendingIdx ^ kQueue.length
-    // kRunningIdx points to the first running element.
-    // kPendingIdx points to the first pending element.
-    // This implements a fast queue with an amortized
-    // time of O(1).
-
-    this[kQueue$1] = [];
-    this[kRunningIdx] = 0;
-    this[kPendingIdx] = 0;
-  }
-
-  get pipelining () {
-    return this[kPipelining]
-  }
-
-  set pipelining (value) {
-    this[kPipelining] = value;
-    resume(this, true);
-  }
-
-  get [kPending$2] () {
-    return this[kQueue$1].length - this[kPendingIdx]
-  }
-
-  get [kRunning$3] () {
-    return this[kPendingIdx] - this[kRunningIdx]
-  }
-
-  get [kSize$4] () {
-    return this[kQueue$1].length - this[kRunningIdx]
-  }
-
-  get [kConnected$5] () {
-    return !!this[kSocket] && !this[kConnecting] && !this[kSocket].destroyed
-  }
-
-  get [kBusy$1] () {
-    const socket = this[kSocket];
-    return (
-      (socket && (socket[kReset] || socket[kWriting] || socket[kBlocking])) ||
-      (this[kSize$4] >= (this[kPipelining] || 1)) ||
-      this[kPending$2] > 0
-    )
-  }
-
-  /* istanbul ignore: only used for test */
-  [kConnect] (cb) {
-    connect$1(this);
-    this.once('connect', cb);
-  }
-
-  [kDispatch$2] (opts, handler) {
-    const origin = opts.origin || this[kUrl$3].origin;
-
-    const request = this[kHTTPConnVersion] === 'h2'
-      ? Request[kHTTP2BuildRequest](origin, opts, handler)
-      : Request[kHTTP1BuildRequest](origin, opts, handler);
-
-    this[kQueue$1].push(request);
-    if (this[kResuming]) ; else if (util$e.bodyLength(request.body) == null && util$e.isIterable(request.body)) {
-      // Wait a tick in case stream/iterator is ended in the same tick.
-      this[kResuming] = 1;
-      process.nextTick(resume, this);
-    } else {
-      resume(this, true);
-    }
-
-    if (this[kResuming] && this[kNeedDrain$3] !== 2 && this[kBusy$1]) {
-      this[kNeedDrain$3] = 2;
-    }
-
-    return this[kNeedDrain$3] < 2
-  }
-
-  async [kClose$5] () {
-    // TODO: for H2 we need to gracefully flush the remaining enqueued
-    // request and close each stream.
-    return new Promise((resolve) => {
-      if (!this[kSize$4]) {
-        resolve(null);
-      } else {
-        this[kClosedResolve$1] = resolve;
-      }
-    })
-  }
-
-  async [kDestroy$3] (err) {
-    return new Promise((resolve) => {
-      const requests = this[kQueue$1].splice(this[kPendingIdx]);
-      for (let i = 0; i < requests.length; i++) {
-        const request = requests[i];
-        errorRequest(this, request, err);
-      }
-
-      const callback = () => {
-        if (this[kClosedResolve$1]) {
-          // TODO (fix): Should we error here with ClientDestroyedError?
-          this[kClosedResolve$1]();
-          this[kClosedResolve$1] = null;
-        }
-        resolve();
-      };
-
-      if (this[kHTTP2Session] != null) {
-        util$e.destroy(this[kHTTP2Session], err);
-        this[kHTTP2Session] = null;
-        this[kHTTP2SessionState] = null;
-      }
-
-      if (!this[kSocket]) {
-        queueMicrotask(callback);
-      } else {
-        util$e.destroy(this[kSocket].on('close', callback), err);
-      }
-
-      resume(this);
-    })
-  }
-};
-
-function onHttp2SessionError (err) {
-  assert$5(err.code !== 'ERR_TLS_CERT_ALTNAME_INVALID');
-
-  this[kSocket][kError] = err;
-
-  onError(this[kClient$1], err);
-}
-
-function onHttp2FrameError (type, code, id) {
-  const err = new InformationalError(`HTTP/2: "frameError" received - type ${type}, code ${code}`);
-
-  if (id === 0) {
-    this[kSocket][kError] = err;
-    onError(this[kClient$1], err);
-  }
-}
-
-function onHttp2SessionEnd () {
-  util$e.destroy(this, new SocketError$2('other side closed'));
-  util$e.destroy(this[kSocket], new SocketError$2('other side closed'));
-}
-
-function onHTTP2GoAway (code) {
-  const client = this[kClient$1];
-  const err = new InformationalError(`HTTP/2: "GOAWAY" frame received with code ${code}`);
-  client[kSocket] = null;
-  client[kHTTP2Session] = null;
-
-  if (client.destroyed) {
-    assert$5(this[kPending$2] === 0);
-
-    // Fail entire queue.
-    const requests = client[kQueue$1].splice(client[kRunningIdx]);
-    for (let i = 0; i < requests.length; i++) {
-      const request = requests[i];
-      errorRequest(this, request, err);
-    }
-  } else if (client[kRunning$3] > 0) {
-    // Fail head of pipeline.
-    const request = client[kQueue$1][client[kRunningIdx]];
-    client[kQueue$1][client[kRunningIdx]++] = null;
-
-    errorRequest(client, request, err);
-  }
-
-  client[kPendingIdx] = client[kRunningIdx];
-
-  assert$5(client[kRunning$3] === 0);
-
-  client.emit('disconnect',
-    client[kUrl$3],
-    [client],
-    err
-  );
-
-  resume(client);
-}
-
-const constants$2 = requireConstants$2();
-const createRedirectInterceptor$2 = redirectInterceptor;
-const EMPTY_BUF = Buffer.alloc(0);
-
-async function lazyllhttp () {
-  const llhttpWasmData = process.env.JEST_WORKER_ID ? requireLlhttpWasm() : undefined;
-
-  let mod;
-  try {
-    mod = await WebAssembly.compile(Buffer.from(requireLlhttp_simdWasm(), 'base64'));
-  } catch (e) {
-    /* istanbul ignore next */
-
-    // We could check if the error was caused by the simd option not
-    // being enabled, but the occurring of this other error
-    // * https://github.com/emscripten-core/emscripten/issues/11495
-    // got me to remove that check to avoid breaking Node 12.
-    mod = await WebAssembly.compile(Buffer.from(llhttpWasmData || requireLlhttpWasm(), 'base64'));
-  }
-
-  return await WebAssembly.instantiate(mod, {
-    env: {
-      /* eslint-disable camelcase */
-
-      wasm_on_url: (p, at, len) => {
-        /* istanbul ignore next */
-        return 0
-      },
-      wasm_on_status: (p, at, len) => {
-        assert$5.strictEqual(currentParser.ptr, p);
-        const start = at - currentBufferPtr + currentBufferRef.byteOffset;
-        return currentParser.onStatus(new FastBuffer(currentBufferRef.buffer, start, len)) || 0
-      },
-      wasm_on_message_begin: (p) => {
-        assert$5.strictEqual(currentParser.ptr, p);
-        return currentParser.onMessageBegin() || 0
-      },
-      wasm_on_header_field: (p, at, len) => {
-        assert$5.strictEqual(currentParser.ptr, p);
-        const start = at - currentBufferPtr + currentBufferRef.byteOffset;
-        return currentParser.onHeaderField(new FastBuffer(currentBufferRef.buffer, start, len)) || 0
-      },
-      wasm_on_header_value: (p, at, len) => {
-        assert$5.strictEqual(currentParser.ptr, p);
-        const start = at - currentBufferPtr + currentBufferRef.byteOffset;
-        return currentParser.onHeaderValue(new FastBuffer(currentBufferRef.buffer, start, len)) || 0
-      },
-      wasm_on_headers_complete: (p, statusCode, upgrade, shouldKeepAlive) => {
-        assert$5.strictEqual(currentParser.ptr, p);
-        return currentParser.onHeadersComplete(statusCode, Boolean(upgrade), Boolean(shouldKeepAlive)) || 0
-      },
-      wasm_on_body: (p, at, len) => {
-        assert$5.strictEqual(currentParser.ptr, p);
-        const start = at - currentBufferPtr + currentBufferRef.byteOffset;
-        return currentParser.onBody(new FastBuffer(currentBufferRef.buffer, start, len)) || 0
-      },
-      wasm_on_message_complete: (p) => {
-        assert$5.strictEqual(currentParser.ptr, p);
-        return currentParser.onMessageComplete() || 0
-      }
-
-      /* eslint-enable camelcase */
-    }
-  })
-}
-
-let llhttpInstance = null;
-let llhttpPromise = lazyllhttp();
-llhttpPromise.catch();
-
-let currentParser = null;
-let currentBufferRef = null;
-let currentBufferSize = 0;
-let currentBufferPtr = null;
-
-const TIMEOUT_HEADERS = 1;
-const TIMEOUT_BODY = 2;
-const TIMEOUT_IDLE = 3;
-
-class Parser {
-  constructor (client, socket, { exports }) {
-    assert$5(Number.isFinite(client[kMaxHeadersSize]) && client[kMaxHeadersSize] > 0);
-
-    this.llhttp = exports;
-    this.ptr = this.llhttp.llhttp_alloc(constants$2.TYPE.RESPONSE);
-    this.client = client;
-    this.socket = socket;
-    this.timeout = null;
-    this.timeoutValue = null;
-    this.timeoutType = null;
-    this.statusCode = null;
-    this.statusText = '';
-    this.upgrade = false;
-    this.headers = [];
-    this.headersSize = 0;
-    this.headersMaxSize = client[kMaxHeadersSize];
-    this.shouldKeepAlive = false;
-    this.paused = false;
-    this.resume = this.resume.bind(this);
-
-    this.bytesRead = 0;
-
-    this.keepAlive = '';
-    this.contentLength = '';
-    this.connection = '';
-    this.maxResponseSize = client[kMaxResponseSize];
-  }
-
-  setTimeout (value, type) {
-    this.timeoutType = type;
-    if (value !== this.timeoutValue) {
-      timers.clearTimeout(this.timeout);
-      if (value) {
-        this.timeout = timers.setTimeout(onParserTimeout, value, this);
-        // istanbul ignore else: only for jest
-        if (this.timeout.unref) {
-          this.timeout.unref();
-        }
-      } else {
-        this.timeout = null;
-      }
-      this.timeoutValue = value;
-    } else if (this.timeout) {
-      // istanbul ignore else: only for jest
-      if (this.timeout.refresh) {
-        this.timeout.refresh();
-      }
-    }
-  }
-
-  resume () {
-    if (this.socket.destroyed || !this.paused) {
-      return
-    }
-
-    assert$5(this.ptr != null);
-    assert$5(currentParser == null);
-
-    this.llhttp.llhttp_resume(this.ptr);
-
-    assert$5(this.timeoutType === TIMEOUT_BODY);
-    if (this.timeout) {
-      // istanbul ignore else: only for jest
-      if (this.timeout.refresh) {
-        this.timeout.refresh();
-      }
-    }
-
-    this.paused = false;
-    this.execute(this.socket.read() || EMPTY_BUF); // Flush parser.
-    this.readMore();
-  }
-
-  readMore () {
-    while (!this.paused && this.ptr) {
-      const chunk = this.socket.read();
-      if (chunk === null) {
-        break
-      }
-      this.execute(chunk);
-    }
-  }
-
-  execute (data) {
-    assert$5(this.ptr != null);
-    assert$5(currentParser == null);
-    assert$5(!this.paused);
-
-    const { socket, llhttp } = this;
-
-    if (data.length > currentBufferSize) {
-      if (currentBufferPtr) {
-        llhttp.free(currentBufferPtr);
-      }
-      currentBufferSize = Math.ceil(data.length / 4096) * 4096;
-      currentBufferPtr = llhttp.malloc(currentBufferSize);
-    }
-
-    new Uint8Array(llhttp.memory.buffer, currentBufferPtr, currentBufferSize).set(data);
-
-    // Call `execute` on the wasm parser.
-    // We pass the `llhttp_parser` pointer address, the pointer address of buffer view data,
-    // and finally the length of bytes to parse.
-    // The return value is an error code or `constants.ERROR.OK`.
-    try {
-      let ret;
-
-      try {
-        currentBufferRef = data;
-        currentParser = this;
-        ret = llhttp.llhttp_execute(this.ptr, currentBufferPtr, data.length);
-        /* eslint-disable-next-line no-useless-catch */
-      } catch (err) {
-        /* istanbul ignore next: difficult to make a test case for */
-        throw err
-      } finally {
-        currentParser = null;
-        currentBufferRef = null;
-      }
-
-      const offset = llhttp.llhttp_get_error_pos(this.ptr) - currentBufferPtr;
-
-      if (ret === constants$2.ERROR.PAUSED_UPGRADE) {
-        this.onUpgrade(data.slice(offset));
-      } else if (ret === constants$2.ERROR.PAUSED) {
-        this.paused = true;
-        socket.unshift(data.slice(offset));
-      } else if (ret !== constants$2.ERROR.OK) {
-        const ptr = llhttp.llhttp_get_error_reason(this.ptr);
-        let message = '';
-        /* istanbul ignore else: difficult to make a test case for */
-        if (ptr) {
-          const len = new Uint8Array(llhttp.memory.buffer, ptr).indexOf(0);
-          message =
-            'Response does not match the HTTP/1.1 protocol (' +
-            Buffer.from(llhttp.memory.buffer, ptr, len).toString() +
-            ')';
-        }
-        throw new HTTPParserError(message, constants$2.ERROR[ret], data.slice(offset))
-      }
-    } catch (err) {
-      util$e.destroy(socket, err);
-    }
-  }
-
-  destroy () {
-    assert$5(this.ptr != null);
-    assert$5(currentParser == null);
-
-    this.llhttp.llhttp_free(this.ptr);
-    this.ptr = null;
-
-    timers.clearTimeout(this.timeout);
-    this.timeout = null;
-    this.timeoutValue = null;
-    this.timeoutType = null;
-
-    this.paused = false;
-  }
-
-  onStatus (buf) {
-    this.statusText = buf.toString();
-  }
-
-  onMessageBegin () {
-    const { socket, client } = this;
-
-    /* istanbul ignore next: difficult to make a test case for */
-    if (socket.destroyed) {
-      return -1
-    }
-
-    const request = client[kQueue$1][client[kRunningIdx]];
-    if (!request) {
-      return -1
-    }
-  }
-
-  onHeaderField (buf) {
-    const len = this.headers.length;
-
-    if ((len & 1) === 0) {
-      this.headers.push(buf);
-    } else {
-      this.headers[len - 1] = Buffer.concat([this.headers[len - 1], buf]);
-    }
-
-    this.trackHeader(buf.length);
-  }
-
-  onHeaderValue (buf) {
-    let len = this.headers.length;
-
-    if ((len & 1) === 1) {
-      this.headers.push(buf);
-      len += 1;
-    } else {
-      this.headers[len - 1] = Buffer.concat([this.headers[len - 1], buf]);
-    }
-
-    const key = this.headers[len - 2];
-    if (key.length === 10 && key.toString().toLowerCase() === 'keep-alive') {
-      this.keepAlive += buf.toString();
-    } else if (key.length === 10 && key.toString().toLowerCase() === 'connection') {
-      this.connection += buf.toString();
-    } else if (key.length === 14 && key.toString().toLowerCase() === 'content-length') {
-      this.contentLength += buf.toString();
-    }
-
-    this.trackHeader(buf.length);
-  }
-
-  trackHeader (len) {
-    this.headersSize += len;
-    if (this.headersSize >= this.headersMaxSize) {
-      util$e.destroy(this.socket, new HeadersOverflowError());
-    }
-  }
-
-  onUpgrade (head) {
-    const { upgrade, client, socket, headers, statusCode } = this;
-
-    assert$5(upgrade);
-
-    const request = client[kQueue$1][client[kRunningIdx]];
-    assert$5(request);
-
-    assert$5(!socket.destroyed);
-    assert$5(socket === client[kSocket]);
-    assert$5(!this.paused);
-    assert$5(request.upgrade || request.method === 'CONNECT');
-
-    this.statusCode = null;
-    this.statusText = '';
-    this.shouldKeepAlive = null;
-
-    assert$5(this.headers.length % 2 === 0);
-    this.headers = [];
-    this.headersSize = 0;
-
-    socket.unshift(head);
-
-    socket[kParser].destroy();
-    socket[kParser] = null;
-
-    socket[kClient$1] = null;
-    socket[kError] = null;
-    socket
-      .removeListener('error', onSocketError)
-      .removeListener('readable', onSocketReadable)
-      .removeListener('end', onSocketEnd)
-      .removeListener('close', onSocketClose);
-
-    client[kSocket] = null;
-    client[kQueue$1][client[kRunningIdx]++] = null;
-    client.emit('disconnect', client[kUrl$3], [client], new InformationalError('upgrade'));
-
-    try {
-      request.onUpgrade(statusCode, headers, socket);
-    } catch (err) {
-      util$e.destroy(socket, err);
-    }
-
-    resume(client);
-  }
-
-  onHeadersComplete (statusCode, upgrade, shouldKeepAlive) {
-    const { client, socket, headers, statusText } = this;
-
-    /* istanbul ignore next: difficult to make a test case for */
-    if (socket.destroyed) {
-      return -1
-    }
-
-    const request = client[kQueue$1][client[kRunningIdx]];
-
-    /* istanbul ignore next: difficult to make a test case for */
-    if (!request) {
-      return -1
-    }
-
-    assert$5(!this.upgrade);
-    assert$5(this.statusCode < 200);
-
-    if (statusCode === 100) {
-      util$e.destroy(socket, new SocketError$2('bad response', util$e.getSocketInfo(socket)));
-      return -1
-    }
-
-    /* this can only happen if server is misbehaving */
-    if (upgrade && !request.upgrade) {
-      util$e.destroy(socket, new SocketError$2('bad upgrade', util$e.getSocketInfo(socket)));
-      return -1
-    }
-
-    assert$5.strictEqual(this.timeoutType, TIMEOUT_HEADERS);
-
-    this.statusCode = statusCode;
-    this.shouldKeepAlive = (
-      shouldKeepAlive ||
-      // Override llhttp value which does not allow keepAlive for HEAD.
-      (request.method === 'HEAD' && !socket[kReset] && this.connection.toLowerCase() === 'keep-alive')
-    );
-
-    if (this.statusCode >= 200) {
-      const bodyTimeout = request.bodyTimeout != null
-        ? request.bodyTimeout
-        : client[kBodyTimeout];
-      this.setTimeout(bodyTimeout, TIMEOUT_BODY);
-    } else if (this.timeout) {
-      // istanbul ignore else: only for jest
-      if (this.timeout.refresh) {
-        this.timeout.refresh();
-      }
-    }
-
-    if (request.method === 'CONNECT') {
-      assert$5(client[kRunning$3] === 1);
-      this.upgrade = true;
-      return 2
-    }
-
-    if (upgrade) {
-      assert$5(client[kRunning$3] === 1);
-      this.upgrade = true;
-      return 2
-    }
-
-    assert$5(this.headers.length % 2 === 0);
-    this.headers = [];
-    this.headersSize = 0;
-
-    if (this.shouldKeepAlive && client[kPipelining]) {
-      const keepAliveTimeout = this.keepAlive ? util$e.parseKeepAliveTimeout(this.keepAlive) : null;
-
-      if (keepAliveTimeout != null) {
-        const timeout = Math.min(
-          keepAliveTimeout - client[kKeepAliveTimeoutThreshold],
-          client[kKeepAliveMaxTimeout]
-        );
-        if (timeout <= 0) {
-          socket[kReset] = true;
-        } else {
-          client[kKeepAliveTimeoutValue] = timeout;
-        }
-      } else {
-        client[kKeepAliveTimeoutValue] = client[kKeepAliveDefaultTimeout];
-      }
-    } else {
-      // Stop more requests from being dispatched.
-      socket[kReset] = true;
-    }
-
-    const pause = request.onHeaders(statusCode, headers, this.resume, statusText) === false;
-
-    if (request.aborted) {
-      return -1
-    }
-
-    if (request.method === 'HEAD') {
-      return 1
-    }
-
-    if (statusCode < 200) {
-      return 1
-    }
-
-    if (socket[kBlocking]) {
-      socket[kBlocking] = false;
-      resume(client);
-    }
-
-    return pause ? constants$2.ERROR.PAUSED : 0
-  }
-
-  onBody (buf) {
-    const { client, socket, statusCode, maxResponseSize } = this;
-
-    if (socket.destroyed) {
-      return -1
-    }
-
-    const request = client[kQueue$1][client[kRunningIdx]];
-    assert$5(request);
-
-    assert$5.strictEqual(this.timeoutType, TIMEOUT_BODY);
-    if (this.timeout) {
-      // istanbul ignore else: only for jest
-      if (this.timeout.refresh) {
-        this.timeout.refresh();
-      }
-    }
-
-    assert$5(statusCode >= 200);
-
-    if (maxResponseSize > -1 && this.bytesRead + buf.length > maxResponseSize) {
-      util$e.destroy(socket, new ResponseExceededMaxSizeError());
-      return -1
-    }
-
-    this.bytesRead += buf.length;
-
-    if (request.onData(buf) === false) {
-      return constants$2.ERROR.PAUSED
-    }
-  }
-
-  onMessageComplete () {
-    const { client, socket, statusCode, upgrade, headers, contentLength, bytesRead, shouldKeepAlive } = this;
-
-    if (socket.destroyed && (!statusCode || shouldKeepAlive)) {
-      return -1
-    }
-
-    if (upgrade) {
-      return
-    }
-
-    const request = client[kQueue$1][client[kRunningIdx]];
-    assert$5(request);
-
-    assert$5(statusCode >= 100);
-
-    this.statusCode = null;
-    this.statusText = '';
-    this.bytesRead = 0;
-    this.contentLength = '';
-    this.keepAlive = '';
-    this.connection = '';
-
-    assert$5(this.headers.length % 2 === 0);
-    this.headers = [];
-    this.headersSize = 0;
-
-    if (statusCode < 200) {
-      return
-    }
-
-    /* istanbul ignore next: should be handled by llhttp? */
-    if (request.method !== 'HEAD' && contentLength && bytesRead !== parseInt(contentLength, 10)) {
-      util$e.destroy(socket, new ResponseContentLengthMismatchError());
-      return -1
-    }
-
-    request.onComplete(headers);
-
-    client[kQueue$1][client[kRunningIdx]++] = null;
-
-    if (socket[kWriting]) {
-      assert$5.strictEqual(client[kRunning$3], 0);
-      // Response completed before request.
-      util$e.destroy(socket, new InformationalError('reset'));
-      return constants$2.ERROR.PAUSED
-    } else if (!shouldKeepAlive) {
-      util$e.destroy(socket, new InformationalError('reset'));
-      return constants$2.ERROR.PAUSED
-    } else if (socket[kReset] && client[kRunning$3] === 0) {
-      // Destroy socket once all requests have completed.
-      // The request at the tail of the pipeline is the one
-      // that requested reset and no further requests should
-      // have been queued since then.
-      util$e.destroy(socket, new InformationalError('reset'));
-      return constants$2.ERROR.PAUSED
-    } else if (client[kPipelining] === 1) {
-      // We must wait a full event loop cycle to reuse this socket to make sure
-      // that non-spec compliant servers are not closing the connection even if they
-      // said they won't.
-      setImmediate(resume, client);
-    } else {
-      resume(client);
-    }
-  }
-}
-
-function onParserTimeout (parser) {
-  const { socket, timeoutType, client } = parser;
-
-  /* istanbul ignore else */
-  if (timeoutType === TIMEOUT_HEADERS) {
-    if (!socket[kWriting] || socket.writableNeedDrain || client[kRunning$3] > 1) {
-      assert$5(!parser.paused, 'cannot be paused while waiting for headers');
-      util$e.destroy(socket, new HeadersTimeoutError());
-    }
-  } else if (timeoutType === TIMEOUT_BODY) {
-    if (!parser.paused) {
-      util$e.destroy(socket, new BodyTimeoutError());
-    }
-  } else if (timeoutType === TIMEOUT_IDLE) {
-    assert$5(client[kRunning$3] === 0 && client[kKeepAliveTimeoutValue]);
-    util$e.destroy(socket, new InformationalError('socket idle timeout'));
-  }
-}
-
-function onSocketReadable () {
-  const { [kParser]: parser } = this;
-  if (parser) {
-    parser.readMore();
-  }
-}
-
-function onSocketError (err) {
-  const { [kClient$1]: client, [kParser]: parser } = this;
-
-  assert$5(err.code !== 'ERR_TLS_CERT_ALTNAME_INVALID');
-
-  if (client[kHTTPConnVersion] !== 'h2') {
-    // On Mac OS, we get an ECONNRESET even if there is a full body to be forwarded
-    // to the user.
-    if (err.code === 'ECONNRESET' && parser.statusCode && !parser.shouldKeepAlive) {
-      // We treat all incoming data so for as a valid response.
-      parser.onMessageComplete();
-      return
-    }
-  }
-
-  this[kError] = err;
-
-  onError(this[kClient$1], err);
-}
-
-function onError (client, err) {
-  if (
-    client[kRunning$3] === 0 &&
-    err.code !== 'UND_ERR_INFO' &&
-    err.code !== 'UND_ERR_SOCKET'
-  ) {
-    // Error is not caused by running request and not a recoverable
-    // socket error.
-
-    assert$5(client[kPendingIdx] === client[kRunningIdx]);
-
-    const requests = client[kQueue$1].splice(client[kRunningIdx]);
-    for (let i = 0; i < requests.length; i++) {
-      const request = requests[i];
-      errorRequest(client, request, err);
-    }
-    assert$5(client[kSize$4] === 0);
-  }
-}
-
-function onSocketEnd () {
-  const { [kParser]: parser, [kClient$1]: client } = this;
-
-  if (client[kHTTPConnVersion] !== 'h2') {
-    if (parser.statusCode && !parser.shouldKeepAlive) {
-      // We treat all incoming data so far as a valid response.
-      parser.onMessageComplete();
-      return
-    }
-  }
-
-  util$e.destroy(this, new SocketError$2('other side closed', util$e.getSocketInfo(this)));
-}
-
-function onSocketClose () {
-  const { [kClient$1]: client, [kParser]: parser } = this;
-
-  if (client[kHTTPConnVersion] === 'h1' && parser) {
-    if (!this[kError] && parser.statusCode && !parser.shouldKeepAlive) {
-      // We treat all incoming data so far as a valid response.
-      parser.onMessageComplete();
-    }
-
-    this[kParser].destroy();
-    this[kParser] = null;
-  }
-
-  const err = this[kError] || new SocketError$2('closed', util$e.getSocketInfo(this));
-
-  client[kSocket] = null;
-
-  if (client.destroyed) {
-    assert$5(client[kPending$2] === 0);
-
-    // Fail entire queue.
-    const requests = client[kQueue$1].splice(client[kRunningIdx]);
-    for (let i = 0; i < requests.length; i++) {
-      const request = requests[i];
-      errorRequest(client, request, err);
-    }
-  } else if (client[kRunning$3] > 0 && err.code !== 'UND_ERR_INFO') {
-    // Fail head of pipeline.
-    const request = client[kQueue$1][client[kRunningIdx]];
-    client[kQueue$1][client[kRunningIdx]++] = null;
-
-    errorRequest(client, request, err);
-  }
-
-  client[kPendingIdx] = client[kRunningIdx];
-
-  assert$5(client[kRunning$3] === 0);
-
-  client.emit('disconnect', client[kUrl$3], [client], err);
-
-  resume(client);
-}
-
-async function connect$1 (client) {
-  assert$5(!client[kConnecting]);
-  assert$5(!client[kSocket]);
-
-  let { host, hostname, protocol, port } = client[kUrl$3];
-
-  // Resolve ipv6
-  if (hostname[0] === '[') {
-    const idx = hostname.indexOf(']');
-
-    assert$5(idx !== -1);
-    const ip = hostname.substring(1, idx);
-
-    assert$5(net.isIP(ip));
-    hostname = ip;
-  }
-
-  client[kConnecting] = true;
-
-  if (channels.beforeConnect.hasSubscribers) {
-    channels.beforeConnect.publish({
-      connectParams: {
-        host,
-        hostname,
-        protocol,
-        port,
-        servername: client[kServerName],
-        localAddress: client[kLocalAddress]
-      },
-      connector: client[kConnector]
-    });
-  }
-
-  try {
-    const socket = await new Promise((resolve, reject) => {
-      client[kConnector]({
-        host,
-        hostname,
-        protocol,
-        port,
-        servername: client[kServerName],
-        localAddress: client[kLocalAddress]
-      }, (err, socket) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(socket);
-        }
-      });
-    });
-
-    if (client.destroyed) {
-      util$e.destroy(socket.on('error', () => {}), new ClientDestroyedError());
-      return
-    }
-
-    client[kConnecting] = false;
-
-    assert$5(socket);
-
-    const isH2 = socket.alpnProtocol === 'h2';
-    if (isH2) {
-      if (!h2ExperimentalWarned) {
-        h2ExperimentalWarned = true;
-        process.emitWarning('H2 support is experimental, expect them to change at any time.', {
-          code: 'UNDICI-H2'
-        });
-      }
-
-      const session = http2.connect(client[kUrl$3], {
-        createConnection: () => socket,
-        peerMaxConcurrentStreams: client[kHTTP2SessionState].maxConcurrentStreams
-      });
-
-      client[kHTTPConnVersion] = 'h2';
-      session[kClient$1] = client;
-      session[kSocket] = socket;
-      session.on('error', onHttp2SessionError);
-      session.on('frameError', onHttp2FrameError);
-      session.on('end', onHttp2SessionEnd);
-      session.on('goaway', onHTTP2GoAway);
-      session.on('close', onSocketClose);
-      session.unref();
-
-      client[kHTTP2Session] = session;
-      socket[kHTTP2Session] = session;
-    } else {
-      if (!llhttpInstance) {
-        llhttpInstance = await llhttpPromise;
-        llhttpPromise = null;
-      }
-
-      socket[kNoRef] = false;
-      socket[kWriting] = false;
-      socket[kReset] = false;
-      socket[kBlocking] = false;
-      socket[kParser] = new Parser(client, socket, llhttpInstance);
-    }
-
-    socket[kCounter] = 0;
-    socket[kMaxRequests] = client[kMaxRequests];
-    socket[kClient$1] = client;
-    socket[kError] = null;
-
-    socket
-      .on('error', onSocketError)
-      .on('readable', onSocketReadable)
-      .on('end', onSocketEnd)
-      .on('close', onSocketClose);
-
-    client[kSocket] = socket;
-
-    if (channels.connected.hasSubscribers) {
-      channels.connected.publish({
-        connectParams: {
-          host,
-          hostname,
-          protocol,
-          port,
-          servername: client[kServerName],
-          localAddress: client[kLocalAddress]
-        },
-        connector: client[kConnector],
-        socket
-      });
-    }
-    client.emit('connect', client[kUrl$3], [client]);
-  } catch (err) {
-    if (client.destroyed) {
-      return
-    }
-
-    client[kConnecting] = false;
-
-    if (channels.connectError.hasSubscribers) {
-      channels.connectError.publish({
-        connectParams: {
-          host,
-          hostname,
-          protocol,
-          port,
-          servername: client[kServerName],
-          localAddress: client[kLocalAddress]
-        },
-        connector: client[kConnector],
-        error: err
-      });
-    }
-
-    if (err.code === 'ERR_TLS_CERT_ALTNAME_INVALID') {
-      assert$5(client[kRunning$3] === 0);
-      while (client[kPending$2] > 0 && client[kQueue$1][client[kPendingIdx]].servername === client[kServerName]) {
-        const request = client[kQueue$1][client[kPendingIdx]++];
-        errorRequest(client, request, err);
-      }
-    } else {
-      onError(client, err);
-    }
-
-    client.emit('connectionError', client[kUrl$3], [client], err);
-  }
-
-  resume(client);
-}
-
-function emitDrain (client) {
-  client[kNeedDrain$3] = 0;
-  client.emit('drain', client[kUrl$3], [client]);
-}
-
-function resume (client, sync) {
-  if (client[kResuming] === 2) {
-    return
-  }
-
-  client[kResuming] = 2;
-
-  _resume(client, sync);
-  client[kResuming] = 0;
-
-  if (client[kRunningIdx] > 256) {
-    client[kQueue$1].splice(0, client[kRunningIdx]);
-    client[kPendingIdx] -= client[kRunningIdx];
-    client[kRunningIdx] = 0;
-  }
-}
-
-function _resume (client, sync) {
-  while (true) {
-    if (client.destroyed) {
-      assert$5(client[kPending$2] === 0);
-      return
-    }
-
-    if (client[kClosedResolve$1] && !client[kSize$4]) {
-      client[kClosedResolve$1]();
-      client[kClosedResolve$1] = null;
-      return
-    }
-
-    const socket = client[kSocket];
-
-    if (socket && !socket.destroyed && socket.alpnProtocol !== 'h2') {
-      if (client[kSize$4] === 0) {
-        if (!socket[kNoRef] && socket.unref) {
-          socket.unref();
-          socket[kNoRef] = true;
-        }
-      } else if (socket[kNoRef] && socket.ref) {
-        socket.ref();
-        socket[kNoRef] = false;
-      }
-
-      if (client[kSize$4] === 0) {
-        if (socket[kParser].timeoutType !== TIMEOUT_IDLE) {
-          socket[kParser].setTimeout(client[kKeepAliveTimeoutValue], TIMEOUT_IDLE);
-        }
-      } else if (client[kRunning$3] > 0 && socket[kParser].statusCode < 200) {
-        if (socket[kParser].timeoutType !== TIMEOUT_HEADERS) {
-          const request = client[kQueue$1][client[kRunningIdx]];
-          const headersTimeout = request.headersTimeout != null
-            ? request.headersTimeout
-            : client[kHeadersTimeout];
-          socket[kParser].setTimeout(headersTimeout, TIMEOUT_HEADERS);
-        }
-      }
-    }
-
-    if (client[kBusy$1]) {
-      client[kNeedDrain$3] = 2;
-    } else if (client[kNeedDrain$3] === 2) {
-      if (sync) {
-        client[kNeedDrain$3] = 1;
-        process.nextTick(emitDrain, client);
-      } else {
-        emitDrain(client);
-      }
-      continue
-    }
-
-    if (client[kPending$2] === 0) {
-      return
-    }
-
-    if (client[kRunning$3] >= (client[kPipelining] || 1)) {
-      return
-    }
-
-    const request = client[kQueue$1][client[kPendingIdx]];
-
-    if (client[kUrl$3].protocol === 'https:' && client[kServerName] !== request.servername) {
-      if (client[kRunning$3] > 0) {
-        return
-      }
-
-      client[kServerName] = request.servername;
-
-      if (socket && socket.servername !== request.servername) {
-        util$e.destroy(socket, new InformationalError('servername changed'));
-        return
-      }
-    }
-
-    if (client[kConnecting]) {
-      return
-    }
-
-    if (!socket && !client[kHTTP2Session]) {
-      connect$1(client);
-      return
-    }
-
-    if (socket.destroyed || socket[kWriting] || socket[kReset] || socket[kBlocking]) {
-      return
-    }
-
-    if (client[kRunning$3] > 0 && !request.idempotent) {
-      // Non-idempotent request cannot be retried.
-      // Ensure that no other requests are inflight and
-      // could cause failure.
-      return
-    }
-
-    if (client[kRunning$3] > 0 && (request.upgrade || request.method === 'CONNECT')) {
-      // Don't dispatch an upgrade until all preceding requests have completed.
-      // A misbehaving server might upgrade the connection before all pipelined
-      // request has completed.
-      return
-    }
-
-    if (client[kRunning$3] > 0 && util$e.bodyLength(request.body) !== 0 &&
-      (util$e.isStream(request.body) || util$e.isAsyncIterable(request.body))) {
-      // Request with stream or iterator body can error while other requests
-      // are inflight and indirectly error those as well.
-      // Ensure this doesn't happen by waiting for inflight
-      // to complete before dispatching.
-
-      // Request with stream or iterator body cannot be retried.
-      // Ensure that no other requests are inflight and
-      // could cause failure.
-      return
-    }
-
-    if (!request.aborted && write(client, request)) {
-      client[kPendingIdx]++;
-    } else {
-      client[kQueue$1].splice(client[kPendingIdx], 1);
-    }
-  }
-}
-
-// https://www.rfc-editor.org/rfc/rfc7230#section-3.3.2
-function shouldSendContentLength (method) {
-  return method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS' && method !== 'TRACE' && method !== 'CONNECT'
-}
-
-function write (client, request) {
-  if (client[kHTTPConnVersion] === 'h2') {
-    writeH2(client, client[kHTTP2Session], request);
-    return
-  }
-
-  const { body, method, path, host, upgrade, headers, blocking, reset } = request;
-
-  // https://tools.ietf.org/html/rfc7231#section-4.3.1
-  // https://tools.ietf.org/html/rfc7231#section-4.3.2
-  // https://tools.ietf.org/html/rfc7231#section-4.3.5
-
-  // Sending a payload body on a request that does not
-  // expect it can cause undefined behavior on some
-  // servers and corrupt connection state. Do not
-  // re-use the connection for further requests.
-
-  const expectsPayload = (
-    method === 'PUT' ||
-    method === 'POST' ||
-    method === 'PATCH'
-  );
-
-  if (body && typeof body.read === 'function') {
-    // Try to read EOF in order to get length.
-    body.read(0);
-  }
-
-  const bodyLength = util$e.bodyLength(body);
-
-  let contentLength = bodyLength;
-
-  if (contentLength === null) {
-    contentLength = request.contentLength;
-  }
-
-  if (contentLength === 0 && !expectsPayload) {
-    // https://tools.ietf.org/html/rfc7230#section-3.3.2
-    // A user agent SHOULD NOT send a Content-Length header field when
-    // the request message does not contain a payload body and the method
-    // semantics do not anticipate such a body.
-
-    contentLength = null;
-  }
-
-  // https://github.com/nodejs/undici/issues/2046
-  // A user agent may send a Content-Length header with 0 value, this should be allowed.
-  if (shouldSendContentLength(method) && contentLength > 0 && request.contentLength !== null && request.contentLength !== contentLength) {
-    if (client[kStrictContentLength]) {
-      errorRequest(client, request, new RequestContentLengthMismatchError());
-      return false
-    }
-
-    process.emitWarning(new RequestContentLengthMismatchError());
-  }
-
-  const socket = client[kSocket];
-
-  try {
-    request.onConnect((err) => {
-      if (request.aborted || request.completed) {
-        return
-      }
-
-      errorRequest(client, request, err || new RequestAbortedError$8());
-
-      util$e.destroy(socket, new InformationalError('aborted'));
-    });
-  } catch (err) {
-    errorRequest(client, request, err);
-  }
-
-  if (request.aborted) {
-    return false
-  }
-
-  if (method === 'HEAD') {
-    // https://github.com/mcollina/undici/issues/258
-    // Close after a HEAD request to interop with misbehaving servers
-    // that may send a body in the response.
-
-    socket[kReset] = true;
-  }
-
-  if (upgrade || method === 'CONNECT') {
-    // On CONNECT or upgrade, block pipeline from dispatching further
-    // requests on this connection.
-
-    socket[kReset] = true;
-  }
-
-  if (reset != null) {
-    socket[kReset] = reset;
-  }
-
-  if (client[kMaxRequests] && socket[kCounter]++ >= client[kMaxRequests]) {
-    socket[kReset] = true;
-  }
-
-  if (blocking) {
-    socket[kBlocking] = true;
-  }
-
-  let header = `${method} ${path} HTTP/1.1\r\n`;
-
-  if (typeof host === 'string') {
-    header += `host: ${host}\r\n`;
-  } else {
-    header += client[kHostHeader];
-  }
-
-  if (upgrade) {
-    header += `connection: upgrade\r\nupgrade: ${upgrade}\r\n`;
-  } else if (client[kPipelining] && !socket[kReset]) {
-    header += 'connection: keep-alive\r\n';
-  } else {
-    header += 'connection: close\r\n';
-  }
-
-  if (headers) {
-    header += headers;
-  }
-
-  if (channels.sendHeaders.hasSubscribers) {
-    channels.sendHeaders.publish({ request, headers: header, socket });
-  }
-
-  /* istanbul ignore else: assertion */
-  if (!body || bodyLength === 0) {
-    if (contentLength === 0) {
-      socket.write(`${header}content-length: 0\r\n\r\n`, 'latin1');
-    } else {
-      assert$5(contentLength === null, 'no body must not have content length');
-      socket.write(`${header}\r\n`, 'latin1');
-    }
-    request.onRequestSent();
-  } else if (util$e.isBuffer(body)) {
-    assert$5(contentLength === body.byteLength, 'buffer body must have content length');
-
-    socket.cork();
-    socket.write(`${header}content-length: ${contentLength}\r\n\r\n`, 'latin1');
-    socket.write(body);
-    socket.uncork();
-    request.onBodySent(body);
-    request.onRequestSent();
-    if (!expectsPayload) {
-      socket[kReset] = true;
-    }
-  } else if (util$e.isBlobLike(body)) {
-    if (typeof body.stream === 'function') {
-      writeIterable({ body: body.stream(), client, request, socket, contentLength, header, expectsPayload });
-    } else {
-      writeBlob({ body, client, request, socket, contentLength, header, expectsPayload });
-    }
-  } else if (util$e.isStream(body)) {
-    writeStream({ body, client, request, socket, contentLength, header, expectsPayload });
-  } else if (util$e.isIterable(body)) {
-    writeIterable({ body, client, request, socket, contentLength, header, expectsPayload });
-  } else {
-    assert$5(false);
-  }
-
-  return true
-}
-
-function writeH2 (client, session, request) {
-  const { body, method, path, host, upgrade, expectContinue, signal, headers: reqHeaders } = request;
-
-  let headers;
-  if (typeof reqHeaders === 'string') headers = Request[kHTTP2CopyHeaders](reqHeaders.trim());
-  else headers = reqHeaders;
-
-  if (upgrade) {
-    errorRequest(client, request, new Error('Upgrade not supported for H2'));
-    return false
-  }
-
-  try {
-    // TODO(HTTP/2): Should we call onConnect immediately or on stream ready event?
-    request.onConnect((err) => {
-      if (request.aborted || request.completed) {
-        return
-      }
-
-      errorRequest(client, request, err || new RequestAbortedError$8());
-    });
-  } catch (err) {
-    errorRequest(client, request, err);
-  }
-
-  if (request.aborted) {
-    return false
-  }
-
-  /** @type {import('node:http2').ClientHttp2Stream} */
-  let stream;
-  const h2State = client[kHTTP2SessionState];
-
-  headers[HTTP2_HEADER_AUTHORITY] = host || client[kHost];
-  headers[HTTP2_HEADER_METHOD] = method;
-
-  if (method === 'CONNECT') {
-    session.ref();
-    // we are already connected, streams are pending, first request
-    // will create a new stream. We trigger a request to create the stream and wait until
-    // `ready` event is triggered
-    // We disabled endStream to allow the user to write to the stream
-    stream = session.request(headers, { endStream: false, signal });
-
-    if (stream.id && !stream.pending) {
-      request.onUpgrade(null, null, stream);
-      ++h2State.openStreams;
-    } else {
-      stream.once('ready', () => {
-        request.onUpgrade(null, null, stream);
-        ++h2State.openStreams;
-      });
-    }
-
-    stream.once('close', () => {
-      h2State.openStreams -= 1;
-      // TODO(HTTP/2): unref only if current streams count is 0
-      if (h2State.openStreams === 0) session.unref();
-    });
-
-    return true
-  }
-
-  // https://tools.ietf.org/html/rfc7540#section-8.3
-  // :path and :scheme headers must be omited when sending CONNECT
-
-  headers[HTTP2_HEADER_PATH] = path;
-  headers[HTTP2_HEADER_SCHEME] = 'https';
-
-  // https://tools.ietf.org/html/rfc7231#section-4.3.1
-  // https://tools.ietf.org/html/rfc7231#section-4.3.2
-  // https://tools.ietf.org/html/rfc7231#section-4.3.5
-
-  // Sending a payload body on a request that does not
-  // expect it can cause undefined behavior on some
-  // servers and corrupt connection state. Do not
-  // re-use the connection for further requests.
-
-  const expectsPayload = (
-    method === 'PUT' ||
-    method === 'POST' ||
-    method === 'PATCH'
-  );
-
-  if (body && typeof body.read === 'function') {
-    // Try to read EOF in order to get length.
-    body.read(0);
-  }
-
-  let contentLength = util$e.bodyLength(body);
-
-  if (contentLength == null) {
-    contentLength = request.contentLength;
-  }
-
-  if (contentLength === 0 || !expectsPayload) {
-    // https://tools.ietf.org/html/rfc7230#section-3.3.2
-    // A user agent SHOULD NOT send a Content-Length header field when
-    // the request message does not contain a payload body and the method
-    // semantics do not anticipate such a body.
-
-    contentLength = null;
-  }
-
-  // https://github.com/nodejs/undici/issues/2046
-  // A user agent may send a Content-Length header with 0 value, this should be allowed.
-  if (shouldSendContentLength(method) && contentLength > 0 && request.contentLength != null && request.contentLength !== contentLength) {
-    if (client[kStrictContentLength]) {
-      errorRequest(client, request, new RequestContentLengthMismatchError());
-      return false
-    }
-
-    process.emitWarning(new RequestContentLengthMismatchError());
-  }
-
-  if (contentLength != null) {
-    assert$5(body, 'no body must not have content length');
-    headers[HTTP2_HEADER_CONTENT_LENGTH] = `${contentLength}`;
-  }
-
-  session.ref();
-
-  const shouldEndStream = method === 'GET' || method === 'HEAD';
-  if (expectContinue) {
-    headers[HTTP2_HEADER_EXPECT] = '100-continue';
-    stream = session.request(headers, { endStream: shouldEndStream, signal });
-
-    stream.once('continue', writeBodyH2);
-  } else {
-    stream = session.request(headers, {
-      endStream: shouldEndStream,
-      signal
-    });
-    writeBodyH2();
-  }
-
-  // Increment counter as we have new several streams open
-  ++h2State.openStreams;
-
-  stream.once('response', headers => {
-    const { [HTTP2_HEADER_STATUS]: statusCode, ...realHeaders } = headers;
-
-    if (request.onHeaders(Number(statusCode), realHeaders, stream.resume.bind(stream), '') === false) {
-      stream.pause();
-    }
-  });
-
-  stream.once('end', () => {
-    request.onComplete([]);
-  });
-
-  stream.on('data', (chunk) => {
-    if (request.onData(chunk) === false) {
-      stream.pause();
-    }
-  });
-
-  stream.once('close', () => {
-    h2State.openStreams -= 1;
-    // TODO(HTTP/2): unref only if current streams count is 0
-    if (h2State.openStreams === 0) {
-      session.unref();
-    }
-  });
-
-  stream.once('error', function (err) {
-    if (client[kHTTP2Session] && !client[kHTTP2Session].destroyed && !this.closed && !this.destroyed) {
-      h2State.streams -= 1;
-      util$e.destroy(stream, err);
-    }
-  });
-
-  stream.once('frameError', (type, code) => {
-    const err = new InformationalError(`HTTP/2: "frameError" received - type ${type}, code ${code}`);
-    errorRequest(client, request, err);
-
-    if (client[kHTTP2Session] && !client[kHTTP2Session].destroyed && !this.closed && !this.destroyed) {
-      h2State.streams -= 1;
-      util$e.destroy(stream, err);
-    }
-  });
-
-  // stream.on('aborted', () => {
-  //   // TODO(HTTP/2): Support aborted
-  // })
-
-  // stream.on('timeout', () => {
-  //   // TODO(HTTP/2): Support timeout
-  // })
-
-  // stream.on('push', headers => {
-  //   // TODO(HTTP/2): Suppor push
-  // })
-
-  // stream.on('trailers', headers => {
-  //   // TODO(HTTP/2): Support trailers
-  // })
-
-  return true
-
-  function writeBodyH2 () {
-    /* istanbul ignore else: assertion */
-    if (!body) {
-      request.onRequestSent();
-    } else if (util$e.isBuffer(body)) {
-      assert$5(contentLength === body.byteLength, 'buffer body must have content length');
-      stream.cork();
-      stream.write(body);
-      stream.uncork();
-      stream.end();
-      request.onBodySent(body);
-      request.onRequestSent();
-    } else if (util$e.isBlobLike(body)) {
-      if (typeof body.stream === 'function') {
-        writeIterable({
-          client,
-          request,
-          contentLength,
-          h2stream: stream,
-          expectsPayload,
-          body: body.stream(),
-          socket: client[kSocket],
-          header: ''
-        });
-      } else {
-        writeBlob({
-          body,
-          client,
-          request,
-          contentLength,
-          expectsPayload,
-          h2stream: stream,
-          header: '',
-          socket: client[kSocket]
-        });
-      }
-    } else if (util$e.isStream(body)) {
-      writeStream({
-        body,
-        client,
-        request,
-        contentLength,
-        expectsPayload,
-        socket: client[kSocket],
-        h2stream: stream,
-        header: ''
-      });
-    } else if (util$e.isIterable(body)) {
-      writeIterable({
-        body,
-        client,
-        request,
-        contentLength,
-        expectsPayload,
-        header: '',
-        h2stream: stream,
-        socket: client[kSocket]
-      });
-    } else {
-      assert$5(false);
-    }
-  }
-}
-
-function writeStream ({ h2stream, body, client, request, socket, contentLength, header, expectsPayload }) {
-  assert$5(contentLength !== 0 || client[kRunning$3] === 0, 'stream body cannot be pipelined');
-
-  if (client[kHTTPConnVersion] === 'h2') {
-    // For HTTP/2, is enough to pipe the stream
-    const pipe = pipeline$1(
-      body,
-      h2stream,
-      (err) => {
-        if (err) {
-          util$e.destroy(body, err);
-          util$e.destroy(h2stream, err);
-        } else {
-          request.onRequestSent();
-        }
-      }
-    );
-
-    pipe.on('data', onPipeData);
-    pipe.once('end', () => {
-      pipe.removeListener('data', onPipeData);
-      util$e.destroy(pipe);
-    });
-
-    function onPipeData (chunk) {
-      request.onBodySent(chunk);
-    }
-
-    return
-  }
-
-  let finished = false;
-
-  const writer = new AsyncWriter({ socket, request, contentLength, client, expectsPayload, header });
-
-  const onData = function (chunk) {
-    if (finished) {
-      return
-    }
-
-    try {
-      if (!writer.write(chunk) && this.pause) {
-        this.pause();
-      }
-    } catch (err) {
-      util$e.destroy(this, err);
-    }
-  };
-  const onDrain = function () {
-    if (finished) {
-      return
-    }
-
-    if (body.resume) {
-      body.resume();
-    }
-  };
-  const onAbort = function () {
-    if (finished) {
-      return
-    }
-    const err = new RequestAbortedError$8();
-    queueMicrotask(() => onFinished(err));
-  };
-  const onFinished = function (err) {
-    if (finished) {
-      return
-    }
-
-    finished = true;
-
-    assert$5(socket.destroyed || (socket[kWriting] && client[kRunning$3] <= 1));
-
-    socket
-      .off('drain', onDrain)
-      .off('error', onFinished);
-
-    body
-      .removeListener('data', onData)
-      .removeListener('end', onFinished)
-      .removeListener('error', onFinished)
-      .removeListener('close', onAbort);
-
-    if (!err) {
-      try {
-        writer.end();
-      } catch (er) {
-        err = er;
-      }
-    }
-
-    writer.destroy(err);
-
-    if (err && (err.code !== 'UND_ERR_INFO' || err.message !== 'reset')) {
-      util$e.destroy(body, err);
-    } else {
-      util$e.destroy(body);
-    }
-  };
-
-  body
-    .on('data', onData)
-    .on('end', onFinished)
-    .on('error', onFinished)
-    .on('close', onAbort);
-
-  if (body.resume) {
-    body.resume();
-  }
-
-  socket
-    .on('drain', onDrain)
-    .on('error', onFinished);
-}
-
-async function writeBlob ({ h2stream, body, client, request, socket, contentLength, header, expectsPayload }) {
-  assert$5(contentLength === body.size, 'blob body must have content length');
-
-  const isH2 = client[kHTTPConnVersion] === 'h2';
-  try {
-    if (contentLength != null && contentLength !== body.size) {
-      throw new RequestContentLengthMismatchError()
-    }
-
-    const buffer = Buffer.from(await body.arrayBuffer());
-
-    if (isH2) {
-      h2stream.cork();
-      h2stream.write(buffer);
-      h2stream.uncork();
-    } else {
-      socket.cork();
-      socket.write(`${header}content-length: ${contentLength}\r\n\r\n`, 'latin1');
-      socket.write(buffer);
-      socket.uncork();
-    }
-
-    request.onBodySent(buffer);
-    request.onRequestSent();
-
-    if (!expectsPayload) {
-      socket[kReset] = true;
-    }
-
-    resume(client);
-  } catch (err) {
-    util$e.destroy(isH2 ? h2stream : socket, err);
-  }
-}
-
-async function writeIterable ({ h2stream, body, client, request, socket, contentLength, header, expectsPayload }) {
-  assert$5(contentLength !== 0 || client[kRunning$3] === 0, 'iterator body cannot be pipelined');
-
-  let callback = null;
-  function onDrain () {
-    if (callback) {
-      const cb = callback;
-      callback = null;
-      cb();
-    }
-  }
-
-  const waitForDrain = () => new Promise((resolve, reject) => {
-    assert$5(callback === null);
-
-    if (socket[kError]) {
-      reject(socket[kError]);
-    } else {
-      callback = resolve;
-    }
-  });
-
-  if (client[kHTTPConnVersion] === 'h2') {
-    h2stream
-      .on('close', onDrain)
-      .on('drain', onDrain);
-
-    try {
-      // It's up to the user to somehow abort the async iterable.
-      for await (const chunk of body) {
-        if (socket[kError]) {
-          throw socket[kError]
-        }
-
-        const res = h2stream.write(chunk);
-        request.onBodySent(chunk);
-        if (!res) {
-          await waitForDrain();
-        }
-      }
-    } catch (err) {
-      h2stream.destroy(err);
-    } finally {
-      request.onRequestSent();
-      h2stream.end();
-      h2stream
-        .off('close', onDrain)
-        .off('drain', onDrain);
-    }
-
-    return
-  }
-
-  socket
-    .on('close', onDrain)
-    .on('drain', onDrain);
-
-  const writer = new AsyncWriter({ socket, request, contentLength, client, expectsPayload, header });
-  try {
-    // It's up to the user to somehow abort the async iterable.
-    for await (const chunk of body) {
-      if (socket[kError]) {
-        throw socket[kError]
-      }
-
-      if (!writer.write(chunk)) {
-        await waitForDrain();
-      }
-    }
-
-    writer.end();
-  } catch (err) {
-    writer.destroy(err);
-  } finally {
-    socket
-      .off('close', onDrain)
-      .off('drain', onDrain);
-  }
-}
-
-class AsyncWriter {
-  constructor ({ socket, request, contentLength, client, expectsPayload, header }) {
-    this.socket = socket;
-    this.request = request;
-    this.contentLength = contentLength;
-    this.client = client;
-    this.bytesWritten = 0;
-    this.expectsPayload = expectsPayload;
-    this.header = header;
-
-    socket[kWriting] = true;
-  }
-
-  write (chunk) {
-    const { socket, request, contentLength, client, bytesWritten, expectsPayload, header } = this;
-
-    if (socket[kError]) {
-      throw socket[kError]
-    }
-
-    if (socket.destroyed) {
-      return false
-    }
-
-    const len = Buffer.byteLength(chunk);
-    if (!len) {
-      return true
-    }
-
-    // We should defer writing chunks.
-    if (contentLength !== null && bytesWritten + len > contentLength) {
-      if (client[kStrictContentLength]) {
-        throw new RequestContentLengthMismatchError()
-      }
-
-      process.emitWarning(new RequestContentLengthMismatchError());
-    }
-
-    socket.cork();
-
-    if (bytesWritten === 0) {
-      if (!expectsPayload) {
-        socket[kReset] = true;
-      }
-
-      if (contentLength === null) {
-        socket.write(`${header}transfer-encoding: chunked\r\n`, 'latin1');
-      } else {
-        socket.write(`${header}content-length: ${contentLength}\r\n\r\n`, 'latin1');
-      }
-    }
-
-    if (contentLength === null) {
-      socket.write(`\r\n${len.toString(16)}\r\n`, 'latin1');
-    }
-
-    this.bytesWritten += len;
-
-    const ret = socket.write(chunk);
-
-    socket.uncork();
-
-    request.onBodySent(chunk);
-
-    if (!ret) {
-      if (socket[kParser].timeout && socket[kParser].timeoutType === TIMEOUT_HEADERS) {
-        // istanbul ignore else: only for jest
-        if (socket[kParser].timeout.refresh) {
-          socket[kParser].timeout.refresh();
-        }
-      }
-    }
-
-    return ret
-  }
-
-  end () {
-    const { socket, contentLength, client, bytesWritten, expectsPayload, header, request } = this;
-    request.onRequestSent();
-
-    socket[kWriting] = false;
-
-    if (socket[kError]) {
-      throw socket[kError]
-    }
-
-    if (socket.destroyed) {
-      return
-    }
-
-    if (bytesWritten === 0) {
-      if (expectsPayload) {
-        // https://tools.ietf.org/html/rfc7230#section-3.3.2
-        // A user agent SHOULD send a Content-Length in a request message when
-        // no Transfer-Encoding is sent and the request method defines a meaning
-        // for an enclosed payload body.
-
-        socket.write(`${header}content-length: 0\r\n\r\n`, 'latin1');
-      } else {
-        socket.write(`${header}\r\n`, 'latin1');
-      }
-    } else if (contentLength === null) {
-      socket.write('\r\n0\r\n\r\n', 'latin1');
-    }
-
-    if (contentLength !== null && bytesWritten !== contentLength) {
-      if (client[kStrictContentLength]) {
-        throw new RequestContentLengthMismatchError()
-      } else {
-        process.emitWarning(new RequestContentLengthMismatchError());
-      }
-    }
-
-    if (socket[kParser].timeout && socket[kParser].timeoutType === TIMEOUT_HEADERS) {
-      // istanbul ignore else: only for jest
-      if (socket[kParser].timeout.refresh) {
-        socket[kParser].timeout.refresh();
-      }
-    }
-
-    resume(client);
-  }
-
-  destroy (err) {
-    const { socket, client } = this;
-
-    socket[kWriting] = false;
-
-    if (err) {
-      assert$5(client[kRunning$3] <= 1, 'pipeline should only contain this request');
-      util$e.destroy(socket, err);
-    }
-  }
-}
-
-function errorRequest (client, request, err) {
-  try {
-    request.onError(err);
-    assert$5(request.aborted);
-  } catch (err) {
-    client.emit('error', err);
-  }
-}
-
-var client = Client$4;
 
 /* eslint-disable */
 
-// Extracted from node/lib/internal/fixed_queue.js
+var fixedQueue;
+var hasRequiredFixedQueue;
 
-// Currently optimal queue size, tested on V8 6.0 - 6.6. Must be power of two.
-const kSize$3 = 2048;
-const kMask = kSize$3 - 1;
+function requireFixedQueue () {
+	if (hasRequiredFixedQueue) return fixedQueue;
+	hasRequiredFixedQueue = 1;
 
-// The FixedQueue is implemented as a singly-linked list of fixed-size
-// circular buffers. It looks something like this:
-//
-//  head                                                       tail
-//    |                                                          |
-//    v                                                          v
-// +-----------+ <-----\       +-----------+ <------\         +-----------+
-// |  [null]   |        \----- |   next    |         \------- |   next    |
-// +-----------+               +-----------+                  +-----------+
-// |   item    | <-- bottom    |   item    | <-- bottom       |  [empty]  |
-// |   item    |               |   item    |                  |  [empty]  |
-// |   item    |               |   item    |                  |  [empty]  |
-// |   item    |               |   item    |                  |  [empty]  |
-// |   item    |               |   item    |       bottom --> |   item    |
-// |   item    |               |   item    |                  |   item    |
-// |    ...    |               |    ...    |                  |    ...    |
-// |   item    |               |   item    |                  |   item    |
-// |   item    |               |   item    |                  |   item    |
-// |  [empty]  | <-- top       |   item    |                  |   item    |
-// |  [empty]  |               |   item    |                  |   item    |
-// |  [empty]  |               |  [empty]  | <-- top  top --> |  [empty]  |
-// +-----------+               +-----------+                  +-----------+
-//
-// Or, if there is only one circular buffer, it looks something
-// like either of these:
-//
-//  head   tail                                 head   tail
-//    |     |                                     |     |
-//    v     v                                     v     v
-// +-----------+                               +-----------+
-// |  [null]   |                               |  [null]   |
-// +-----------+                               +-----------+
-// |  [empty]  |                               |   item    |
-// |  [empty]  |                               |   item    |
-// |   item    | <-- bottom            top --> |  [empty]  |
-// |   item    |                               |  [empty]  |
-// |  [empty]  | <-- top            bottom --> |   item    |
-// |  [empty]  |                               |   item    |
-// +-----------+                               +-----------+
-//
-// Adding a value means moving `top` forward by one, removing means
-// moving `bottom` forward by one. After reaching the end, the queue
-// wraps around.
-//
-// When `top === bottom` the current queue is empty and when
-// `top + 1 === bottom` it's full. This wastes a single space of storage
-// but allows much quicker checks.
+	// Extracted from node/lib/internal/fixed_queue.js
 
-class FixedCircularBuffer {
-  constructor() {
-    this.bottom = 0;
-    this.top = 0;
-    this.list = new Array(kSize$3);
-    this.next = null;
-  }
+	// Currently optimal queue size, tested on V8 6.0 - 6.6. Must be power of two.
+	const kSize = 2048;
+	const kMask = kSize - 1;
 
-  isEmpty() {
-    return this.top === this.bottom;
-  }
+	// The FixedQueue is implemented as a singly-linked list of fixed-size
+	// circular buffers. It looks something like this:
+	//
+	//  head                                                       tail
+	//    |                                                          |
+	//    v                                                          v
+	// +-----------+ <-----\       +-----------+ <------\         +-----------+
+	// |  [null]   |        \----- |   next    |         \------- |   next    |
+	// +-----------+               +-----------+                  +-----------+
+	// |   item    | <-- bottom    |   item    | <-- bottom       |  [empty]  |
+	// |   item    |               |   item    |                  |  [empty]  |
+	// |   item    |               |   item    |                  |  [empty]  |
+	// |   item    |               |   item    |                  |  [empty]  |
+	// |   item    |               |   item    |       bottom --> |   item    |
+	// |   item    |               |   item    |                  |   item    |
+	// |    ...    |               |    ...    |                  |    ...    |
+	// |   item    |               |   item    |                  |   item    |
+	// |   item    |               |   item    |                  |   item    |
+	// |  [empty]  | <-- top       |   item    |                  |   item    |
+	// |  [empty]  |               |   item    |                  |   item    |
+	// |  [empty]  |               |  [empty]  | <-- top  top --> |  [empty]  |
+	// +-----------+               +-----------+                  +-----------+
+	//
+	// Or, if there is only one circular buffer, it looks something
+	// like either of these:
+	//
+	//  head   tail                                 head   tail
+	//    |     |                                     |     |
+	//    v     v                                     v     v
+	// +-----------+                               +-----------+
+	// |  [null]   |                               |  [null]   |
+	// +-----------+                               +-----------+
+	// |  [empty]  |                               |   item    |
+	// |  [empty]  |                               |   item    |
+	// |   item    | <-- bottom            top --> |  [empty]  |
+	// |   item    |                               |  [empty]  |
+	// |  [empty]  | <-- top            bottom --> |   item    |
+	// |  [empty]  |                               |   item    |
+	// +-----------+                               +-----------+
+	//
+	// Adding a value means moving `top` forward by one, removing means
+	// moving `bottom` forward by one. After reaching the end, the queue
+	// wraps around.
+	//
+	// When `top === bottom` the current queue is empty and when
+	// `top + 1 === bottom` it's full. This wastes a single space of storage
+	// but allows much quicker checks.
 
-  isFull() {
-    return ((this.top + 1) & kMask) === this.bottom;
-  }
+	class FixedCircularBuffer {
+	  constructor() {
+	    this.bottom = 0;
+	    this.top = 0;
+	    this.list = new Array(kSize);
+	    this.next = null;
+	  }
 
-  push(data) {
-    this.list[this.top] = data;
-    this.top = (this.top + 1) & kMask;
-  }
+	  isEmpty() {
+	    return this.top === this.bottom;
+	  }
 
-  shift() {
-    const nextItem = this.list[this.bottom];
-    if (nextItem === undefined)
-      return null;
-    this.list[this.bottom] = undefined;
-    this.bottom = (this.bottom + 1) & kMask;
-    return nextItem;
-  }
+	  isFull() {
+	    return ((this.top + 1) & kMask) === this.bottom;
+	  }
+
+	  push(data) {
+	    this.list[this.top] = data;
+	    this.top = (this.top + 1) & kMask;
+	  }
+
+	  shift() {
+	    const nextItem = this.list[this.bottom];
+	    if (nextItem === undefined)
+	      return null;
+	    this.list[this.bottom] = undefined;
+	    this.bottom = (this.bottom + 1) & kMask;
+	    return nextItem;
+	  }
+	}
+
+	fixedQueue = class FixedQueue {
+	  constructor() {
+	    this.head = this.tail = new FixedCircularBuffer();
+	  }
+
+	  isEmpty() {
+	    return this.head.isEmpty();
+	  }
+
+	  push(data) {
+	    if (this.head.isFull()) {
+	      // Head is full: Creates a new queue, sets the old queue's `.next` to it,
+	      // and sets it as the new main queue.
+	      this.head = this.head.next = new FixedCircularBuffer();
+	    }
+	    this.head.push(data);
+	  }
+
+	  shift() {
+	    const tail = this.tail;
+	    const next = tail.shift();
+	    if (tail.isEmpty() && tail.next !== null) {
+	      // If there is another queue, it forms the new tail.
+	      this.tail = tail.next;
+	    }
+	    return next;
+	  }
+	};
+	return fixedQueue;
 }
 
-var fixedQueue = class FixedQueue {
-  constructor() {
-    this.head = this.tail = new FixedCircularBuffer();
-  }
+var poolStats;
+var hasRequiredPoolStats;
 
-  isEmpty() {
-    return this.head.isEmpty();
-  }
+function requirePoolStats () {
+	if (hasRequiredPoolStats) return poolStats;
+	hasRequiredPoolStats = 1;
+	const { kFree, kConnected, kPending, kQueued, kRunning, kSize } = requireSymbols$4();
+	const kPool = Symbol('pool');
 
-  push(data) {
-    if (this.head.isFull()) {
-      // Head is full: Creates a new queue, sets the old queue's `.next` to it,
-      // and sets it as the new main queue.
-      this.head = this.head.next = new FixedCircularBuffer();
-    }
-    this.head.push(data);
-  }
+	class PoolStats {
+	  constructor (pool) {
+	    this[kPool] = pool;
+	  }
 
-  shift() {
-    const tail = this.tail;
-    const next = tail.shift();
-    if (tail.isEmpty() && tail.next !== null) {
-      // If there is another queue, it forms the new tail.
-      this.tail = tail.next;
-    }
-    return next;
-  }
-};
+	  get connected () {
+	    return this[kPool][kConnected]
+	  }
 
-const { kFree: kFree$1, kConnected: kConnected$4, kPending: kPending$1, kQueued: kQueued$1, kRunning: kRunning$2, kSize: kSize$2 } = symbols$4;
-const kPool = Symbol('pool');
+	  get free () {
+	    return this[kPool][kFree]
+	  }
 
-let PoolStats$1 = class PoolStats {
-  constructor (pool) {
-    this[kPool] = pool;
-  }
+	  get pending () {
+	    return this[kPool][kPending]
+	  }
 
-  get connected () {
-    return this[kPool][kConnected$4]
-  }
+	  get queued () {
+	    return this[kPool][kQueued]
+	  }
 
-  get free () {
-    return this[kPool][kFree$1]
-  }
+	  get running () {
+	    return this[kPool][kRunning]
+	  }
 
-  get pending () {
-    return this[kPool][kPending$1]
-  }
+	  get size () {
+	    return this[kPool][kSize]
+	  }
+	}
 
-  get queued () {
-    return this[kPool][kQueued$1]
-  }
-
-  get running () {
-    return this[kPool][kRunning$2]
-  }
-
-  get size () {
-    return this[kPool][kSize$2]
-  }
-};
-
-var poolStats = PoolStats$1;
-
-const DispatcherBase$2 = dispatcherBase;
-const FixedQueue = fixedQueue;
-const { kConnected: kConnected$3, kSize: kSize$1, kRunning: kRunning$1, kPending, kQueued, kBusy, kFree, kUrl: kUrl$2, kClose: kClose$4, kDestroy: kDestroy$2, kDispatch: kDispatch$1 } = symbols$4;
-const PoolStats = poolStats;
-
-const kClients$4 = Symbol('clients');
-const kNeedDrain$2 = Symbol('needDrain');
-const kQueue = Symbol('queue');
-const kClosedResolve = Symbol('closed resolve');
-const kOnDrain$1 = Symbol('onDrain');
-const kOnConnect$1 = Symbol('onConnect');
-const kOnDisconnect$1 = Symbol('onDisconnect');
-const kOnConnectionError$1 = Symbol('onConnectionError');
-const kGetDispatcher$2 = Symbol('get dispatcher');
-const kAddClient$2 = Symbol('add client');
-const kRemoveClient$1 = Symbol('remove client');
-const kStats = Symbol('stats');
-
-let PoolBase$2 = class PoolBase extends DispatcherBase$2 {
-  constructor () {
-    super();
-
-    this[kQueue] = new FixedQueue();
-    this[kClients$4] = [];
-    this[kQueued] = 0;
-
-    const pool = this;
-
-    this[kOnDrain$1] = function onDrain (origin, targets) {
-      const queue = pool[kQueue];
-
-      let needDrain = false;
-
-      while (!needDrain) {
-        const item = queue.shift();
-        if (!item) {
-          break
-        }
-        pool[kQueued]--;
-        needDrain = !this.dispatch(item.opts, item.handler);
-      }
-
-      this[kNeedDrain$2] = needDrain;
-
-      if (!this[kNeedDrain$2] && pool[kNeedDrain$2]) {
-        pool[kNeedDrain$2] = false;
-        pool.emit('drain', origin, [pool, ...targets]);
-      }
-
-      if (pool[kClosedResolve] && queue.isEmpty()) {
-        Promise
-          .all(pool[kClients$4].map(c => c.close()))
-          .then(pool[kClosedResolve]);
-      }
-    };
-
-    this[kOnConnect$1] = (origin, targets) => {
-      pool.emit('connect', origin, [pool, ...targets]);
-    };
-
-    this[kOnDisconnect$1] = (origin, targets, err) => {
-      pool.emit('disconnect', origin, [pool, ...targets], err);
-    };
-
-    this[kOnConnectionError$1] = (origin, targets, err) => {
-      pool.emit('connectionError', origin, [pool, ...targets], err);
-    };
-
-    this[kStats] = new PoolStats(this);
-  }
-
-  get [kBusy] () {
-    return this[kNeedDrain$2]
-  }
-
-  get [kConnected$3] () {
-    return this[kClients$4].filter(client => client[kConnected$3]).length
-  }
-
-  get [kFree] () {
-    return this[kClients$4].filter(client => client[kConnected$3] && !client[kNeedDrain$2]).length
-  }
-
-  get [kPending] () {
-    let ret = this[kQueued];
-    for (const { [kPending]: pending } of this[kClients$4]) {
-      ret += pending;
-    }
-    return ret
-  }
-
-  get [kRunning$1] () {
-    let ret = 0;
-    for (const { [kRunning$1]: running } of this[kClients$4]) {
-      ret += running;
-    }
-    return ret
-  }
-
-  get [kSize$1] () {
-    let ret = this[kQueued];
-    for (const { [kSize$1]: size } of this[kClients$4]) {
-      ret += size;
-    }
-    return ret
-  }
-
-  get stats () {
-    return this[kStats]
-  }
-
-  async [kClose$4] () {
-    if (this[kQueue].isEmpty()) {
-      return Promise.all(this[kClients$4].map(c => c.close()))
-    } else {
-      return new Promise((resolve) => {
-        this[kClosedResolve] = resolve;
-      })
-    }
-  }
-
-  async [kDestroy$2] (err) {
-    while (true) {
-      const item = this[kQueue].shift();
-      if (!item) {
-        break
-      }
-      item.handler.onError(err);
-    }
-
-    return Promise.all(this[kClients$4].map(c => c.destroy(err)))
-  }
-
-  [kDispatch$1] (opts, handler) {
-    const dispatcher = this[kGetDispatcher$2]();
-
-    if (!dispatcher) {
-      this[kNeedDrain$2] = true;
-      this[kQueue].push({ opts, handler });
-      this[kQueued]++;
-    } else if (!dispatcher.dispatch(opts, handler)) {
-      dispatcher[kNeedDrain$2] = true;
-      this[kNeedDrain$2] = !this[kGetDispatcher$2]();
-    }
-
-    return !this[kNeedDrain$2]
-  }
-
-  [kAddClient$2] (client) {
-    client
-      .on('drain', this[kOnDrain$1])
-      .on('connect', this[kOnConnect$1])
-      .on('disconnect', this[kOnDisconnect$1])
-      .on('connectionError', this[kOnConnectionError$1]);
-
-    this[kClients$4].push(client);
-
-    if (this[kNeedDrain$2]) {
-      process.nextTick(() => {
-        if (this[kNeedDrain$2]) {
-          this[kOnDrain$1](client[kUrl$2], [this, client]);
-        }
-      });
-    }
-
-    return this
-  }
-
-  [kRemoveClient$1] (client) {
-    client.close(() => {
-      const idx = this[kClients$4].indexOf(client);
-      if (idx !== -1) {
-        this[kClients$4].splice(idx, 1);
-      }
-    });
-
-    this[kNeedDrain$2] = this[kClients$4].some(dispatcher => (
-      !dispatcher[kNeedDrain$2] &&
-      dispatcher.closed !== true &&
-      dispatcher.destroyed !== true
-    ));
-  }
-};
-
-var poolBase = {
-  PoolBase: PoolBase$2,
-  kClients: kClients$4,
-  kNeedDrain: kNeedDrain$2,
-  kAddClient: kAddClient$2,
-  kRemoveClient: kRemoveClient$1,
-  kGetDispatcher: kGetDispatcher$2
-};
-
-const {
-  PoolBase: PoolBase$1,
-  kClients: kClients$3,
-  kNeedDrain: kNeedDrain$1,
-  kAddClient: kAddClient$1,
-  kGetDispatcher: kGetDispatcher$1
-} = poolBase;
-const Client$3 = client;
-const {
-  InvalidArgumentError: InvalidArgumentError$f
-} = errors$1;
-const util$d = util$j;
-const { kUrl: kUrl$1, kInterceptors: kInterceptors$3 } = symbols$4;
-const buildConnector$2 = connect$2;
-
-const kOptions$3 = Symbol('options');
-const kConnections = Symbol('connections');
-const kFactory$3 = Symbol('factory');
-
-function defaultFactory$3 (origin, opts) {
-  return new Client$3(origin, opts)
+	poolStats = PoolStats;
+	return poolStats;
 }
 
-let Pool$5 = class Pool extends PoolBase$1 {
-  constructor (origin, {
-    connections,
-    factory = defaultFactory$3,
-    connect,
-    connectTimeout,
-    tls,
-    maxCachedSessions,
-    socketPath,
-    autoSelectFamily,
-    autoSelectFamilyAttemptTimeout,
-    allowH2,
-    ...options
-  } = {}) {
-    super();
+var poolBase;
+var hasRequiredPoolBase;
 
-    if (connections != null && (!Number.isFinite(connections) || connections < 0)) {
-      throw new InvalidArgumentError$f('invalid connections')
-    }
+function requirePoolBase () {
+	if (hasRequiredPoolBase) return poolBase;
+	hasRequiredPoolBase = 1;
 
-    if (typeof factory !== 'function') {
-      throw new InvalidArgumentError$f('factory must be a function.')
-    }
+	const DispatcherBase = requireDispatcherBase();
+	const FixedQueue = requireFixedQueue();
+	const { kConnected, kSize, kRunning, kPending, kQueued, kBusy, kFree, kUrl, kClose, kDestroy, kDispatch } = requireSymbols$4();
+	const PoolStats = requirePoolStats();
 
-    if (connect != null && typeof connect !== 'function' && typeof connect !== 'object') {
-      throw new InvalidArgumentError$f('connect must be a function or an object')
-    }
+	const kClients = Symbol('clients');
+	const kNeedDrain = Symbol('needDrain');
+	const kQueue = Symbol('queue');
+	const kClosedResolve = Symbol('closed resolve');
+	const kOnDrain = Symbol('onDrain');
+	const kOnConnect = Symbol('onConnect');
+	const kOnDisconnect = Symbol('onDisconnect');
+	const kOnConnectionError = Symbol('onConnectionError');
+	const kGetDispatcher = Symbol('get dispatcher');
+	const kAddClient = Symbol('add client');
+	const kRemoveClient = Symbol('remove client');
+	const kStats = Symbol('stats');
 
-    if (typeof connect !== 'function') {
-      connect = buildConnector$2({
-        ...tls,
-        maxCachedSessions,
-        allowH2,
-        socketPath,
-        timeout: connectTimeout,
-        ...(util$d.nodeHasAutoSelectFamily && autoSelectFamily ? { autoSelectFamily, autoSelectFamilyAttemptTimeout } : undefined),
-        ...connect
-      });
-    }
+	class PoolBase extends DispatcherBase {
+	  constructor () {
+	    super();
 
-    this[kInterceptors$3] = options.interceptors && options.interceptors.Pool && Array.isArray(options.interceptors.Pool)
-      ? options.interceptors.Pool
-      : [];
-    this[kConnections] = connections || null;
-    this[kUrl$1] = util$d.parseOrigin(origin);
-    this[kOptions$3] = { ...util$d.deepClone(options), connect, allowH2 };
-    this[kOptions$3].interceptors = options.interceptors
-      ? { ...options.interceptors }
-      : undefined;
-    this[kFactory$3] = factory;
-  }
+	    this[kQueue] = new FixedQueue();
+	    this[kClients] = [];
+	    this[kQueued] = 0;
 
-  [kGetDispatcher$1] () {
-    let dispatcher = this[kClients$3].find(dispatcher => !dispatcher[kNeedDrain$1]);
+	    const pool = this;
 
-    if (dispatcher) {
-      return dispatcher
-    }
+	    this[kOnDrain] = function onDrain (origin, targets) {
+	      const queue = pool[kQueue];
 
-    if (!this[kConnections] || this[kClients$3].length < this[kConnections]) {
-      dispatcher = this[kFactory$3](this[kUrl$1], this[kOptions$3]);
-      this[kAddClient$1](dispatcher);
-    }
+	      let needDrain = false;
 
-    return dispatcher
-  }
-};
+	      while (!needDrain) {
+	        const item = queue.shift();
+	        if (!item) {
+	          break
+	        }
+	        pool[kQueued]--;
+	        needDrain = !this.dispatch(item.opts, item.handler);
+	      }
 
-var pool = Pool$5;
+	      this[kNeedDrain] = needDrain;
 
-const {
-  BalancedPoolMissingUpstreamError,
-  InvalidArgumentError: InvalidArgumentError$e
-} = errors$1;
-const {
-  PoolBase,
-  kClients: kClients$2,
-  kNeedDrain,
-  kAddClient,
-  kRemoveClient,
-  kGetDispatcher
-} = poolBase;
-const Pool$4 = pool;
-const { kUrl, kInterceptors: kInterceptors$2 } = symbols$4;
-const { parseOrigin } = util$j;
-const kFactory$2 = Symbol('factory');
+	      if (!this[kNeedDrain] && pool[kNeedDrain]) {
+	        pool[kNeedDrain] = false;
+	        pool.emit('drain', origin, [pool, ...targets]);
+	      }
 
-const kOptions$2 = Symbol('options');
-const kGreatestCommonDivisor = Symbol('kGreatestCommonDivisor');
-const kCurrentWeight = Symbol('kCurrentWeight');
-const kIndex = Symbol('kIndex');
-const kWeight = Symbol('kWeight');
-const kMaxWeightPerServer = Symbol('kMaxWeightPerServer');
-const kErrorPenalty = Symbol('kErrorPenalty');
+	      if (pool[kClosedResolve] && queue.isEmpty()) {
+	        Promise
+	          .all(pool[kClients].map(c => c.close()))
+	          .then(pool[kClosedResolve]);
+	      }
+	    };
 
-function getGreatestCommonDivisor (a, b) {
-  if (b === 0) return a
-  return getGreatestCommonDivisor(b, a % b)
+	    this[kOnConnect] = (origin, targets) => {
+	      pool.emit('connect', origin, [pool, ...targets]);
+	    };
+
+	    this[kOnDisconnect] = (origin, targets, err) => {
+	      pool.emit('disconnect', origin, [pool, ...targets], err);
+	    };
+
+	    this[kOnConnectionError] = (origin, targets, err) => {
+	      pool.emit('connectionError', origin, [pool, ...targets], err);
+	    };
+
+	    this[kStats] = new PoolStats(this);
+	  }
+
+	  get [kBusy] () {
+	    return this[kNeedDrain]
+	  }
+
+	  get [kConnected] () {
+	    return this[kClients].filter(client => client[kConnected]).length
+	  }
+
+	  get [kFree] () {
+	    return this[kClients].filter(client => client[kConnected] && !client[kNeedDrain]).length
+	  }
+
+	  get [kPending] () {
+	    let ret = this[kQueued];
+	    for (const { [kPending]: pending } of this[kClients]) {
+	      ret += pending;
+	    }
+	    return ret
+	  }
+
+	  get [kRunning] () {
+	    let ret = 0;
+	    for (const { [kRunning]: running } of this[kClients]) {
+	      ret += running;
+	    }
+	    return ret
+	  }
+
+	  get [kSize] () {
+	    let ret = this[kQueued];
+	    for (const { [kSize]: size } of this[kClients]) {
+	      ret += size;
+	    }
+	    return ret
+	  }
+
+	  get stats () {
+	    return this[kStats]
+	  }
+
+	  async [kClose] () {
+	    if (this[kQueue].isEmpty()) {
+	      return Promise.all(this[kClients].map(c => c.close()))
+	    } else {
+	      return new Promise((resolve) => {
+	        this[kClosedResolve] = resolve;
+	      })
+	    }
+	  }
+
+	  async [kDestroy] (err) {
+	    while (true) {
+	      const item = this[kQueue].shift();
+	      if (!item) {
+	        break
+	      }
+	      item.handler.onError(err);
+	    }
+
+	    return Promise.all(this[kClients].map(c => c.destroy(err)))
+	  }
+
+	  [kDispatch] (opts, handler) {
+	    const dispatcher = this[kGetDispatcher]();
+
+	    if (!dispatcher) {
+	      this[kNeedDrain] = true;
+	      this[kQueue].push({ opts, handler });
+	      this[kQueued]++;
+	    } else if (!dispatcher.dispatch(opts, handler)) {
+	      dispatcher[kNeedDrain] = true;
+	      this[kNeedDrain] = !this[kGetDispatcher]();
+	    }
+
+	    return !this[kNeedDrain]
+	  }
+
+	  [kAddClient] (client) {
+	    client
+	      .on('drain', this[kOnDrain])
+	      .on('connect', this[kOnConnect])
+	      .on('disconnect', this[kOnDisconnect])
+	      .on('connectionError', this[kOnConnectionError]);
+
+	    this[kClients].push(client);
+
+	    if (this[kNeedDrain]) {
+	      process.nextTick(() => {
+	        if (this[kNeedDrain]) {
+	          this[kOnDrain](client[kUrl], [this, client]);
+	        }
+	      });
+	    }
+
+	    return this
+	  }
+
+	  [kRemoveClient] (client) {
+	    client.close(() => {
+	      const idx = this[kClients].indexOf(client);
+	      if (idx !== -1) {
+	        this[kClients].splice(idx, 1);
+	      }
+	    });
+
+	    this[kNeedDrain] = this[kClients].some(dispatcher => (
+	      !dispatcher[kNeedDrain] &&
+	      dispatcher.closed !== true &&
+	      dispatcher.destroyed !== true
+	    ));
+	  }
+	}
+
+	poolBase = {
+	  PoolBase,
+	  kClients,
+	  kNeedDrain,
+	  kAddClient,
+	  kRemoveClient,
+	  kGetDispatcher
+	};
+	return poolBase;
 }
 
-function defaultFactory$2 (origin, opts) {
-  return new Pool$4(origin, opts)
+var pool;
+var hasRequiredPool;
+
+function requirePool () {
+	if (hasRequiredPool) return pool;
+	hasRequiredPool = 1;
+
+	const {
+	  PoolBase,
+	  kClients,
+	  kNeedDrain,
+	  kAddClient,
+	  kGetDispatcher
+	} = requirePoolBase();
+	const Client = requireClient();
+	const {
+	  InvalidArgumentError
+	} = requireErrors();
+	const util = requireUtil$6();
+	const { kUrl, kInterceptors } = requireSymbols$4();
+	const buildConnector = requireConnect();
+
+	const kOptions = Symbol('options');
+	const kConnections = Symbol('connections');
+	const kFactory = Symbol('factory');
+
+	function defaultFactory (origin, opts) {
+	  return new Client(origin, opts)
+	}
+
+	class Pool extends PoolBase {
+	  constructor (origin, {
+	    connections,
+	    factory = defaultFactory,
+	    connect,
+	    connectTimeout,
+	    tls,
+	    maxCachedSessions,
+	    socketPath,
+	    autoSelectFamily,
+	    autoSelectFamilyAttemptTimeout,
+	    allowH2,
+	    ...options
+	  } = {}) {
+	    super();
+
+	    if (connections != null && (!Number.isFinite(connections) || connections < 0)) {
+	      throw new InvalidArgumentError('invalid connections')
+	    }
+
+	    if (typeof factory !== 'function') {
+	      throw new InvalidArgumentError('factory must be a function.')
+	    }
+
+	    if (connect != null && typeof connect !== 'function' && typeof connect !== 'object') {
+	      throw new InvalidArgumentError('connect must be a function or an object')
+	    }
+
+	    if (typeof connect !== 'function') {
+	      connect = buildConnector({
+	        ...tls,
+	        maxCachedSessions,
+	        allowH2,
+	        socketPath,
+	        timeout: connectTimeout,
+	        ...(util.nodeHasAutoSelectFamily && autoSelectFamily ? { autoSelectFamily, autoSelectFamilyAttemptTimeout } : undefined),
+	        ...connect
+	      });
+	    }
+
+	    this[kInterceptors] = options.interceptors && options.interceptors.Pool && Array.isArray(options.interceptors.Pool)
+	      ? options.interceptors.Pool
+	      : [];
+	    this[kConnections] = connections || null;
+	    this[kUrl] = util.parseOrigin(origin);
+	    this[kOptions] = { ...util.deepClone(options), connect, allowH2 };
+	    this[kOptions].interceptors = options.interceptors
+	      ? { ...options.interceptors }
+	      : undefined;
+	    this[kFactory] = factory;
+	  }
+
+	  [kGetDispatcher] () {
+	    let dispatcher = this[kClients].find(dispatcher => !dispatcher[kNeedDrain]);
+
+	    if (dispatcher) {
+	      return dispatcher
+	    }
+
+	    if (!this[kConnections] || this[kClients].length < this[kConnections]) {
+	      dispatcher = this[kFactory](this[kUrl], this[kOptions]);
+	      this[kAddClient](dispatcher);
+	    }
+
+	    return dispatcher
+	  }
+	}
+
+	pool = Pool;
+	return pool;
 }
 
-let BalancedPool$1 = class BalancedPool extends PoolBase {
-  constructor (upstreams = [], { factory = defaultFactory$2, ...opts } = {}) {
-    super();
+var balancedPool;
+var hasRequiredBalancedPool;
 
-    this[kOptions$2] = opts;
-    this[kIndex] = -1;
-    this[kCurrentWeight] = 0;
+function requireBalancedPool () {
+	if (hasRequiredBalancedPool) return balancedPool;
+	hasRequiredBalancedPool = 1;
 
-    this[kMaxWeightPerServer] = this[kOptions$2].maxWeightPerServer || 100;
-    this[kErrorPenalty] = this[kOptions$2].errorPenalty || 15;
+	const {
+	  BalancedPoolMissingUpstreamError,
+	  InvalidArgumentError
+	} = requireErrors();
+	const {
+	  PoolBase,
+	  kClients,
+	  kNeedDrain,
+	  kAddClient,
+	  kRemoveClient,
+	  kGetDispatcher
+	} = requirePoolBase();
+	const Pool = requirePool();
+	const { kUrl, kInterceptors } = requireSymbols$4();
+	const { parseOrigin } = requireUtil$6();
+	const kFactory = Symbol('factory');
 
-    if (!Array.isArray(upstreams)) {
-      upstreams = [upstreams];
-    }
+	const kOptions = Symbol('options');
+	const kGreatestCommonDivisor = Symbol('kGreatestCommonDivisor');
+	const kCurrentWeight = Symbol('kCurrentWeight');
+	const kIndex = Symbol('kIndex');
+	const kWeight = Symbol('kWeight');
+	const kMaxWeightPerServer = Symbol('kMaxWeightPerServer');
+	const kErrorPenalty = Symbol('kErrorPenalty');
 
-    if (typeof factory !== 'function') {
-      throw new InvalidArgumentError$e('factory must be a function.')
-    }
+	function getGreatestCommonDivisor (a, b) {
+	  if (b === 0) return a
+	  return getGreatestCommonDivisor(b, a % b)
+	}
 
-    this[kInterceptors$2] = opts.interceptors && opts.interceptors.BalancedPool && Array.isArray(opts.interceptors.BalancedPool)
-      ? opts.interceptors.BalancedPool
-      : [];
-    this[kFactory$2] = factory;
+	function defaultFactory (origin, opts) {
+	  return new Pool(origin, opts)
+	}
 
-    for (const upstream of upstreams) {
-      this.addUpstream(upstream);
-    }
-    this._updateBalancedPoolStats();
-  }
+	class BalancedPool extends PoolBase {
+	  constructor (upstreams = [], { factory = defaultFactory, ...opts } = {}) {
+	    super();
 
-  addUpstream (upstream) {
-    const upstreamOrigin = parseOrigin(upstream).origin;
+	    this[kOptions] = opts;
+	    this[kIndex] = -1;
+	    this[kCurrentWeight] = 0;
 
-    if (this[kClients$2].find((pool) => (
-      pool[kUrl].origin === upstreamOrigin &&
-      pool.closed !== true &&
-      pool.destroyed !== true
-    ))) {
-      return this
-    }
-    const pool = this[kFactory$2](upstreamOrigin, Object.assign({}, this[kOptions$2]));
+	    this[kMaxWeightPerServer] = this[kOptions].maxWeightPerServer || 100;
+	    this[kErrorPenalty] = this[kOptions].errorPenalty || 15;
 
-    this[kAddClient](pool);
-    pool.on('connect', () => {
-      pool[kWeight] = Math.min(this[kMaxWeightPerServer], pool[kWeight] + this[kErrorPenalty]);
-    });
+	    if (!Array.isArray(upstreams)) {
+	      upstreams = [upstreams];
+	    }
 
-    pool.on('connectionError', () => {
-      pool[kWeight] = Math.max(1, pool[kWeight] - this[kErrorPenalty]);
-      this._updateBalancedPoolStats();
-    });
+	    if (typeof factory !== 'function') {
+	      throw new InvalidArgumentError('factory must be a function.')
+	    }
 
-    pool.on('disconnect', (...args) => {
-      const err = args[2];
-      if (err && err.code === 'UND_ERR_SOCKET') {
-        // decrease the weight of the pool.
-        pool[kWeight] = Math.max(1, pool[kWeight] - this[kErrorPenalty]);
-        this._updateBalancedPoolStats();
-      }
-    });
+	    this[kInterceptors] = opts.interceptors && opts.interceptors.BalancedPool && Array.isArray(opts.interceptors.BalancedPool)
+	      ? opts.interceptors.BalancedPool
+	      : [];
+	    this[kFactory] = factory;
 
-    for (const client of this[kClients$2]) {
-      client[kWeight] = this[kMaxWeightPerServer];
-    }
+	    for (const upstream of upstreams) {
+	      this.addUpstream(upstream);
+	    }
+	    this._updateBalancedPoolStats();
+	  }
 
-    this._updateBalancedPoolStats();
+	  addUpstream (upstream) {
+	    const upstreamOrigin = parseOrigin(upstream).origin;
 
-    return this
-  }
+	    if (this[kClients].find((pool) => (
+	      pool[kUrl].origin === upstreamOrigin &&
+	      pool.closed !== true &&
+	      pool.destroyed !== true
+	    ))) {
+	      return this
+	    }
+	    const pool = this[kFactory](upstreamOrigin, Object.assign({}, this[kOptions]));
 
-  _updateBalancedPoolStats () {
-    this[kGreatestCommonDivisor] = this[kClients$2].map(p => p[kWeight]).reduce(getGreatestCommonDivisor, 0);
-  }
+	    this[kAddClient](pool);
+	    pool.on('connect', () => {
+	      pool[kWeight] = Math.min(this[kMaxWeightPerServer], pool[kWeight] + this[kErrorPenalty]);
+	    });
 
-  removeUpstream (upstream) {
-    const upstreamOrigin = parseOrigin(upstream).origin;
+	    pool.on('connectionError', () => {
+	      pool[kWeight] = Math.max(1, pool[kWeight] - this[kErrorPenalty]);
+	      this._updateBalancedPoolStats();
+	    });
 
-    const pool = this[kClients$2].find((pool) => (
-      pool[kUrl].origin === upstreamOrigin &&
-      pool.closed !== true &&
-      pool.destroyed !== true
-    ));
+	    pool.on('disconnect', (...args) => {
+	      const err = args[2];
+	      if (err && err.code === 'UND_ERR_SOCKET') {
+	        // decrease the weight of the pool.
+	        pool[kWeight] = Math.max(1, pool[kWeight] - this[kErrorPenalty]);
+	        this._updateBalancedPoolStats();
+	      }
+	    });
 
-    if (pool) {
-      this[kRemoveClient](pool);
-    }
+	    for (const client of this[kClients]) {
+	      client[kWeight] = this[kMaxWeightPerServer];
+	    }
 
-    return this
-  }
+	    this._updateBalancedPoolStats();
 
-  get upstreams () {
-    return this[kClients$2]
-      .filter(dispatcher => dispatcher.closed !== true && dispatcher.destroyed !== true)
-      .map((p) => p[kUrl].origin)
-  }
+	    return this
+	  }
 
-  [kGetDispatcher] () {
-    // We validate that pools is greater than 0,
-    // otherwise we would have to wait until an upstream
-    // is added, which might never happen.
-    if (this[kClients$2].length === 0) {
-      throw new BalancedPoolMissingUpstreamError()
-    }
+	  _updateBalancedPoolStats () {
+	    this[kGreatestCommonDivisor] = this[kClients].map(p => p[kWeight]).reduce(getGreatestCommonDivisor, 0);
+	  }
 
-    const dispatcher = this[kClients$2].find(dispatcher => (
-      !dispatcher[kNeedDrain] &&
-      dispatcher.closed !== true &&
-      dispatcher.destroyed !== true
-    ));
+	  removeUpstream (upstream) {
+	    const upstreamOrigin = parseOrigin(upstream).origin;
 
-    if (!dispatcher) {
-      return
-    }
+	    const pool = this[kClients].find((pool) => (
+	      pool[kUrl].origin === upstreamOrigin &&
+	      pool.closed !== true &&
+	      pool.destroyed !== true
+	    ));
 
-    const allClientsBusy = this[kClients$2].map(pool => pool[kNeedDrain]).reduce((a, b) => a && b, true);
+	    if (pool) {
+	      this[kRemoveClient](pool);
+	    }
 
-    if (allClientsBusy) {
-      return
-    }
+	    return this
+	  }
 
-    let counter = 0;
+	  get upstreams () {
+	    return this[kClients]
+	      .filter(dispatcher => dispatcher.closed !== true && dispatcher.destroyed !== true)
+	      .map((p) => p[kUrl].origin)
+	  }
 
-    let maxWeightIndex = this[kClients$2].findIndex(pool => !pool[kNeedDrain]);
+	  [kGetDispatcher] () {
+	    // We validate that pools is greater than 0,
+	    // otherwise we would have to wait until an upstream
+	    // is added, which might never happen.
+	    if (this[kClients].length === 0) {
+	      throw new BalancedPoolMissingUpstreamError()
+	    }
 
-    while (counter++ < this[kClients$2].length) {
-      this[kIndex] = (this[kIndex] + 1) % this[kClients$2].length;
-      const pool = this[kClients$2][this[kIndex]];
+	    const dispatcher = this[kClients].find(dispatcher => (
+	      !dispatcher[kNeedDrain] &&
+	      dispatcher.closed !== true &&
+	      dispatcher.destroyed !== true
+	    ));
 
-      // find pool index with the largest weight
-      if (pool[kWeight] > this[kClients$2][maxWeightIndex][kWeight] && !pool[kNeedDrain]) {
-        maxWeightIndex = this[kIndex];
-      }
+	    if (!dispatcher) {
+	      return
+	    }
 
-      // decrease the current weight every `this[kClients].length`.
-      if (this[kIndex] === 0) {
-        // Set the current weight to the next lower weight.
-        this[kCurrentWeight] = this[kCurrentWeight] - this[kGreatestCommonDivisor];
+	    const allClientsBusy = this[kClients].map(pool => pool[kNeedDrain]).reduce((a, b) => a && b, true);
 
-        if (this[kCurrentWeight] <= 0) {
-          this[kCurrentWeight] = this[kMaxWeightPerServer];
-        }
-      }
-      if (pool[kWeight] >= this[kCurrentWeight] && (!pool[kNeedDrain])) {
-        return pool
-      }
-    }
+	    if (allClientsBusy) {
+	      return
+	    }
 
-    this[kCurrentWeight] = this[kClients$2][maxWeightIndex][kWeight];
-    this[kIndex] = maxWeightIndex;
-    return this[kClients$2][maxWeightIndex]
-  }
-};
+	    let counter = 0;
 
-var balancedPool = BalancedPool$1;
+	    let maxWeightIndex = this[kClients].findIndex(pool => !pool[kNeedDrain]);
 
-/* istanbul ignore file: only for Node 12 */
+	    while (counter++ < this[kClients].length) {
+	      this[kIndex] = (this[kIndex] + 1) % this[kClients].length;
+	      const pool = this[kClients][this[kIndex]];
 
-const { kConnected: kConnected$2, kSize } = symbols$4;
+	      // find pool index with the largest weight
+	      if (pool[kWeight] > this[kClients][maxWeightIndex][kWeight] && !pool[kNeedDrain]) {
+	        maxWeightIndex = this[kIndex];
+	      }
 
-class CompatWeakRef {
-  constructor (value) {
-    this.value = value;
-  }
+	      // decrease the current weight every `this[kClients].length`.
+	      if (this[kIndex] === 0) {
+	        // Set the current weight to the next lower weight.
+	        this[kCurrentWeight] = this[kCurrentWeight] - this[kGreatestCommonDivisor];
 
-  deref () {
-    return this.value[kConnected$2] === 0 && this.value[kSize] === 0
-      ? undefined
-      : this.value
-  }
+	        if (this[kCurrentWeight] <= 0) {
+	          this[kCurrentWeight] = this[kMaxWeightPerServer];
+	        }
+	      }
+	      if (pool[kWeight] >= this[kCurrentWeight] && (!pool[kNeedDrain])) {
+	        return pool
+	      }
+	    }
+
+	    this[kCurrentWeight] = this[kClients][maxWeightIndex][kWeight];
+	    this[kIndex] = maxWeightIndex;
+	    return this[kClients][maxWeightIndex]
+	  }
+	}
+
+	balancedPool = BalancedPool;
+	return balancedPool;
 }
 
-class CompatFinalizer {
-  constructor (finalizer) {
-    this.finalizer = finalizer;
-  }
+var dispatcherWeakref;
+var hasRequiredDispatcherWeakref;
 
-  register (dispatcher, key) {
-    if (dispatcher.on) {
-      dispatcher.on('disconnect', () => {
-        if (dispatcher[kConnected$2] === 0 && dispatcher[kSize] === 0) {
-          this.finalizer(key);
-        }
-      });
-    }
-  }
+function requireDispatcherWeakref () {
+	if (hasRequiredDispatcherWeakref) return dispatcherWeakref;
+	hasRequiredDispatcherWeakref = 1;
+
+	/* istanbul ignore file: only for Node 12 */
+
+	const { kConnected, kSize } = requireSymbols$4();
+
+	class CompatWeakRef {
+	  constructor (value) {
+	    this.value = value;
+	  }
+
+	  deref () {
+	    return this.value[kConnected] === 0 && this.value[kSize] === 0
+	      ? undefined
+	      : this.value
+	  }
+	}
+
+	class CompatFinalizer {
+	  constructor (finalizer) {
+	    this.finalizer = finalizer;
+	  }
+
+	  register (dispatcher, key) {
+	    if (dispatcher.on) {
+	      dispatcher.on('disconnect', () => {
+	        if (dispatcher[kConnected] === 0 && dispatcher[kSize] === 0) {
+	          this.finalizer(key);
+	        }
+	      });
+	    }
+	  }
+	}
+
+	dispatcherWeakref = function () {
+	  // FIXME: remove workaround when the Node bug is fixed
+	  // https://github.com/nodejs/node/issues/49344#issuecomment-1741776308
+	  if (process.env.NODE_V8_COVERAGE) {
+	    return {
+	      WeakRef: CompatWeakRef,
+	      FinalizationRegistry: CompatFinalizer
+	    }
+	  }
+	  return {
+	    WeakRef: commonjsGlobal.WeakRef || CompatWeakRef,
+	    FinalizationRegistry: commonjsGlobal.FinalizationRegistry || CompatFinalizer
+	  }
+	};
+	return dispatcherWeakref;
 }
 
-var dispatcherWeakref = function () {
-  // FIXME: remove workaround when the Node bug is fixed
-  // https://github.com/nodejs/node/issues/49344#issuecomment-1741776308
-  if (process.env.NODE_V8_COVERAGE) {
-    return {
-      WeakRef: CompatWeakRef,
-      FinalizationRegistry: CompatFinalizer
-    }
-  }
-  return {
-    WeakRef: commonjsGlobal.WeakRef || CompatWeakRef,
-    FinalizationRegistry: commonjsGlobal.FinalizationRegistry || CompatFinalizer
-  }
-};
+var agent;
+var hasRequiredAgent;
 
-const { InvalidArgumentError: InvalidArgumentError$d } = errors$1;
-const { kClients: kClients$1, kRunning, kClose: kClose$3, kDestroy: kDestroy$1, kDispatch, kInterceptors: kInterceptors$1 } = symbols$4;
-const DispatcherBase$1 = dispatcherBase;
-const Pool$3 = pool;
-const Client$2 = client;
-const util$c = util$j;
-const createRedirectInterceptor$1 = redirectInterceptor;
-const { WeakRef: WeakRef$1, FinalizationRegistry } = dispatcherWeakref();
+function requireAgent () {
+	if (hasRequiredAgent) return agent;
+	hasRequiredAgent = 1;
 
-const kOnConnect = Symbol('onConnect');
-const kOnDisconnect = Symbol('onDisconnect');
-const kOnConnectionError = Symbol('onConnectionError');
-const kMaxRedirections = Symbol('maxRedirections');
-const kOnDrain = Symbol('onDrain');
-const kFactory$1 = Symbol('factory');
-const kFinalizer = Symbol('finalizer');
-const kOptions$1 = Symbol('options');
+	const { InvalidArgumentError } = requireErrors();
+	const { kClients, kRunning, kClose, kDestroy, kDispatch, kInterceptors } = requireSymbols$4();
+	const DispatcherBase = requireDispatcherBase();
+	const Pool = requirePool();
+	const Client = requireClient();
+	const util = requireUtil$6();
+	const createRedirectInterceptor = requireRedirectInterceptor();
+	const { WeakRef, FinalizationRegistry } = requireDispatcherWeakref()();
 
-function defaultFactory$1 (origin, opts) {
-  return opts && opts.connections === 1
-    ? new Client$2(origin, opts)
-    : new Pool$3(origin, opts)
+	const kOnConnect = Symbol('onConnect');
+	const kOnDisconnect = Symbol('onDisconnect');
+	const kOnConnectionError = Symbol('onConnectionError');
+	const kMaxRedirections = Symbol('maxRedirections');
+	const kOnDrain = Symbol('onDrain');
+	const kFactory = Symbol('factory');
+	const kFinalizer = Symbol('finalizer');
+	const kOptions = Symbol('options');
+
+	function defaultFactory (origin, opts) {
+	  return opts && opts.connections === 1
+	    ? new Client(origin, opts)
+	    : new Pool(origin, opts)
+	}
+
+	class Agent extends DispatcherBase {
+	  constructor ({ factory = defaultFactory, maxRedirections = 0, connect, ...options } = {}) {
+	    super();
+
+	    if (typeof factory !== 'function') {
+	      throw new InvalidArgumentError('factory must be a function.')
+	    }
+
+	    if (connect != null && typeof connect !== 'function' && typeof connect !== 'object') {
+	      throw new InvalidArgumentError('connect must be a function or an object')
+	    }
+
+	    if (!Number.isInteger(maxRedirections) || maxRedirections < 0) {
+	      throw new InvalidArgumentError('maxRedirections must be a positive number')
+	    }
+
+	    if (connect && typeof connect !== 'function') {
+	      connect = { ...connect };
+	    }
+
+	    this[kInterceptors] = options.interceptors && options.interceptors.Agent && Array.isArray(options.interceptors.Agent)
+	      ? options.interceptors.Agent
+	      : [createRedirectInterceptor({ maxRedirections })];
+
+	    this[kOptions] = { ...util.deepClone(options), connect };
+	    this[kOptions].interceptors = options.interceptors
+	      ? { ...options.interceptors }
+	      : undefined;
+	    this[kMaxRedirections] = maxRedirections;
+	    this[kFactory] = factory;
+	    this[kClients] = new Map();
+	    this[kFinalizer] = new FinalizationRegistry(/* istanbul ignore next: gc is undeterministic */ key => {
+	      const ref = this[kClients].get(key);
+	      if (ref !== undefined && ref.deref() === undefined) {
+	        this[kClients].delete(key);
+	      }
+	    });
+
+	    const agent = this;
+
+	    this[kOnDrain] = (origin, targets) => {
+	      agent.emit('drain', origin, [agent, ...targets]);
+	    };
+
+	    this[kOnConnect] = (origin, targets) => {
+	      agent.emit('connect', origin, [agent, ...targets]);
+	    };
+
+	    this[kOnDisconnect] = (origin, targets, err) => {
+	      agent.emit('disconnect', origin, [agent, ...targets], err);
+	    };
+
+	    this[kOnConnectionError] = (origin, targets, err) => {
+	      agent.emit('connectionError', origin, [agent, ...targets], err);
+	    };
+	  }
+
+	  get [kRunning] () {
+	    let ret = 0;
+	    for (const ref of this[kClients].values()) {
+	      const client = ref.deref();
+	      /* istanbul ignore next: gc is undeterministic */
+	      if (client) {
+	        ret += client[kRunning];
+	      }
+	    }
+	    return ret
+	  }
+
+	  [kDispatch] (opts, handler) {
+	    let key;
+	    if (opts.origin && (typeof opts.origin === 'string' || opts.origin instanceof URL)) {
+	      key = String(opts.origin);
+	    } else {
+	      throw new InvalidArgumentError('opts.origin must be a non-empty string or URL.')
+	    }
+
+	    const ref = this[kClients].get(key);
+
+	    let dispatcher = ref ? ref.deref() : null;
+	    if (!dispatcher) {
+	      dispatcher = this[kFactory](opts.origin, this[kOptions])
+	        .on('drain', this[kOnDrain])
+	        .on('connect', this[kOnConnect])
+	        .on('disconnect', this[kOnDisconnect])
+	        .on('connectionError', this[kOnConnectionError]);
+
+	      this[kClients].set(key, new WeakRef(dispatcher));
+	      this[kFinalizer].register(dispatcher, key);
+	    }
+
+	    return dispatcher.dispatch(opts, handler)
+	  }
+
+	  async [kClose] () {
+	    const closePromises = [];
+	    for (const ref of this[kClients].values()) {
+	      const client = ref.deref();
+	      /* istanbul ignore else: gc is undeterministic */
+	      if (client) {
+	        closePromises.push(client.close());
+	      }
+	    }
+
+	    await Promise.all(closePromises);
+	  }
+
+	  async [kDestroy] (err) {
+	    const destroyPromises = [];
+	    for (const ref of this[kClients].values()) {
+	      const client = ref.deref();
+	      /* istanbul ignore else: gc is undeterministic */
+	      if (client) {
+	        destroyPromises.push(client.destroy(err));
+	      }
+	    }
+
+	    await Promise.all(destroyPromises);
+	  }
+	}
+
+	agent = Agent;
+	return agent;
 }
 
-let Agent$4 = class Agent extends DispatcherBase$1 {
-  constructor ({ factory = defaultFactory$1, maxRedirections = 0, connect, ...options } = {}) {
-    super();
-
-    if (typeof factory !== 'function') {
-      throw new InvalidArgumentError$d('factory must be a function.')
-    }
-
-    if (connect != null && typeof connect !== 'function' && typeof connect !== 'object') {
-      throw new InvalidArgumentError$d('connect must be a function or an object')
-    }
-
-    if (!Number.isInteger(maxRedirections) || maxRedirections < 0) {
-      throw new InvalidArgumentError$d('maxRedirections must be a positive number')
-    }
-
-    if (connect && typeof connect !== 'function') {
-      connect = { ...connect };
-    }
-
-    this[kInterceptors$1] = options.interceptors && options.interceptors.Agent && Array.isArray(options.interceptors.Agent)
-      ? options.interceptors.Agent
-      : [createRedirectInterceptor$1({ maxRedirections })];
-
-    this[kOptions$1] = { ...util$c.deepClone(options), connect };
-    this[kOptions$1].interceptors = options.interceptors
-      ? { ...options.interceptors }
-      : undefined;
-    this[kMaxRedirections] = maxRedirections;
-    this[kFactory$1] = factory;
-    this[kClients$1] = new Map();
-    this[kFinalizer] = new FinalizationRegistry(/* istanbul ignore next: gc is undeterministic */ key => {
-      const ref = this[kClients$1].get(key);
-      if (ref !== undefined && ref.deref() === undefined) {
-        this[kClients$1].delete(key);
-      }
-    });
-
-    const agent = this;
-
-    this[kOnDrain] = (origin, targets) => {
-      agent.emit('drain', origin, [agent, ...targets]);
-    };
-
-    this[kOnConnect] = (origin, targets) => {
-      agent.emit('connect', origin, [agent, ...targets]);
-    };
-
-    this[kOnDisconnect] = (origin, targets, err) => {
-      agent.emit('disconnect', origin, [agent, ...targets], err);
-    };
-
-    this[kOnConnectionError] = (origin, targets, err) => {
-      agent.emit('connectionError', origin, [agent, ...targets], err);
-    };
-  }
-
-  get [kRunning] () {
-    let ret = 0;
-    for (const ref of this[kClients$1].values()) {
-      const client = ref.deref();
-      /* istanbul ignore next: gc is undeterministic */
-      if (client) {
-        ret += client[kRunning];
-      }
-    }
-    return ret
-  }
-
-  [kDispatch] (opts, handler) {
-    let key;
-    if (opts.origin && (typeof opts.origin === 'string' || opts.origin instanceof URL)) {
-      key = String(opts.origin);
-    } else {
-      throw new InvalidArgumentError$d('opts.origin must be a non-empty string or URL.')
-    }
-
-    const ref = this[kClients$1].get(key);
-
-    let dispatcher = ref ? ref.deref() : null;
-    if (!dispatcher) {
-      dispatcher = this[kFactory$1](opts.origin, this[kOptions$1])
-        .on('drain', this[kOnDrain])
-        .on('connect', this[kOnConnect])
-        .on('disconnect', this[kOnDisconnect])
-        .on('connectionError', this[kOnConnectionError]);
-
-      this[kClients$1].set(key, new WeakRef$1(dispatcher));
-      this[kFinalizer].register(dispatcher, key);
-    }
-
-    return dispatcher.dispatch(opts, handler)
-  }
-
-  async [kClose$3] () {
-    const closePromises = [];
-    for (const ref of this[kClients$1].values()) {
-      const client = ref.deref();
-      /* istanbul ignore else: gc is undeterministic */
-      if (client) {
-        closePromises.push(client.close());
-      }
-    }
-
-    await Promise.all(closePromises);
-  }
-
-  async [kDestroy$1] (err) {
-    const destroyPromises = [];
-    for (const ref of this[kClients$1].values()) {
-      const client = ref.deref();
-      /* istanbul ignore else: gc is undeterministic */
-      if (client) {
-        destroyPromises.push(client.destroy(err));
-      }
-    }
-
-    await Promise.all(destroyPromises);
-  }
-};
-
-var agent = Agent$4;
-
-var api$1 = {};
+var api = {};
 
 var apiRequest = {exports: {}};
 
-const assert$4 = require$$0$3;
-const { Readable: Readable$2 } = require$$0$4;
-const { RequestAbortedError: RequestAbortedError$7, NotSupportedError, InvalidArgumentError: InvalidArgumentError$c } = errors$1;
-const util$b = util$j;
-const { ReadableStreamFrom, toUSVString: toUSVString$1 } = util$j;
+var readable;
+var hasRequiredReadable;
 
-let Blob$1;
+function requireReadable () {
+	if (hasRequiredReadable) return readable;
+	hasRequiredReadable = 1;
 
-const kConsume = Symbol('kConsume');
-const kReading = Symbol('kReading');
-const kBody = Symbol('kBody');
-const kAbort = Symbol('abort');
-const kContentType = Symbol('kContentType');
+	const assert = require$$0$3;
+	const { Readable } = require$$0$4;
+	const { RequestAbortedError, NotSupportedError, InvalidArgumentError } = requireErrors();
+	const util = requireUtil$6();
+	const { ReadableStreamFrom, toUSVString } = requireUtil$6();
 
-const noop = () => {};
+	let Blob;
 
-var readable = class BodyReadable extends Readable$2 {
-  constructor ({
-    resume,
-    abort,
-    contentType = '',
-    highWaterMark = 64 * 1024 // Same as nodejs fs streams.
-  }) {
-    super({
-      autoDestroy: true,
-      read: resume,
-      highWaterMark
-    });
+	const kConsume = Symbol('kConsume');
+	const kReading = Symbol('kReading');
+	const kBody = Symbol('kBody');
+	const kAbort = Symbol('abort');
+	const kContentType = Symbol('kContentType');
 
-    this._readableState.dataEmitted = false;
+	const noop = () => {};
 
-    this[kAbort] = abort;
-    this[kConsume] = null;
-    this[kBody] = null;
-    this[kContentType] = contentType;
+	readable = class BodyReadable extends Readable {
+	  constructor ({
+	    resume,
+	    abort,
+	    contentType = '',
+	    highWaterMark = 64 * 1024 // Same as nodejs fs streams.
+	  }) {
+	    super({
+	      autoDestroy: true,
+	      read: resume,
+	      highWaterMark
+	    });
 
-    // Is stream being consumed through Readable API?
-    // This is an optimization so that we avoid checking
-    // for 'data' and 'readable' listeners in the hot path
-    // inside push().
-    this[kReading] = false;
-  }
+	    this._readableState.dataEmitted = false;
 
-  destroy (err) {
-    if (this.destroyed) {
-      // Node < 16
-      return this
-    }
+	    this[kAbort] = abort;
+	    this[kConsume] = null;
+	    this[kBody] = null;
+	    this[kContentType] = contentType;
 
-    if (!err && !this._readableState.endEmitted) {
-      err = new RequestAbortedError$7();
-    }
+	    // Is stream being consumed through Readable API?
+	    // This is an optimization so that we avoid checking
+	    // for 'data' and 'readable' listeners in the hot path
+	    // inside push().
+	    this[kReading] = false;
+	  }
 
-    if (err) {
-      this[kAbort]();
-    }
+	  destroy (err) {
+	    if (this.destroyed) {
+	      // Node < 16
+	      return this
+	    }
 
-    return super.destroy(err)
-  }
+	    if (!err && !this._readableState.endEmitted) {
+	      err = new RequestAbortedError();
+	    }
 
-  emit (ev, ...args) {
-    if (ev === 'data') {
-      // Node < 16.7
-      this._readableState.dataEmitted = true;
-    } else if (ev === 'error') {
-      // Node < 16
-      this._readableState.errorEmitted = true;
-    }
-    return super.emit(ev, ...args)
-  }
+	    if (err) {
+	      this[kAbort]();
+	    }
 
-  on (ev, ...args) {
-    if (ev === 'data' || ev === 'readable') {
-      this[kReading] = true;
-    }
-    return super.on(ev, ...args)
-  }
+	    return super.destroy(err)
+	  }
 
-  addListener (ev, ...args) {
-    return this.on(ev, ...args)
-  }
+	  emit (ev, ...args) {
+	    if (ev === 'data') {
+	      // Node < 16.7
+	      this._readableState.dataEmitted = true;
+	    } else if (ev === 'error') {
+	      // Node < 16
+	      this._readableState.errorEmitted = true;
+	    }
+	    return super.emit(ev, ...args)
+	  }
 
-  off (ev, ...args) {
-    const ret = super.off(ev, ...args);
-    if (ev === 'data' || ev === 'readable') {
-      this[kReading] = (
-        this.listenerCount('data') > 0 ||
-        this.listenerCount('readable') > 0
-      );
-    }
-    return ret
-  }
+	  on (ev, ...args) {
+	    if (ev === 'data' || ev === 'readable') {
+	      this[kReading] = true;
+	    }
+	    return super.on(ev, ...args)
+	  }
 
-  removeListener (ev, ...args) {
-    return this.off(ev, ...args)
-  }
+	  addListener (ev, ...args) {
+	    return this.on(ev, ...args)
+	  }
 
-  push (chunk) {
-    if (this[kConsume] && chunk !== null && this.readableLength === 0) {
-      consumePush(this[kConsume], chunk);
-      return this[kReading] ? super.push(chunk) : true
-    }
-    return super.push(chunk)
-  }
+	  off (ev, ...args) {
+	    const ret = super.off(ev, ...args);
+	    if (ev === 'data' || ev === 'readable') {
+	      this[kReading] = (
+	        this.listenerCount('data') > 0 ||
+	        this.listenerCount('readable') > 0
+	      );
+	    }
+	    return ret
+	  }
 
-  // https://fetch.spec.whatwg.org/#dom-body-text
-  async text () {
-    return consume(this, 'text')
-  }
+	  removeListener (ev, ...args) {
+	    return this.off(ev, ...args)
+	  }
 
-  // https://fetch.spec.whatwg.org/#dom-body-json
-  async json () {
-    return consume(this, 'json')
-  }
+	  push (chunk) {
+	    if (this[kConsume] && chunk !== null && this.readableLength === 0) {
+	      consumePush(this[kConsume], chunk);
+	      return this[kReading] ? super.push(chunk) : true
+	    }
+	    return super.push(chunk)
+	  }
 
-  // https://fetch.spec.whatwg.org/#dom-body-blob
-  async blob () {
-    return consume(this, 'blob')
-  }
+	  // https://fetch.spec.whatwg.org/#dom-body-text
+	  async text () {
+	    return consume(this, 'text')
+	  }
 
-  // https://fetch.spec.whatwg.org/#dom-body-arraybuffer
-  async arrayBuffer () {
-    return consume(this, 'arrayBuffer')
-  }
+	  // https://fetch.spec.whatwg.org/#dom-body-json
+	  async json () {
+	    return consume(this, 'json')
+	  }
 
-  // https://fetch.spec.whatwg.org/#dom-body-formdata
-  async formData () {
-    // TODO: Implement.
-    throw new NotSupportedError()
-  }
+	  // https://fetch.spec.whatwg.org/#dom-body-blob
+	  async blob () {
+	    return consume(this, 'blob')
+	  }
 
-  // https://fetch.spec.whatwg.org/#dom-body-bodyused
-  get bodyUsed () {
-    return util$b.isDisturbed(this)
-  }
+	  // https://fetch.spec.whatwg.org/#dom-body-arraybuffer
+	  async arrayBuffer () {
+	    return consume(this, 'arrayBuffer')
+	  }
 
-  // https://fetch.spec.whatwg.org/#dom-body-body
-  get body () {
-    if (!this[kBody]) {
-      this[kBody] = ReadableStreamFrom(this);
-      if (this[kConsume]) {
-        // TODO: Is this the best way to force a lock?
-        this[kBody].getReader(); // Ensure stream is locked.
-        assert$4(this[kBody].locked);
-      }
-    }
-    return this[kBody]
-  }
+	  // https://fetch.spec.whatwg.org/#dom-body-formdata
+	  async formData () {
+	    // TODO: Implement.
+	    throw new NotSupportedError()
+	  }
 
-  dump (opts) {
-    let limit = opts && Number.isFinite(opts.limit) ? opts.limit : 262144;
-    const signal = opts && opts.signal;
+	  // https://fetch.spec.whatwg.org/#dom-body-bodyused
+	  get bodyUsed () {
+	    return util.isDisturbed(this)
+	  }
 
-    if (signal) {
-      try {
-        if (typeof signal !== 'object' || !('aborted' in signal)) {
-          throw new InvalidArgumentError$c('signal must be an AbortSignal')
-        }
-        util$b.throwIfAborted(signal);
-      } catch (err) {
-        return Promise.reject(err)
-      }
-    }
+	  // https://fetch.spec.whatwg.org/#dom-body-body
+	  get body () {
+	    if (!this[kBody]) {
+	      this[kBody] = ReadableStreamFrom(this);
+	      if (this[kConsume]) {
+	        // TODO: Is this the best way to force a lock?
+	        this[kBody].getReader(); // Ensure stream is locked.
+	        assert(this[kBody].locked);
+	      }
+	    }
+	    return this[kBody]
+	  }
 
-    if (this.closed) {
-      return Promise.resolve(null)
-    }
+	  dump (opts) {
+	    let limit = opts && Number.isFinite(opts.limit) ? opts.limit : 262144;
+	    const signal = opts && opts.signal;
 
-    return new Promise((resolve, reject) => {
-      const signalListenerCleanup = signal
-        ? util$b.addAbortListener(signal, () => {
-          this.destroy();
-        })
-        : noop;
+	    if (signal) {
+	      try {
+	        if (typeof signal !== 'object' || !('aborted' in signal)) {
+	          throw new InvalidArgumentError('signal must be an AbortSignal')
+	        }
+	        util.throwIfAborted(signal);
+	      } catch (err) {
+	        return Promise.reject(err)
+	      }
+	    }
 
-      this
-        .on('close', function () {
-          signalListenerCleanup();
-          if (signal && signal.aborted) {
-            reject(signal.reason || Object.assign(new Error('The operation was aborted'), { name: 'AbortError' }));
-          } else {
-            resolve(null);
-          }
-        })
-        .on('error', noop)
-        .on('data', function (chunk) {
-          limit -= chunk.length;
-          if (limit <= 0) {
-            this.destroy();
-          }
-        })
-        .resume();
-    })
-  }
-};
+	    if (this.closed) {
+	      return Promise.resolve(null)
+	    }
 
-// https://streams.spec.whatwg.org/#readablestream-locked
-function isLocked (self) {
-  // Consume is an implicit lock.
-  return (self[kBody] && self[kBody].locked === true) || self[kConsume]
+	    return new Promise((resolve, reject) => {
+	      const signalListenerCleanup = signal
+	        ? util.addAbortListener(signal, () => {
+	          this.destroy();
+	        })
+	        : noop;
+
+	      this
+	        .on('close', function () {
+	          signalListenerCleanup();
+	          if (signal && signal.aborted) {
+	            reject(signal.reason || Object.assign(new Error('The operation was aborted'), { name: 'AbortError' }));
+	          } else {
+	            resolve(null);
+	          }
+	        })
+	        .on('error', noop)
+	        .on('data', function (chunk) {
+	          limit -= chunk.length;
+	          if (limit <= 0) {
+	            this.destroy();
+	          }
+	        })
+	        .resume();
+	    })
+	  }
+	};
+
+	// https://streams.spec.whatwg.org/#readablestream-locked
+	function isLocked (self) {
+	  // Consume is an implicit lock.
+	  return (self[kBody] && self[kBody].locked === true) || self[kConsume]
+	}
+
+	// https://fetch.spec.whatwg.org/#body-unusable
+	function isUnusable (self) {
+	  return util.isDisturbed(self) || isLocked(self)
+	}
+
+	async function consume (stream, type) {
+	  if (isUnusable(stream)) {
+	    throw new TypeError('unusable')
+	  }
+
+	  assert(!stream[kConsume]);
+
+	  return new Promise((resolve, reject) => {
+	    stream[kConsume] = {
+	      type,
+	      stream,
+	      resolve,
+	      reject,
+	      length: 0,
+	      body: []
+	    };
+
+	    stream
+	      .on('error', function (err) {
+	        consumeFinish(this[kConsume], err);
+	      })
+	      .on('close', function () {
+	        if (this[kConsume].body !== null) {
+	          consumeFinish(this[kConsume], new RequestAbortedError());
+	        }
+	      });
+
+	    process.nextTick(consumeStart, stream[kConsume]);
+	  })
+	}
+
+	function consumeStart (consume) {
+	  if (consume.body === null) {
+	    return
+	  }
+
+	  const { _readableState: state } = consume.stream;
+
+	  for (const chunk of state.buffer) {
+	    consumePush(consume, chunk);
+	  }
+
+	  if (state.endEmitted) {
+	    consumeEnd(this[kConsume]);
+	  } else {
+	    consume.stream.on('end', function () {
+	      consumeEnd(this[kConsume]);
+	    });
+	  }
+
+	  consume.stream.resume();
+
+	  while (consume.stream.read() != null) {
+	    // Loop
+	  }
+	}
+
+	function consumeEnd (consume) {
+	  const { type, body, resolve, stream, length } = consume;
+
+	  try {
+	    if (type === 'text') {
+	      resolve(toUSVString(Buffer.concat(body)));
+	    } else if (type === 'json') {
+	      resolve(JSON.parse(Buffer.concat(body)));
+	    } else if (type === 'arrayBuffer') {
+	      const dst = new Uint8Array(length);
+
+	      let pos = 0;
+	      for (const buf of body) {
+	        dst.set(buf, pos);
+	        pos += buf.byteLength;
+	      }
+
+	      resolve(dst.buffer);
+	    } else if (type === 'blob') {
+	      if (!Blob) {
+	        Blob = require('buffer').Blob;
+	      }
+	      resolve(new Blob(body, { type: stream[kContentType] }));
+	    }
+
+	    consumeFinish(consume);
+	  } catch (err) {
+	    stream.destroy(err);
+	  }
+	}
+
+	function consumePush (consume, chunk) {
+	  consume.length += chunk.length;
+	  consume.body.push(chunk);
+	}
+
+	function consumeFinish (consume, err) {
+	  if (consume.body === null) {
+	    return
+	  }
+
+	  if (err) {
+	    consume.reject(err);
+	  } else {
+	    consume.resolve();
+	  }
+
+	  consume.type = null;
+	  consume.stream = null;
+	  consume.resolve = null;
+	  consume.reject = null;
+	  consume.length = 0;
+	  consume.body = null;
+	}
+	return readable;
 }
 
-// https://fetch.spec.whatwg.org/#body-unusable
-function isUnusable (self) {
-  return util$b.isDisturbed(self) || isLocked(self)
+var util$4;
+var hasRequiredUtil$4;
+
+function requireUtil$4 () {
+	if (hasRequiredUtil$4) return util$4;
+	hasRequiredUtil$4 = 1;
+	const assert = require$$0$3;
+	const {
+	  ResponseStatusCodeError
+	} = requireErrors();
+	const { toUSVString } = requireUtil$6();
+
+	async function getResolveErrorBodyCallback ({ callback, body, contentType, statusCode, statusMessage, headers }) {
+	  assert(body);
+
+	  let chunks = [];
+	  let limit = 0;
+
+	  for await (const chunk of body) {
+	    chunks.push(chunk);
+	    limit += chunk.length;
+	    if (limit > 128 * 1024) {
+	      chunks = null;
+	      break
+	    }
+	  }
+
+	  if (statusCode === 204 || !contentType || !chunks) {
+	    process.nextTick(callback, new ResponseStatusCodeError(`Response status code ${statusCode}${statusMessage ? `: ${statusMessage}` : ''}`, statusCode, headers));
+	    return
+	  }
+
+	  try {
+	    if (contentType.startsWith('application/json')) {
+	      const payload = JSON.parse(toUSVString(Buffer.concat(chunks)));
+	      process.nextTick(callback, new ResponseStatusCodeError(`Response status code ${statusCode}${statusMessage ? `: ${statusMessage}` : ''}`, statusCode, headers, payload));
+	      return
+	    }
+
+	    if (contentType.startsWith('text/')) {
+	      const payload = toUSVString(Buffer.concat(chunks));
+	      process.nextTick(callback, new ResponseStatusCodeError(`Response status code ${statusCode}${statusMessage ? `: ${statusMessage}` : ''}`, statusCode, headers, payload));
+	      return
+	    }
+	  } catch (err) {
+	    // Process in a fallback if error
+	  }
+
+	  process.nextTick(callback, new ResponseStatusCodeError(`Response status code ${statusCode}${statusMessage ? `: ${statusMessage}` : ''}`, statusCode, headers));
+	}
+
+	util$4 = { getResolveErrorBodyCallback };
+	return util$4;
 }
 
-async function consume (stream, type) {
-  if (isUnusable(stream)) {
-    throw new TypeError('unusable')
-  }
+var abortSignal;
+var hasRequiredAbortSignal;
 
-  assert$4(!stream[kConsume]);
+function requireAbortSignal () {
+	if (hasRequiredAbortSignal) return abortSignal;
+	hasRequiredAbortSignal = 1;
+	const { addAbortListener } = requireUtil$6();
+	const { RequestAbortedError } = requireErrors();
 
-  return new Promise((resolve, reject) => {
-    stream[kConsume] = {
-      type,
-      stream,
-      resolve,
-      reject,
-      length: 0,
-      body: []
-    };
+	const kListener = Symbol('kListener');
+	const kSignal = Symbol('kSignal');
 
-    stream
-      .on('error', function (err) {
-        consumeFinish(this[kConsume], err);
-      })
-      .on('close', function () {
-        if (this[kConsume].body !== null) {
-          consumeFinish(this[kConsume], new RequestAbortedError$7());
-        }
-      });
+	function abort (self) {
+	  if (self.abort) {
+	    self.abort();
+	  } else {
+	    self.onError(new RequestAbortedError());
+	  }
+	}
 
-    process.nextTick(consumeStart, stream[kConsume]);
-  })
+	function addSignal (self, signal) {
+	  self[kSignal] = null;
+	  self[kListener] = null;
+
+	  if (!signal) {
+	    return
+	  }
+
+	  if (signal.aborted) {
+	    abort(self);
+	    return
+	  }
+
+	  self[kSignal] = signal;
+	  self[kListener] = () => {
+	    abort(self);
+	  };
+
+	  addAbortListener(self[kSignal], self[kListener]);
+	}
+
+	function removeSignal (self) {
+	  if (!self[kSignal]) {
+	    return
+	  }
+
+	  if ('removeEventListener' in self[kSignal]) {
+	    self[kSignal].removeEventListener('abort', self[kListener]);
+	  } else {
+	    self[kSignal].removeListener('abort', self[kListener]);
+	  }
+
+	  self[kSignal] = null;
+	  self[kListener] = null;
+	}
+
+	abortSignal = {
+	  addSignal,
+	  removeSignal
+	};
+	return abortSignal;
 }
 
-function consumeStart (consume) {
-  if (consume.body === null) {
-    return
-  }
+var hasRequiredApiRequest;
 
-  const { _readableState: state } = consume.stream;
+function requireApiRequest () {
+	if (hasRequiredApiRequest) return apiRequest.exports;
+	hasRequiredApiRequest = 1;
 
-  for (const chunk of state.buffer) {
-    consumePush(consume, chunk);
-  }
+	const Readable = requireReadable();
+	const {
+	  InvalidArgumentError,
+	  RequestAbortedError
+	} = requireErrors();
+	const util = requireUtil$6();
+	const { getResolveErrorBodyCallback } = requireUtil$4();
+	const { AsyncResource } = require$$4;
+	const { addSignal, removeSignal } = requireAbortSignal();
 
-  if (state.endEmitted) {
-    consumeEnd(this[kConsume]);
-  } else {
-    consume.stream.on('end', function () {
-      consumeEnd(this[kConsume]);
-    });
-  }
+	class RequestHandler extends AsyncResource {
+	  constructor (opts, callback) {
+	    if (!opts || typeof opts !== 'object') {
+	      throw new InvalidArgumentError('invalid opts')
+	    }
 
-  consume.stream.resume();
+	    const { signal, method, opaque, body, onInfo, responseHeaders, throwOnError, highWaterMark } = opts;
 
-  while (consume.stream.read() != null) {
-    // Loop
-  }
+	    try {
+	      if (typeof callback !== 'function') {
+	        throw new InvalidArgumentError('invalid callback')
+	      }
+
+	      if (highWaterMark && (typeof highWaterMark !== 'number' || highWaterMark < 0)) {
+	        throw new InvalidArgumentError('invalid highWaterMark')
+	      }
+
+	      if (signal && typeof signal.on !== 'function' && typeof signal.addEventListener !== 'function') {
+	        throw new InvalidArgumentError('signal must be an EventEmitter or EventTarget')
+	      }
+
+	      if (method === 'CONNECT') {
+	        throw new InvalidArgumentError('invalid method')
+	      }
+
+	      if (onInfo && typeof onInfo !== 'function') {
+	        throw new InvalidArgumentError('invalid onInfo callback')
+	      }
+
+	      super('UNDICI_REQUEST');
+	    } catch (err) {
+	      if (util.isStream(body)) {
+	        util.destroy(body.on('error', util.nop), err);
+	      }
+	      throw err
+	    }
+
+	    this.responseHeaders = responseHeaders || null;
+	    this.opaque = opaque || null;
+	    this.callback = callback;
+	    this.res = null;
+	    this.abort = null;
+	    this.body = body;
+	    this.trailers = {};
+	    this.context = null;
+	    this.onInfo = onInfo || null;
+	    this.throwOnError = throwOnError;
+	    this.highWaterMark = highWaterMark;
+
+	    if (util.isStream(body)) {
+	      body.on('error', (err) => {
+	        this.onError(err);
+	      });
+	    }
+
+	    addSignal(this, signal);
+	  }
+
+	  onConnect (abort, context) {
+	    if (!this.callback) {
+	      throw new RequestAbortedError()
+	    }
+
+	    this.abort = abort;
+	    this.context = context;
+	  }
+
+	  onHeaders (statusCode, rawHeaders, resume, statusMessage) {
+	    const { callback, opaque, abort, context, responseHeaders, highWaterMark } = this;
+
+	    const headers = responseHeaders === 'raw' ? util.parseRawHeaders(rawHeaders) : util.parseHeaders(rawHeaders);
+
+	    if (statusCode < 200) {
+	      if (this.onInfo) {
+	        this.onInfo({ statusCode, headers });
+	      }
+	      return
+	    }
+
+	    const parsedHeaders = responseHeaders === 'raw' ? util.parseHeaders(rawHeaders) : headers;
+	    const contentType = parsedHeaders['content-type'];
+	    const body = new Readable({ resume, abort, contentType, highWaterMark });
+
+	    this.callback = null;
+	    this.res = body;
+	    if (callback !== null) {
+	      if (this.throwOnError && statusCode >= 400) {
+	        this.runInAsyncScope(getResolveErrorBodyCallback, null,
+	          { callback, body, contentType, statusCode, statusMessage, headers }
+	        );
+	      } else {
+	        this.runInAsyncScope(callback, null, null, {
+	          statusCode,
+	          headers,
+	          trailers: this.trailers,
+	          opaque,
+	          body,
+	          context
+	        });
+	      }
+	    }
+	  }
+
+	  onData (chunk) {
+	    const { res } = this;
+	    return res.push(chunk)
+	  }
+
+	  onComplete (trailers) {
+	    const { res } = this;
+
+	    removeSignal(this);
+
+	    util.parseHeaders(trailers, this.trailers);
+
+	    res.push(null);
+	  }
+
+	  onError (err) {
+	    const { res, callback, body, opaque } = this;
+
+	    removeSignal(this);
+
+	    if (callback) {
+	      // TODO: Does this need queueMicrotask?
+	      this.callback = null;
+	      queueMicrotask(() => {
+	        this.runInAsyncScope(callback, null, err, { opaque });
+	      });
+	    }
+
+	    if (res) {
+	      this.res = null;
+	      // Ensure all queued handlers are invoked before destroying res.
+	      queueMicrotask(() => {
+	        util.destroy(res, err);
+	      });
+	    }
+
+	    if (body) {
+	      this.body = null;
+	      util.destroy(body, err);
+	    }
+	  }
+	}
+
+	function request (opts, callback) {
+	  if (callback === undefined) {
+	    return new Promise((resolve, reject) => {
+	      request.call(this, opts, (err, data) => {
+	        return err ? reject(err) : resolve(data)
+	      });
+	    })
+	  }
+
+	  try {
+	    this.dispatch(opts, new RequestHandler(opts, callback));
+	  } catch (err) {
+	    if (typeof callback !== 'function') {
+	      throw err
+	    }
+	    const opaque = opts && opts.opaque;
+	    queueMicrotask(() => callback(err, { opaque }));
+	  }
+	}
+
+	apiRequest.exports = request;
+	apiRequest.exports.RequestHandler = RequestHandler;
+	return apiRequest.exports;
 }
 
-function consumeEnd (consume) {
-  const { type, body, resolve, stream, length } = consume;
+var apiStream;
+var hasRequiredApiStream;
 
-  try {
-    if (type === 'text') {
-      resolve(toUSVString$1(Buffer.concat(body)));
-    } else if (type === 'json') {
-      resolve(JSON.parse(Buffer.concat(body)));
-    } else if (type === 'arrayBuffer') {
-      const dst = new Uint8Array(length);
+function requireApiStream () {
+	if (hasRequiredApiStream) return apiStream;
+	hasRequiredApiStream = 1;
 
-      let pos = 0;
-      for (const buf of body) {
-        dst.set(buf, pos);
-        pos += buf.byteLength;
-      }
+	const { finished, PassThrough } = require$$0$4;
+	const {
+	  InvalidArgumentError,
+	  InvalidReturnValueError,
+	  RequestAbortedError
+	} = requireErrors();
+	const util = requireUtil$6();
+	const { getResolveErrorBodyCallback } = requireUtil$4();
+	const { AsyncResource } = require$$4;
+	const { addSignal, removeSignal } = requireAbortSignal();
 
-      resolve(dst.buffer);
-    } else if (type === 'blob') {
-      if (!Blob$1) {
-        Blob$1 = require('buffer').Blob;
-      }
-      resolve(new Blob$1(body, { type: stream[kContentType] }));
-    }
+	class StreamHandler extends AsyncResource {
+	  constructor (opts, factory, callback) {
+	    if (!opts || typeof opts !== 'object') {
+	      throw new InvalidArgumentError('invalid opts')
+	    }
 
-    consumeFinish(consume);
-  } catch (err) {
-    stream.destroy(err);
-  }
+	    const { signal, method, opaque, body, onInfo, responseHeaders, throwOnError } = opts;
+
+	    try {
+	      if (typeof callback !== 'function') {
+	        throw new InvalidArgumentError('invalid callback')
+	      }
+
+	      if (typeof factory !== 'function') {
+	        throw new InvalidArgumentError('invalid factory')
+	      }
+
+	      if (signal && typeof signal.on !== 'function' && typeof signal.addEventListener !== 'function') {
+	        throw new InvalidArgumentError('signal must be an EventEmitter or EventTarget')
+	      }
+
+	      if (method === 'CONNECT') {
+	        throw new InvalidArgumentError('invalid method')
+	      }
+
+	      if (onInfo && typeof onInfo !== 'function') {
+	        throw new InvalidArgumentError('invalid onInfo callback')
+	      }
+
+	      super('UNDICI_STREAM');
+	    } catch (err) {
+	      if (util.isStream(body)) {
+	        util.destroy(body.on('error', util.nop), err);
+	      }
+	      throw err
+	    }
+
+	    this.responseHeaders = responseHeaders || null;
+	    this.opaque = opaque || null;
+	    this.factory = factory;
+	    this.callback = callback;
+	    this.res = null;
+	    this.abort = null;
+	    this.context = null;
+	    this.trailers = null;
+	    this.body = body;
+	    this.onInfo = onInfo || null;
+	    this.throwOnError = throwOnError || false;
+
+	    if (util.isStream(body)) {
+	      body.on('error', (err) => {
+	        this.onError(err);
+	      });
+	    }
+
+	    addSignal(this, signal);
+	  }
+
+	  onConnect (abort, context) {
+	    if (!this.callback) {
+	      throw new RequestAbortedError()
+	    }
+
+	    this.abort = abort;
+	    this.context = context;
+	  }
+
+	  onHeaders (statusCode, rawHeaders, resume, statusMessage) {
+	    const { factory, opaque, context, callback, responseHeaders } = this;
+
+	    const headers = responseHeaders === 'raw' ? util.parseRawHeaders(rawHeaders) : util.parseHeaders(rawHeaders);
+
+	    if (statusCode < 200) {
+	      if (this.onInfo) {
+	        this.onInfo({ statusCode, headers });
+	      }
+	      return
+	    }
+
+	    this.factory = null;
+
+	    let res;
+
+	    if (this.throwOnError && statusCode >= 400) {
+	      const parsedHeaders = responseHeaders === 'raw' ? util.parseHeaders(rawHeaders) : headers;
+	      const contentType = parsedHeaders['content-type'];
+	      res = new PassThrough();
+
+	      this.callback = null;
+	      this.runInAsyncScope(getResolveErrorBodyCallback, null,
+	        { callback, body: res, contentType, statusCode, statusMessage, headers }
+	      );
+	    } else {
+	      if (factory === null) {
+	        return
+	      }
+
+	      res = this.runInAsyncScope(factory, null, {
+	        statusCode,
+	        headers,
+	        opaque,
+	        context
+	      });
+
+	      if (
+	        !res ||
+	        typeof res.write !== 'function' ||
+	        typeof res.end !== 'function' ||
+	        typeof res.on !== 'function'
+	      ) {
+	        throw new InvalidReturnValueError('expected Writable')
+	      }
+
+	      // TODO: Avoid finished. It registers an unnecessary amount of listeners.
+	      finished(res, { readable: false }, (err) => {
+	        const { callback, res, opaque, trailers, abort } = this;
+
+	        this.res = null;
+	        if (err || !res.readable) {
+	          util.destroy(res, err);
+	        }
+
+	        this.callback = null;
+	        this.runInAsyncScope(callback, null, err || null, { opaque, trailers });
+
+	        if (err) {
+	          abort();
+	        }
+	      });
+	    }
+
+	    res.on('drain', resume);
+
+	    this.res = res;
+
+	    const needDrain = res.writableNeedDrain !== undefined
+	      ? res.writableNeedDrain
+	      : res._writableState && res._writableState.needDrain;
+
+	    return needDrain !== true
+	  }
+
+	  onData (chunk) {
+	    const { res } = this;
+
+	    return res ? res.write(chunk) : true
+	  }
+
+	  onComplete (trailers) {
+	    const { res } = this;
+
+	    removeSignal(this);
+
+	    if (!res) {
+	      return
+	    }
+
+	    this.trailers = util.parseHeaders(trailers);
+
+	    res.end();
+	  }
+
+	  onError (err) {
+	    const { res, callback, opaque, body } = this;
+
+	    removeSignal(this);
+
+	    this.factory = null;
+
+	    if (res) {
+	      this.res = null;
+	      util.destroy(res, err);
+	    } else if (callback) {
+	      this.callback = null;
+	      queueMicrotask(() => {
+	        this.runInAsyncScope(callback, null, err, { opaque });
+	      });
+	    }
+
+	    if (body) {
+	      this.body = null;
+	      util.destroy(body, err);
+	    }
+	  }
+	}
+
+	function stream (opts, factory, callback) {
+	  if (callback === undefined) {
+	    return new Promise((resolve, reject) => {
+	      stream.call(this, opts, factory, (err, data) => {
+	        return err ? reject(err) : resolve(data)
+	      });
+	    })
+	  }
+
+	  try {
+	    this.dispatch(opts, new StreamHandler(opts, factory, callback));
+	  } catch (err) {
+	    if (typeof callback !== 'function') {
+	      throw err
+	    }
+	    const opaque = opts && opts.opaque;
+	    queueMicrotask(() => callback(err, { opaque }));
+	  }
+	}
+
+	apiStream = stream;
+	return apiStream;
 }
 
-function consumePush (consume, chunk) {
-  consume.length += chunk.length;
-  consume.body.push(chunk);
+var apiPipeline;
+var hasRequiredApiPipeline;
+
+function requireApiPipeline () {
+	if (hasRequiredApiPipeline) return apiPipeline;
+	hasRequiredApiPipeline = 1;
+
+	const {
+	  Readable,
+	  Duplex,
+	  PassThrough
+	} = require$$0$4;
+	const {
+	  InvalidArgumentError,
+	  InvalidReturnValueError,
+	  RequestAbortedError
+	} = requireErrors();
+	const util = requireUtil$6();
+	const { AsyncResource } = require$$4;
+	const { addSignal, removeSignal } = requireAbortSignal();
+	const assert = require$$0$3;
+
+	const kResume = Symbol('resume');
+
+	class PipelineRequest extends Readable {
+	  constructor () {
+	    super({ autoDestroy: true });
+
+	    this[kResume] = null;
+	  }
+
+	  _read () {
+	    const { [kResume]: resume } = this;
+
+	    if (resume) {
+	      this[kResume] = null;
+	      resume();
+	    }
+	  }
+
+	  _destroy (err, callback) {
+	    this._read();
+
+	    callback(err);
+	  }
+	}
+
+	class PipelineResponse extends Readable {
+	  constructor (resume) {
+	    super({ autoDestroy: true });
+	    this[kResume] = resume;
+	  }
+
+	  _read () {
+	    this[kResume]();
+	  }
+
+	  _destroy (err, callback) {
+	    if (!err && !this._readableState.endEmitted) {
+	      err = new RequestAbortedError();
+	    }
+
+	    callback(err);
+	  }
+	}
+
+	class PipelineHandler extends AsyncResource {
+	  constructor (opts, handler) {
+	    if (!opts || typeof opts !== 'object') {
+	      throw new InvalidArgumentError('invalid opts')
+	    }
+
+	    if (typeof handler !== 'function') {
+	      throw new InvalidArgumentError('invalid handler')
+	    }
+
+	    const { signal, method, opaque, onInfo, responseHeaders } = opts;
+
+	    if (signal && typeof signal.on !== 'function' && typeof signal.addEventListener !== 'function') {
+	      throw new InvalidArgumentError('signal must be an EventEmitter or EventTarget')
+	    }
+
+	    if (method === 'CONNECT') {
+	      throw new InvalidArgumentError('invalid method')
+	    }
+
+	    if (onInfo && typeof onInfo !== 'function') {
+	      throw new InvalidArgumentError('invalid onInfo callback')
+	    }
+
+	    super('UNDICI_PIPELINE');
+
+	    this.opaque = opaque || null;
+	    this.responseHeaders = responseHeaders || null;
+	    this.handler = handler;
+	    this.abort = null;
+	    this.context = null;
+	    this.onInfo = onInfo || null;
+
+	    this.req = new PipelineRequest().on('error', util.nop);
+
+	    this.ret = new Duplex({
+	      readableObjectMode: opts.objectMode,
+	      autoDestroy: true,
+	      read: () => {
+	        const { body } = this;
+
+	        if (body && body.resume) {
+	          body.resume();
+	        }
+	      },
+	      write: (chunk, encoding, callback) => {
+	        const { req } = this;
+
+	        if (req.push(chunk, encoding) || req._readableState.destroyed) {
+	          callback();
+	        } else {
+	          req[kResume] = callback;
+	        }
+	      },
+	      destroy: (err, callback) => {
+	        const { body, req, res, ret, abort } = this;
+
+	        if (!err && !ret._readableState.endEmitted) {
+	          err = new RequestAbortedError();
+	        }
+
+	        if (abort && err) {
+	          abort();
+	        }
+
+	        util.destroy(body, err);
+	        util.destroy(req, err);
+	        util.destroy(res, err);
+
+	        removeSignal(this);
+
+	        callback(err);
+	      }
+	    }).on('prefinish', () => {
+	      const { req } = this;
+
+	      // Node < 15 does not call _final in same tick.
+	      req.push(null);
+	    });
+
+	    this.res = null;
+
+	    addSignal(this, signal);
+	  }
+
+	  onConnect (abort, context) {
+	    const { ret, res } = this;
+
+	    assert(!res, 'pipeline cannot be retried');
+
+	    if (ret.destroyed) {
+	      throw new RequestAbortedError()
+	    }
+
+	    this.abort = abort;
+	    this.context = context;
+	  }
+
+	  onHeaders (statusCode, rawHeaders, resume) {
+	    const { opaque, handler, context } = this;
+
+	    if (statusCode < 200) {
+	      if (this.onInfo) {
+	        const headers = this.responseHeaders === 'raw' ? util.parseRawHeaders(rawHeaders) : util.parseHeaders(rawHeaders);
+	        this.onInfo({ statusCode, headers });
+	      }
+	      return
+	    }
+
+	    this.res = new PipelineResponse(resume);
+
+	    let body;
+	    try {
+	      this.handler = null;
+	      const headers = this.responseHeaders === 'raw' ? util.parseRawHeaders(rawHeaders) : util.parseHeaders(rawHeaders);
+	      body = this.runInAsyncScope(handler, null, {
+	        statusCode,
+	        headers,
+	        opaque,
+	        body: this.res,
+	        context
+	      });
+	    } catch (err) {
+	      this.res.on('error', util.nop);
+	      throw err
+	    }
+
+	    if (!body || typeof body.on !== 'function') {
+	      throw new InvalidReturnValueError('expected Readable')
+	    }
+
+	    body
+	      .on('data', (chunk) => {
+	        const { ret, body } = this;
+
+	        if (!ret.push(chunk) && body.pause) {
+	          body.pause();
+	        }
+	      })
+	      .on('error', (err) => {
+	        const { ret } = this;
+
+	        util.destroy(ret, err);
+	      })
+	      .on('end', () => {
+	        const { ret } = this;
+
+	        ret.push(null);
+	      })
+	      .on('close', () => {
+	        const { ret } = this;
+
+	        if (!ret._readableState.ended) {
+	          util.destroy(ret, new RequestAbortedError());
+	        }
+	      });
+
+	    this.body = body;
+	  }
+
+	  onData (chunk) {
+	    const { res } = this;
+	    return res.push(chunk)
+	  }
+
+	  onComplete (trailers) {
+	    const { res } = this;
+	    res.push(null);
+	  }
+
+	  onError (err) {
+	    const { ret } = this;
+	    this.handler = null;
+	    util.destroy(ret, err);
+	  }
+	}
+
+	function pipeline (opts, handler) {
+	  try {
+	    const pipelineHandler = new PipelineHandler(opts, handler);
+	    this.dispatch({ ...opts, body: pipelineHandler.req }, pipelineHandler);
+	    return pipelineHandler.ret
+	  } catch (err) {
+	    return new PassThrough().destroy(err)
+	  }
+	}
+
+	apiPipeline = pipeline;
+	return apiPipeline;
 }
 
-function consumeFinish (consume, err) {
-  if (consume.body === null) {
-    return
-  }
+var apiUpgrade;
+var hasRequiredApiUpgrade;
 
-  if (err) {
-    consume.reject(err);
-  } else {
-    consume.resolve();
-  }
+function requireApiUpgrade () {
+	if (hasRequiredApiUpgrade) return apiUpgrade;
+	hasRequiredApiUpgrade = 1;
 
-  consume.type = null;
-  consume.stream = null;
-  consume.resolve = null;
-  consume.reject = null;
-  consume.length = 0;
-  consume.body = null;
+	const { InvalidArgumentError, RequestAbortedError, SocketError } = requireErrors();
+	const { AsyncResource } = require$$4;
+	const util = requireUtil$6();
+	const { addSignal, removeSignal } = requireAbortSignal();
+	const assert = require$$0$3;
+
+	class UpgradeHandler extends AsyncResource {
+	  constructor (opts, callback) {
+	    if (!opts || typeof opts !== 'object') {
+	      throw new InvalidArgumentError('invalid opts')
+	    }
+
+	    if (typeof callback !== 'function') {
+	      throw new InvalidArgumentError('invalid callback')
+	    }
+
+	    const { signal, opaque, responseHeaders } = opts;
+
+	    if (signal && typeof signal.on !== 'function' && typeof signal.addEventListener !== 'function') {
+	      throw new InvalidArgumentError('signal must be an EventEmitter or EventTarget')
+	    }
+
+	    super('UNDICI_UPGRADE');
+
+	    this.responseHeaders = responseHeaders || null;
+	    this.opaque = opaque || null;
+	    this.callback = callback;
+	    this.abort = null;
+	    this.context = null;
+
+	    addSignal(this, signal);
+	  }
+
+	  onConnect (abort, context) {
+	    if (!this.callback) {
+	      throw new RequestAbortedError()
+	    }
+
+	    this.abort = abort;
+	    this.context = null;
+	  }
+
+	  onHeaders () {
+	    throw new SocketError('bad upgrade', null)
+	  }
+
+	  onUpgrade (statusCode, rawHeaders, socket) {
+	    const { callback, opaque, context } = this;
+
+	    assert.strictEqual(statusCode, 101);
+
+	    removeSignal(this);
+
+	    this.callback = null;
+	    const headers = this.responseHeaders === 'raw' ? util.parseRawHeaders(rawHeaders) : util.parseHeaders(rawHeaders);
+	    this.runInAsyncScope(callback, null, null, {
+	      headers,
+	      socket,
+	      opaque,
+	      context
+	    });
+	  }
+
+	  onError (err) {
+	    const { callback, opaque } = this;
+
+	    removeSignal(this);
+
+	    if (callback) {
+	      this.callback = null;
+	      queueMicrotask(() => {
+	        this.runInAsyncScope(callback, null, err, { opaque });
+	      });
+	    }
+	  }
+	}
+
+	function upgrade (opts, callback) {
+	  if (callback === undefined) {
+	    return new Promise((resolve, reject) => {
+	      upgrade.call(this, opts, (err, data) => {
+	        return err ? reject(err) : resolve(data)
+	      });
+	    })
+	  }
+
+	  try {
+	    const upgradeHandler = new UpgradeHandler(opts, callback);
+	    this.dispatch({
+	      ...opts,
+	      method: opts.method || 'GET',
+	      upgrade: opts.protocol || 'Websocket'
+	    }, upgradeHandler);
+	  } catch (err) {
+	    if (typeof callback !== 'function') {
+	      throw err
+	    }
+	    const opaque = opts && opts.opaque;
+	    queueMicrotask(() => callback(err, { opaque }));
+	  }
+	}
+
+	apiUpgrade = upgrade;
+	return apiUpgrade;
 }
 
-const assert$3 = require$$0$3;
-const {
-  ResponseStatusCodeError
-} = errors$1;
-const { toUSVString } = util$j;
+var apiConnect;
+var hasRequiredApiConnect;
 
-async function getResolveErrorBodyCallback$2 ({ callback, body, contentType, statusCode, statusMessage, headers }) {
-  assert$3(body);
+function requireApiConnect () {
+	if (hasRequiredApiConnect) return apiConnect;
+	hasRequiredApiConnect = 1;
 
-  let chunks = [];
-  let limit = 0;
+	const { AsyncResource } = require$$4;
+	const { InvalidArgumentError, RequestAbortedError, SocketError } = requireErrors();
+	const util = requireUtil$6();
+	const { addSignal, removeSignal } = requireAbortSignal();
 
-  for await (const chunk of body) {
-    chunks.push(chunk);
-    limit += chunk.length;
-    if (limit > 128 * 1024) {
-      chunks = null;
-      break
-    }
-  }
+	class ConnectHandler extends AsyncResource {
+	  constructor (opts, callback) {
+	    if (!opts || typeof opts !== 'object') {
+	      throw new InvalidArgumentError('invalid opts')
+	    }
 
-  if (statusCode === 204 || !contentType || !chunks) {
-    process.nextTick(callback, new ResponseStatusCodeError(`Response status code ${statusCode}${statusMessage ? `: ${statusMessage}` : ''}`, statusCode, headers));
-    return
-  }
+	    if (typeof callback !== 'function') {
+	      throw new InvalidArgumentError('invalid callback')
+	    }
 
-  try {
-    if (contentType.startsWith('application/json')) {
-      const payload = JSON.parse(toUSVString(Buffer.concat(chunks)));
-      process.nextTick(callback, new ResponseStatusCodeError(`Response status code ${statusCode}${statusMessage ? `: ${statusMessage}` : ''}`, statusCode, headers, payload));
-      return
-    }
+	    const { signal, opaque, responseHeaders } = opts;
 
-    if (contentType.startsWith('text/')) {
-      const payload = toUSVString(Buffer.concat(chunks));
-      process.nextTick(callback, new ResponseStatusCodeError(`Response status code ${statusCode}${statusMessage ? `: ${statusMessage}` : ''}`, statusCode, headers, payload));
-      return
-    }
-  } catch (err) {
-    // Process in a fallback if error
-  }
+	    if (signal && typeof signal.on !== 'function' && typeof signal.addEventListener !== 'function') {
+	      throw new InvalidArgumentError('signal must be an EventEmitter or EventTarget')
+	    }
 
-  process.nextTick(callback, new ResponseStatusCodeError(`Response status code ${statusCode}${statusMessage ? `: ${statusMessage}` : ''}`, statusCode, headers));
+	    super('UNDICI_CONNECT');
+
+	    this.opaque = opaque || null;
+	    this.responseHeaders = responseHeaders || null;
+	    this.callback = callback;
+	    this.abort = null;
+
+	    addSignal(this, signal);
+	  }
+
+	  onConnect (abort, context) {
+	    if (!this.callback) {
+	      throw new RequestAbortedError()
+	    }
+
+	    this.abort = abort;
+	    this.context = context;
+	  }
+
+	  onHeaders () {
+	    throw new SocketError('bad connect', null)
+	  }
+
+	  onUpgrade (statusCode, rawHeaders, socket) {
+	    const { callback, opaque, context } = this;
+
+	    removeSignal(this);
+
+	    this.callback = null;
+
+	    let headers = rawHeaders;
+	    // Indicates is an HTTP2Session
+	    if (headers != null) {
+	      headers = this.responseHeaders === 'raw' ? util.parseRawHeaders(rawHeaders) : util.parseHeaders(rawHeaders);
+	    }
+
+	    this.runInAsyncScope(callback, null, null, {
+	      statusCode,
+	      headers,
+	      socket,
+	      opaque,
+	      context
+	    });
+	  }
+
+	  onError (err) {
+	    const { callback, opaque } = this;
+
+	    removeSignal(this);
+
+	    if (callback) {
+	      this.callback = null;
+	      queueMicrotask(() => {
+	        this.runInAsyncScope(callback, null, err, { opaque });
+	      });
+	    }
+	  }
+	}
+
+	function connect (opts, callback) {
+	  if (callback === undefined) {
+	    return new Promise((resolve, reject) => {
+	      connect.call(this, opts, (err, data) => {
+	        return err ? reject(err) : resolve(data)
+	      });
+	    })
+	  }
+
+	  try {
+	    const connectHandler = new ConnectHandler(opts, callback);
+	    this.dispatch({ ...opts, method: 'CONNECT' }, connectHandler);
+	  } catch (err) {
+	    if (typeof callback !== 'function') {
+	      throw err
+	    }
+	    const opaque = opts && opts.opaque;
+	    queueMicrotask(() => callback(err, { opaque }));
+	  }
+	}
+
+	apiConnect = connect;
+	return apiConnect;
 }
 
-var util$a = { getResolveErrorBodyCallback: getResolveErrorBodyCallback$2 };
+var hasRequiredApi;
 
-const { addAbortListener } = util$j;
-const { RequestAbortedError: RequestAbortedError$6 } = errors$1;
+function requireApi () {
+	if (hasRequiredApi) return api;
+	hasRequiredApi = 1;
 
-const kListener = Symbol('kListener');
-const kSignal = Symbol('kSignal');
-
-function abort (self) {
-  if (self.abort) {
-    self.abort();
-  } else {
-    self.onError(new RequestAbortedError$6());
-  }
+	api.request = requireApiRequest();
+	api.stream = requireApiStream();
+	api.pipeline = requireApiPipeline();
+	api.upgrade = requireApiUpgrade();
+	api.connect = requireApiConnect();
+	return api;
 }
 
-function addSignal$5 (self, signal) {
-  self[kSignal] = null;
-  self[kListener] = null;
+var mockErrors;
+var hasRequiredMockErrors;
 
-  if (!signal) {
-    return
-  }
+function requireMockErrors () {
+	if (hasRequiredMockErrors) return mockErrors;
+	hasRequiredMockErrors = 1;
 
-  if (signal.aborted) {
-    abort(self);
-    return
-  }
+	const { UndiciError } = requireErrors();
 
-  self[kSignal] = signal;
-  self[kListener] = () => {
-    abort(self);
-  };
+	class MockNotMatchedError extends UndiciError {
+	  constructor (message) {
+	    super(message);
+	    Error.captureStackTrace(this, MockNotMatchedError);
+	    this.name = 'MockNotMatchedError';
+	    this.message = message || 'The request does not match any registered mock dispatches';
+	    this.code = 'UND_MOCK_ERR_MOCK_NOT_MATCHED';
+	  }
+	}
 
-  addAbortListener(self[kSignal], self[kListener]);
+	mockErrors = {
+	  MockNotMatchedError
+	};
+	return mockErrors;
 }
 
-function removeSignal$5 (self) {
-  if (!self[kSignal]) {
-    return
-  }
+var mockSymbols;
+var hasRequiredMockSymbols;
 
-  if ('removeEventListener' in self[kSignal]) {
-    self[kSignal].removeEventListener('abort', self[kListener]);
-  } else {
-    self[kSignal].removeListener('abort', self[kListener]);
-  }
+function requireMockSymbols () {
+	if (hasRequiredMockSymbols) return mockSymbols;
+	hasRequiredMockSymbols = 1;
 
-  self[kSignal] = null;
-  self[kListener] = null;
+	mockSymbols = {
+	  kAgent: Symbol('agent'),
+	  kOptions: Symbol('options'),
+	  kFactory: Symbol('factory'),
+	  kDispatches: Symbol('dispatches'),
+	  kDispatchKey: Symbol('dispatch key'),
+	  kDefaultHeaders: Symbol('default headers'),
+	  kDefaultTrailers: Symbol('default trailers'),
+	  kContentLength: Symbol('content length'),
+	  kMockAgent: Symbol('mock agent'),
+	  kMockAgentSet: Symbol('mock agent set'),
+	  kMockAgentGet: Symbol('mock agent get'),
+	  kMockDispatch: Symbol('mock dispatch'),
+	  kClose: Symbol('close'),
+	  kOriginalClose: Symbol('original agent close'),
+	  kOrigin: Symbol('origin'),
+	  kIsMockActive: Symbol('is mock active'),
+	  kNetConnect: Symbol('net connect'),
+	  kGetNetConnect: Symbol('get net connect'),
+	  kConnected: Symbol('connected')
+	};
+	return mockSymbols;
 }
 
-var abortSignal = {
-  addSignal: addSignal$5,
-  removeSignal: removeSignal$5
-};
+var mockUtils;
+var hasRequiredMockUtils;
 
-const Readable$1 = readable;
-const {
-  InvalidArgumentError: InvalidArgumentError$b,
-  RequestAbortedError: RequestAbortedError$5
-} = errors$1;
-const util$9 = util$j;
-const { getResolveErrorBodyCallback: getResolveErrorBodyCallback$1 } = util$a;
-const { AsyncResource: AsyncResource$4 } = require$$4;
-const { addSignal: addSignal$4, removeSignal: removeSignal$4 } = abortSignal;
+function requireMockUtils () {
+	if (hasRequiredMockUtils) return mockUtils;
+	hasRequiredMockUtils = 1;
 
-class RequestHandler extends AsyncResource$4 {
-  constructor (opts, callback) {
-    if (!opts || typeof opts !== 'object') {
-      throw new InvalidArgumentError$b('invalid opts')
-    }
+	const { MockNotMatchedError } = requireMockErrors();
+	const {
+	  kDispatches,
+	  kMockAgent,
+	  kOriginalDispatch,
+	  kOrigin,
+	  kGetNetConnect
+	} = requireMockSymbols();
+	const { buildURL, nop } = requireUtil$6();
+	const { STATUS_CODES } = require$$2$1;
+	const {
+	  types: {
+	    isPromise
+	  }
+	} = require$$1$1;
 
-    const { signal, method, opaque, body, onInfo, responseHeaders, throwOnError, highWaterMark } = opts;
+	function matchValue (match, value) {
+	  if (typeof match === 'string') {
+	    return match === value
+	  }
+	  if (match instanceof RegExp) {
+	    return match.test(value)
+	  }
+	  if (typeof match === 'function') {
+	    return match(value) === true
+	  }
+	  return false
+	}
 
-    try {
-      if (typeof callback !== 'function') {
-        throw new InvalidArgumentError$b('invalid callback')
-      }
+	function lowerCaseEntries (headers) {
+	  return Object.fromEntries(
+	    Object.entries(headers).map(([headerName, headerValue]) => {
+	      return [headerName.toLocaleLowerCase(), headerValue]
+	    })
+	  )
+	}
 
-      if (highWaterMark && (typeof highWaterMark !== 'number' || highWaterMark < 0)) {
-        throw new InvalidArgumentError$b('invalid highWaterMark')
-      }
+	/**
+	 * @param {import('../../index').Headers|string[]|Record<string, string>} headers
+	 * @param {string} key
+	 */
+	function getHeaderByName (headers, key) {
+	  if (Array.isArray(headers)) {
+	    for (let i = 0; i < headers.length; i += 2) {
+	      if (headers[i].toLocaleLowerCase() === key.toLocaleLowerCase()) {
+	        return headers[i + 1]
+	      }
+	    }
 
-      if (signal && typeof signal.on !== 'function' && typeof signal.addEventListener !== 'function') {
-        throw new InvalidArgumentError$b('signal must be an EventEmitter or EventTarget')
-      }
+	    return undefined
+	  } else if (typeof headers.get === 'function') {
+	    return headers.get(key)
+	  } else {
+	    return lowerCaseEntries(headers)[key.toLocaleLowerCase()]
+	  }
+	}
 
-      if (method === 'CONNECT') {
-        throw new InvalidArgumentError$b('invalid method')
-      }
+	/** @param {string[]} headers */
+	function buildHeadersFromArray (headers) { // fetch HeadersList
+	  const clone = headers.slice();
+	  const entries = [];
+	  for (let index = 0; index < clone.length; index += 2) {
+	    entries.push([clone[index], clone[index + 1]]);
+	  }
+	  return Object.fromEntries(entries)
+	}
 
-      if (onInfo && typeof onInfo !== 'function') {
-        throw new InvalidArgumentError$b('invalid onInfo callback')
-      }
+	function matchHeaders (mockDispatch, headers) {
+	  if (typeof mockDispatch.headers === 'function') {
+	    if (Array.isArray(headers)) { // fetch HeadersList
+	      headers = buildHeadersFromArray(headers);
+	    }
+	    return mockDispatch.headers(headers ? lowerCaseEntries(headers) : {})
+	  }
+	  if (typeof mockDispatch.headers === 'undefined') {
+	    return true
+	  }
+	  if (typeof headers !== 'object' || typeof mockDispatch.headers !== 'object') {
+	    return false
+	  }
 
-      super('UNDICI_REQUEST');
-    } catch (err) {
-      if (util$9.isStream(body)) {
-        util$9.destroy(body.on('error', util$9.nop), err);
-      }
-      throw err
-    }
+	  for (const [matchHeaderName, matchHeaderValue] of Object.entries(mockDispatch.headers)) {
+	    const headerValue = getHeaderByName(headers, matchHeaderName);
 
-    this.responseHeaders = responseHeaders || null;
-    this.opaque = opaque || null;
-    this.callback = callback;
-    this.res = null;
-    this.abort = null;
-    this.body = body;
-    this.trailers = {};
-    this.context = null;
-    this.onInfo = onInfo || null;
-    this.throwOnError = throwOnError;
-    this.highWaterMark = highWaterMark;
+	    if (!matchValue(matchHeaderValue, headerValue)) {
+	      return false
+	    }
+	  }
+	  return true
+	}
 
-    if (util$9.isStream(body)) {
-      body.on('error', (err) => {
-        this.onError(err);
-      });
-    }
+	function safeUrl (path) {
+	  if (typeof path !== 'string') {
+	    return path
+	  }
 
-    addSignal$4(this, signal);
-  }
+	  const pathSegments = path.split('?');
 
-  onConnect (abort, context) {
-    if (!this.callback) {
-      throw new RequestAbortedError$5()
-    }
+	  if (pathSegments.length !== 2) {
+	    return path
+	  }
 
-    this.abort = abort;
-    this.context = context;
-  }
+	  const qp = new URLSearchParams(pathSegments.pop());
+	  qp.sort();
+	  return [...pathSegments, qp.toString()].join('?')
+	}
 
-  onHeaders (statusCode, rawHeaders, resume, statusMessage) {
-    const { callback, opaque, abort, context, responseHeaders, highWaterMark } = this;
+	function matchKey (mockDispatch, { path, method, body, headers }) {
+	  const pathMatch = matchValue(mockDispatch.path, path);
+	  const methodMatch = matchValue(mockDispatch.method, method);
+	  const bodyMatch = typeof mockDispatch.body !== 'undefined' ? matchValue(mockDispatch.body, body) : true;
+	  const headersMatch = matchHeaders(mockDispatch, headers);
+	  return pathMatch && methodMatch && bodyMatch && headersMatch
+	}
 
-    const headers = responseHeaders === 'raw' ? util$9.parseRawHeaders(rawHeaders) : util$9.parseHeaders(rawHeaders);
+	function getResponseData (data) {
+	  if (Buffer.isBuffer(data)) {
+	    return data
+	  } else if (typeof data === 'object') {
+	    return JSON.stringify(data)
+	  } else {
+	    return data.toString()
+	  }
+	}
 
-    if (statusCode < 200) {
-      if (this.onInfo) {
-        this.onInfo({ statusCode, headers });
-      }
-      return
-    }
+	function getMockDispatch (mockDispatches, key) {
+	  const basePath = key.query ? buildURL(key.path, key.query) : key.path;
+	  const resolvedPath = typeof basePath === 'string' ? safeUrl(basePath) : basePath;
 
-    const parsedHeaders = responseHeaders === 'raw' ? util$9.parseHeaders(rawHeaders) : headers;
-    const contentType = parsedHeaders['content-type'];
-    const body = new Readable$1({ resume, abort, contentType, highWaterMark });
+	  // Match path
+	  let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path }) => matchValue(safeUrl(path), resolvedPath));
+	  if (matchedMockDispatches.length === 0) {
+	    throw new MockNotMatchedError(`Mock dispatch not matched for path '${resolvedPath}'`)
+	  }
 
-    this.callback = null;
-    this.res = body;
-    if (callback !== null) {
-      if (this.throwOnError && statusCode >= 400) {
-        this.runInAsyncScope(getResolveErrorBodyCallback$1, null,
-          { callback, body, contentType, statusCode, statusMessage, headers }
-        );
-      } else {
-        this.runInAsyncScope(callback, null, null, {
-          statusCode,
-          headers,
-          trailers: this.trailers,
-          opaque,
-          body,
-          context
-        });
-      }
-    }
-  }
+	  // Match method
+	  matchedMockDispatches = matchedMockDispatches.filter(({ method }) => matchValue(method, key.method));
+	  if (matchedMockDispatches.length === 0) {
+	    throw new MockNotMatchedError(`Mock dispatch not matched for method '${key.method}'`)
+	  }
 
-  onData (chunk) {
-    const { res } = this;
-    return res.push(chunk)
-  }
+	  // Match body
+	  matchedMockDispatches = matchedMockDispatches.filter(({ body }) => typeof body !== 'undefined' ? matchValue(body, key.body) : true);
+	  if (matchedMockDispatches.length === 0) {
+	    throw new MockNotMatchedError(`Mock dispatch not matched for body '${key.body}'`)
+	  }
 
-  onComplete (trailers) {
-    const { res } = this;
+	  // Match headers
+	  matchedMockDispatches = matchedMockDispatches.filter((mockDispatch) => matchHeaders(mockDispatch, key.headers));
+	  if (matchedMockDispatches.length === 0) {
+	    throw new MockNotMatchedError(`Mock dispatch not matched for headers '${typeof key.headers === 'object' ? JSON.stringify(key.headers) : key.headers}'`)
+	  }
 
-    removeSignal$4(this);
+	  return matchedMockDispatches[0]
+	}
 
-    util$9.parseHeaders(trailers, this.trailers);
+	function addMockDispatch (mockDispatches, key, data) {
+	  const baseData = { timesInvoked: 0, times: 1, persist: false, consumed: false };
+	  const replyData = typeof data === 'function' ? { callback: data } : { ...data };
+	  const newMockDispatch = { ...baseData, ...key, pending: true, data: { error: null, ...replyData } };
+	  mockDispatches.push(newMockDispatch);
+	  return newMockDispatch
+	}
 
-    res.push(null);
-  }
+	function deleteMockDispatch (mockDispatches, key) {
+	  const index = mockDispatches.findIndex(dispatch => {
+	    if (!dispatch.consumed) {
+	      return false
+	    }
+	    return matchKey(dispatch, key)
+	  });
+	  if (index !== -1) {
+	    mockDispatches.splice(index, 1);
+	  }
+	}
 
-  onError (err) {
-    const { res, callback, body, opaque } = this;
+	function buildKey (opts) {
+	  const { path, method, body, headers, query } = opts;
+	  return {
+	    path,
+	    method,
+	    body,
+	    headers,
+	    query
+	  }
+	}
 
-    removeSignal$4(this);
+	function generateKeyValues (data) {
+	  return Object.entries(data).reduce((keyValuePairs, [key, value]) => [
+	    ...keyValuePairs,
+	    Buffer.from(`${key}`),
+	    Array.isArray(value) ? value.map(x => Buffer.from(`${x}`)) : Buffer.from(`${value}`)
+	  ], [])
+	}
 
-    if (callback) {
-      // TODO: Does this need queueMicrotask?
-      this.callback = null;
-      queueMicrotask(() => {
-        this.runInAsyncScope(callback, null, err, { opaque });
-      });
-    }
+	/**
+	 * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+	 * @param {number} statusCode
+	 */
+	function getStatusText (statusCode) {
+	  return STATUS_CODES[statusCode] || 'unknown'
+	}
 
-    if (res) {
-      this.res = null;
-      // Ensure all queued handlers are invoked before destroying res.
-      queueMicrotask(() => {
-        util$9.destroy(res, err);
-      });
-    }
+	async function getResponse (body) {
+	  const buffers = [];
+	  for await (const data of body) {
+	    buffers.push(data);
+	  }
+	  return Buffer.concat(buffers).toString('utf8')
+	}
 
-    if (body) {
-      this.body = null;
-      util$9.destroy(body, err);
-    }
-  }
+	/**
+	 * Mock dispatch function used to simulate undici dispatches
+	 */
+	function mockDispatch (opts, handler) {
+	  // Get mock dispatch from built key
+	  const key = buildKey(opts);
+	  const mockDispatch = getMockDispatch(this[kDispatches], key);
+
+	  mockDispatch.timesInvoked++;
+
+	  // Here's where we resolve a callback if a callback is present for the dispatch data.
+	  if (mockDispatch.data.callback) {
+	    mockDispatch.data = { ...mockDispatch.data, ...mockDispatch.data.callback(opts) };
+	  }
+
+	  // Parse mockDispatch data
+	  const { data: { statusCode, data, headers, trailers, error }, delay, persist } = mockDispatch;
+	  const { timesInvoked, times } = mockDispatch;
+
+	  // If it's used up and not persistent, mark as consumed
+	  mockDispatch.consumed = !persist && timesInvoked >= times;
+	  mockDispatch.pending = timesInvoked < times;
+
+	  // If specified, trigger dispatch error
+	  if (error !== null) {
+	    deleteMockDispatch(this[kDispatches], key);
+	    handler.onError(error);
+	    return true
+	  }
+
+	  // Handle the request with a delay if necessary
+	  if (typeof delay === 'number' && delay > 0) {
+	    setTimeout(() => {
+	      handleReply(this[kDispatches]);
+	    }, delay);
+	  } else {
+	    handleReply(this[kDispatches]);
+	  }
+
+	  function handleReply (mockDispatches, _data = data) {
+	    // fetch's HeadersList is a 1D string array
+	    const optsHeaders = Array.isArray(opts.headers)
+	      ? buildHeadersFromArray(opts.headers)
+	      : opts.headers;
+	    const body = typeof _data === 'function'
+	      ? _data({ ...opts, headers: optsHeaders })
+	      : _data;
+
+	    // util.types.isPromise is likely needed for jest.
+	    if (isPromise(body)) {
+	      // If handleReply is asynchronous, throwing an error
+	      // in the callback will reject the promise, rather than
+	      // synchronously throw the error, which breaks some tests.
+	      // Rather, we wait for the callback to resolve if it is a
+	      // promise, and then re-run handleReply with the new body.
+	      body.then((newData) => handleReply(mockDispatches, newData));
+	      return
+	    }
+
+	    const responseData = getResponseData(body);
+	    const responseHeaders = generateKeyValues(headers);
+	    const responseTrailers = generateKeyValues(trailers);
+
+	    handler.abort = nop;
+	    handler.onHeaders(statusCode, responseHeaders, resume, getStatusText(statusCode));
+	    handler.onData(Buffer.from(responseData));
+	    handler.onComplete(responseTrailers);
+	    deleteMockDispatch(mockDispatches, key);
+	  }
+
+	  function resume () {}
+
+	  return true
+	}
+
+	function buildMockDispatch () {
+	  const agent = this[kMockAgent];
+	  const origin = this[kOrigin];
+	  const originalDispatch = this[kOriginalDispatch];
+
+	  return function dispatch (opts, handler) {
+	    if (agent.isMockActive) {
+	      try {
+	        mockDispatch.call(this, opts, handler);
+	      } catch (error) {
+	        if (error instanceof MockNotMatchedError) {
+	          const netConnect = agent[kGetNetConnect]();
+	          if (netConnect === false) {
+	            throw new MockNotMatchedError(`${error.message}: subsequent request to origin ${origin} was not allowed (net.connect disabled)`)
+	          }
+	          if (checkNetConnect(netConnect, origin)) {
+	            originalDispatch.call(this, opts, handler);
+	          } else {
+	            throw new MockNotMatchedError(`${error.message}: subsequent request to origin ${origin} was not allowed (net.connect is not enabled for this origin)`)
+	          }
+	        } else {
+	          throw error
+	        }
+	      }
+	    } else {
+	      originalDispatch.call(this, opts, handler);
+	    }
+	  }
+	}
+
+	function checkNetConnect (netConnect, origin) {
+	  const url = new URL(origin);
+	  if (netConnect === true) {
+	    return true
+	  } else if (Array.isArray(netConnect) && netConnect.some((matcher) => matchValue(matcher, url.host))) {
+	    return true
+	  }
+	  return false
+	}
+
+	function buildMockOptions (opts) {
+	  if (opts) {
+	    const { agent, ...mockOptions } = opts;
+	    return mockOptions
+	  }
+	}
+
+	mockUtils = {
+	  getResponseData,
+	  getMockDispatch,
+	  addMockDispatch,
+	  deleteMockDispatch,
+	  buildKey,
+	  generateKeyValues,
+	  matchValue,
+	  getResponse,
+	  getStatusText,
+	  mockDispatch,
+	  buildMockDispatch,
+	  checkNetConnect,
+	  buildMockOptions,
+	  getHeaderByName
+	};
+	return mockUtils;
 }
-
-function request$2 (opts, callback) {
-  if (callback === undefined) {
-    return new Promise((resolve, reject) => {
-      request$2.call(this, opts, (err, data) => {
-        return err ? reject(err) : resolve(data)
-      });
-    })
-  }
-
-  try {
-    this.dispatch(opts, new RequestHandler(opts, callback));
-  } catch (err) {
-    if (typeof callback !== 'function') {
-      throw err
-    }
-    const opaque = opts && opts.opaque;
-    queueMicrotask(() => callback(err, { opaque }));
-  }
-}
-
-apiRequest.exports = request$2;
-apiRequest.exports.RequestHandler = RequestHandler;
-
-var apiRequestExports = apiRequest.exports;
-
-const { finished, PassThrough: PassThrough$1 } = require$$0$4;
-const {
-  InvalidArgumentError: InvalidArgumentError$a,
-  InvalidReturnValueError: InvalidReturnValueError$1,
-  RequestAbortedError: RequestAbortedError$4
-} = errors$1;
-const util$8 = util$j;
-const { getResolveErrorBodyCallback } = util$a;
-const { AsyncResource: AsyncResource$3 } = require$$4;
-const { addSignal: addSignal$3, removeSignal: removeSignal$3 } = abortSignal;
-
-class StreamHandler extends AsyncResource$3 {
-  constructor (opts, factory, callback) {
-    if (!opts || typeof opts !== 'object') {
-      throw new InvalidArgumentError$a('invalid opts')
-    }
-
-    const { signal, method, opaque, body, onInfo, responseHeaders, throwOnError } = opts;
-
-    try {
-      if (typeof callback !== 'function') {
-        throw new InvalidArgumentError$a('invalid callback')
-      }
-
-      if (typeof factory !== 'function') {
-        throw new InvalidArgumentError$a('invalid factory')
-      }
-
-      if (signal && typeof signal.on !== 'function' && typeof signal.addEventListener !== 'function') {
-        throw new InvalidArgumentError$a('signal must be an EventEmitter or EventTarget')
-      }
-
-      if (method === 'CONNECT') {
-        throw new InvalidArgumentError$a('invalid method')
-      }
-
-      if (onInfo && typeof onInfo !== 'function') {
-        throw new InvalidArgumentError$a('invalid onInfo callback')
-      }
-
-      super('UNDICI_STREAM');
-    } catch (err) {
-      if (util$8.isStream(body)) {
-        util$8.destroy(body.on('error', util$8.nop), err);
-      }
-      throw err
-    }
-
-    this.responseHeaders = responseHeaders || null;
-    this.opaque = opaque || null;
-    this.factory = factory;
-    this.callback = callback;
-    this.res = null;
-    this.abort = null;
-    this.context = null;
-    this.trailers = null;
-    this.body = body;
-    this.onInfo = onInfo || null;
-    this.throwOnError = throwOnError || false;
-
-    if (util$8.isStream(body)) {
-      body.on('error', (err) => {
-        this.onError(err);
-      });
-    }
-
-    addSignal$3(this, signal);
-  }
-
-  onConnect (abort, context) {
-    if (!this.callback) {
-      throw new RequestAbortedError$4()
-    }
-
-    this.abort = abort;
-    this.context = context;
-  }
-
-  onHeaders (statusCode, rawHeaders, resume, statusMessage) {
-    const { factory, opaque, context, callback, responseHeaders } = this;
-
-    const headers = responseHeaders === 'raw' ? util$8.parseRawHeaders(rawHeaders) : util$8.parseHeaders(rawHeaders);
-
-    if (statusCode < 200) {
-      if (this.onInfo) {
-        this.onInfo({ statusCode, headers });
-      }
-      return
-    }
-
-    this.factory = null;
-
-    let res;
-
-    if (this.throwOnError && statusCode >= 400) {
-      const parsedHeaders = responseHeaders === 'raw' ? util$8.parseHeaders(rawHeaders) : headers;
-      const contentType = parsedHeaders['content-type'];
-      res = new PassThrough$1();
-
-      this.callback = null;
-      this.runInAsyncScope(getResolveErrorBodyCallback, null,
-        { callback, body: res, contentType, statusCode, statusMessage, headers }
-      );
-    } else {
-      if (factory === null) {
-        return
-      }
-
-      res = this.runInAsyncScope(factory, null, {
-        statusCode,
-        headers,
-        opaque,
-        context
-      });
-
-      if (
-        !res ||
-        typeof res.write !== 'function' ||
-        typeof res.end !== 'function' ||
-        typeof res.on !== 'function'
-      ) {
-        throw new InvalidReturnValueError$1('expected Writable')
-      }
-
-      // TODO: Avoid finished. It registers an unnecessary amount of listeners.
-      finished(res, { readable: false }, (err) => {
-        const { callback, res, opaque, trailers, abort } = this;
-
-        this.res = null;
-        if (err || !res.readable) {
-          util$8.destroy(res, err);
-        }
-
-        this.callback = null;
-        this.runInAsyncScope(callback, null, err || null, { opaque, trailers });
-
-        if (err) {
-          abort();
-        }
-      });
-    }
-
-    res.on('drain', resume);
-
-    this.res = res;
-
-    const needDrain = res.writableNeedDrain !== undefined
-      ? res.writableNeedDrain
-      : res._writableState && res._writableState.needDrain;
-
-    return needDrain !== true
-  }
-
-  onData (chunk) {
-    const { res } = this;
-
-    return res ? res.write(chunk) : true
-  }
-
-  onComplete (trailers) {
-    const { res } = this;
-
-    removeSignal$3(this);
-
-    if (!res) {
-      return
-    }
-
-    this.trailers = util$8.parseHeaders(trailers);
-
-    res.end();
-  }
-
-  onError (err) {
-    const { res, callback, opaque, body } = this;
-
-    removeSignal$3(this);
-
-    this.factory = null;
-
-    if (res) {
-      this.res = null;
-      util$8.destroy(res, err);
-    } else if (callback) {
-      this.callback = null;
-      queueMicrotask(() => {
-        this.runInAsyncScope(callback, null, err, { opaque });
-      });
-    }
-
-    if (body) {
-      this.body = null;
-      util$8.destroy(body, err);
-    }
-  }
-}
-
-function stream (opts, factory, callback) {
-  if (callback === undefined) {
-    return new Promise((resolve, reject) => {
-      stream.call(this, opts, factory, (err, data) => {
-        return err ? reject(err) : resolve(data)
-      });
-    })
-  }
-
-  try {
-    this.dispatch(opts, new StreamHandler(opts, factory, callback));
-  } catch (err) {
-    if (typeof callback !== 'function') {
-      throw err
-    }
-    const opaque = opts && opts.opaque;
-    queueMicrotask(() => callback(err, { opaque }));
-  }
-}
-
-var apiStream = stream;
-
-const {
-  Readable,
-  Duplex,
-  PassThrough
-} = require$$0$4;
-const {
-  InvalidArgumentError: InvalidArgumentError$9,
-  InvalidReturnValueError,
-  RequestAbortedError: RequestAbortedError$3
-} = errors$1;
-const util$7 = util$j;
-const { AsyncResource: AsyncResource$2 } = require$$4;
-const { addSignal: addSignal$2, removeSignal: removeSignal$2 } = abortSignal;
-const assert$2 = require$$0$3;
-
-const kResume = Symbol('resume');
-
-class PipelineRequest extends Readable {
-  constructor () {
-    super({ autoDestroy: true });
-
-    this[kResume] = null;
-  }
-
-  _read () {
-    const { [kResume]: resume } = this;
-
-    if (resume) {
-      this[kResume] = null;
-      resume();
-    }
-  }
-
-  _destroy (err, callback) {
-    this._read();
-
-    callback(err);
-  }
-}
-
-class PipelineResponse extends Readable {
-  constructor (resume) {
-    super({ autoDestroy: true });
-    this[kResume] = resume;
-  }
-
-  _read () {
-    this[kResume]();
-  }
-
-  _destroy (err, callback) {
-    if (!err && !this._readableState.endEmitted) {
-      err = new RequestAbortedError$3();
-    }
-
-    callback(err);
-  }
-}
-
-class PipelineHandler extends AsyncResource$2 {
-  constructor (opts, handler) {
-    if (!opts || typeof opts !== 'object') {
-      throw new InvalidArgumentError$9('invalid opts')
-    }
-
-    if (typeof handler !== 'function') {
-      throw new InvalidArgumentError$9('invalid handler')
-    }
-
-    const { signal, method, opaque, onInfo, responseHeaders } = opts;
-
-    if (signal && typeof signal.on !== 'function' && typeof signal.addEventListener !== 'function') {
-      throw new InvalidArgumentError$9('signal must be an EventEmitter or EventTarget')
-    }
-
-    if (method === 'CONNECT') {
-      throw new InvalidArgumentError$9('invalid method')
-    }
-
-    if (onInfo && typeof onInfo !== 'function') {
-      throw new InvalidArgumentError$9('invalid onInfo callback')
-    }
-
-    super('UNDICI_PIPELINE');
-
-    this.opaque = opaque || null;
-    this.responseHeaders = responseHeaders || null;
-    this.handler = handler;
-    this.abort = null;
-    this.context = null;
-    this.onInfo = onInfo || null;
-
-    this.req = new PipelineRequest().on('error', util$7.nop);
-
-    this.ret = new Duplex({
-      readableObjectMode: opts.objectMode,
-      autoDestroy: true,
-      read: () => {
-        const { body } = this;
-
-        if (body && body.resume) {
-          body.resume();
-        }
-      },
-      write: (chunk, encoding, callback) => {
-        const { req } = this;
-
-        if (req.push(chunk, encoding) || req._readableState.destroyed) {
-          callback();
-        } else {
-          req[kResume] = callback;
-        }
-      },
-      destroy: (err, callback) => {
-        const { body, req, res, ret, abort } = this;
-
-        if (!err && !ret._readableState.endEmitted) {
-          err = new RequestAbortedError$3();
-        }
-
-        if (abort && err) {
-          abort();
-        }
-
-        util$7.destroy(body, err);
-        util$7.destroy(req, err);
-        util$7.destroy(res, err);
-
-        removeSignal$2(this);
-
-        callback(err);
-      }
-    }).on('prefinish', () => {
-      const { req } = this;
-
-      // Node < 15 does not call _final in same tick.
-      req.push(null);
-    });
-
-    this.res = null;
-
-    addSignal$2(this, signal);
-  }
-
-  onConnect (abort, context) {
-    const { ret, res } = this;
-
-    assert$2(!res, 'pipeline cannot be retried');
-
-    if (ret.destroyed) {
-      throw new RequestAbortedError$3()
-    }
-
-    this.abort = abort;
-    this.context = context;
-  }
-
-  onHeaders (statusCode, rawHeaders, resume) {
-    const { opaque, handler, context } = this;
-
-    if (statusCode < 200) {
-      if (this.onInfo) {
-        const headers = this.responseHeaders === 'raw' ? util$7.parseRawHeaders(rawHeaders) : util$7.parseHeaders(rawHeaders);
-        this.onInfo({ statusCode, headers });
-      }
-      return
-    }
-
-    this.res = new PipelineResponse(resume);
-
-    let body;
-    try {
-      this.handler = null;
-      const headers = this.responseHeaders === 'raw' ? util$7.parseRawHeaders(rawHeaders) : util$7.parseHeaders(rawHeaders);
-      body = this.runInAsyncScope(handler, null, {
-        statusCode,
-        headers,
-        opaque,
-        body: this.res,
-        context
-      });
-    } catch (err) {
-      this.res.on('error', util$7.nop);
-      throw err
-    }
-
-    if (!body || typeof body.on !== 'function') {
-      throw new InvalidReturnValueError('expected Readable')
-    }
-
-    body
-      .on('data', (chunk) => {
-        const { ret, body } = this;
-
-        if (!ret.push(chunk) && body.pause) {
-          body.pause();
-        }
-      })
-      .on('error', (err) => {
-        const { ret } = this;
-
-        util$7.destroy(ret, err);
-      })
-      .on('end', () => {
-        const { ret } = this;
-
-        ret.push(null);
-      })
-      .on('close', () => {
-        const { ret } = this;
-
-        if (!ret._readableState.ended) {
-          util$7.destroy(ret, new RequestAbortedError$3());
-        }
-      });
-
-    this.body = body;
-  }
-
-  onData (chunk) {
-    const { res } = this;
-    return res.push(chunk)
-  }
-
-  onComplete (trailers) {
-    const { res } = this;
-    res.push(null);
-  }
-
-  onError (err) {
-    const { ret } = this;
-    this.handler = null;
-    util$7.destroy(ret, err);
-  }
-}
-
-function pipeline (opts, handler) {
-  try {
-    const pipelineHandler = new PipelineHandler(opts, handler);
-    this.dispatch({ ...opts, body: pipelineHandler.req }, pipelineHandler);
-    return pipelineHandler.ret
-  } catch (err) {
-    return new PassThrough().destroy(err)
-  }
-}
-
-var apiPipeline = pipeline;
-
-const { InvalidArgumentError: InvalidArgumentError$8, RequestAbortedError: RequestAbortedError$2, SocketError: SocketError$1 } = errors$1;
-const { AsyncResource: AsyncResource$1 } = require$$4;
-const util$6 = util$j;
-const { addSignal: addSignal$1, removeSignal: removeSignal$1 } = abortSignal;
-const assert$1 = require$$0$3;
-
-class UpgradeHandler extends AsyncResource$1 {
-  constructor (opts, callback) {
-    if (!opts || typeof opts !== 'object') {
-      throw new InvalidArgumentError$8('invalid opts')
-    }
-
-    if (typeof callback !== 'function') {
-      throw new InvalidArgumentError$8('invalid callback')
-    }
-
-    const { signal, opaque, responseHeaders } = opts;
-
-    if (signal && typeof signal.on !== 'function' && typeof signal.addEventListener !== 'function') {
-      throw new InvalidArgumentError$8('signal must be an EventEmitter or EventTarget')
-    }
-
-    super('UNDICI_UPGRADE');
-
-    this.responseHeaders = responseHeaders || null;
-    this.opaque = opaque || null;
-    this.callback = callback;
-    this.abort = null;
-    this.context = null;
-
-    addSignal$1(this, signal);
-  }
-
-  onConnect (abort, context) {
-    if (!this.callback) {
-      throw new RequestAbortedError$2()
-    }
-
-    this.abort = abort;
-    this.context = null;
-  }
-
-  onHeaders () {
-    throw new SocketError$1('bad upgrade', null)
-  }
-
-  onUpgrade (statusCode, rawHeaders, socket) {
-    const { callback, opaque, context } = this;
-
-    assert$1.strictEqual(statusCode, 101);
-
-    removeSignal$1(this);
-
-    this.callback = null;
-    const headers = this.responseHeaders === 'raw' ? util$6.parseRawHeaders(rawHeaders) : util$6.parseHeaders(rawHeaders);
-    this.runInAsyncScope(callback, null, null, {
-      headers,
-      socket,
-      opaque,
-      context
-    });
-  }
-
-  onError (err) {
-    const { callback, opaque } = this;
-
-    removeSignal$1(this);
-
-    if (callback) {
-      this.callback = null;
-      queueMicrotask(() => {
-        this.runInAsyncScope(callback, null, err, { opaque });
-      });
-    }
-  }
-}
-
-function upgrade (opts, callback) {
-  if (callback === undefined) {
-    return new Promise((resolve, reject) => {
-      upgrade.call(this, opts, (err, data) => {
-        return err ? reject(err) : resolve(data)
-      });
-    })
-  }
-
-  try {
-    const upgradeHandler = new UpgradeHandler(opts, callback);
-    this.dispatch({
-      ...opts,
-      method: opts.method || 'GET',
-      upgrade: opts.protocol || 'Websocket'
-    }, upgradeHandler);
-  } catch (err) {
-    if (typeof callback !== 'function') {
-      throw err
-    }
-    const opaque = opts && opts.opaque;
-    queueMicrotask(() => callback(err, { opaque }));
-  }
-}
-
-var apiUpgrade = upgrade;
-
-const { AsyncResource } = require$$4;
-const { InvalidArgumentError: InvalidArgumentError$7, RequestAbortedError: RequestAbortedError$1, SocketError } = errors$1;
-const util$5 = util$j;
-const { addSignal, removeSignal } = abortSignal;
-
-class ConnectHandler extends AsyncResource {
-  constructor (opts, callback) {
-    if (!opts || typeof opts !== 'object') {
-      throw new InvalidArgumentError$7('invalid opts')
-    }
-
-    if (typeof callback !== 'function') {
-      throw new InvalidArgumentError$7('invalid callback')
-    }
-
-    const { signal, opaque, responseHeaders } = opts;
-
-    if (signal && typeof signal.on !== 'function' && typeof signal.addEventListener !== 'function') {
-      throw new InvalidArgumentError$7('signal must be an EventEmitter or EventTarget')
-    }
-
-    super('UNDICI_CONNECT');
-
-    this.opaque = opaque || null;
-    this.responseHeaders = responseHeaders || null;
-    this.callback = callback;
-    this.abort = null;
-
-    addSignal(this, signal);
-  }
-
-  onConnect (abort, context) {
-    if (!this.callback) {
-      throw new RequestAbortedError$1()
-    }
-
-    this.abort = abort;
-    this.context = context;
-  }
-
-  onHeaders () {
-    throw new SocketError('bad connect', null)
-  }
-
-  onUpgrade (statusCode, rawHeaders, socket) {
-    const { callback, opaque, context } = this;
-
-    removeSignal(this);
-
-    this.callback = null;
-
-    let headers = rawHeaders;
-    // Indicates is an HTTP2Session
-    if (headers != null) {
-      headers = this.responseHeaders === 'raw' ? util$5.parseRawHeaders(rawHeaders) : util$5.parseHeaders(rawHeaders);
-    }
-
-    this.runInAsyncScope(callback, null, null, {
-      statusCode,
-      headers,
-      socket,
-      opaque,
-      context
-    });
-  }
-
-  onError (err) {
-    const { callback, opaque } = this;
-
-    removeSignal(this);
-
-    if (callback) {
-      this.callback = null;
-      queueMicrotask(() => {
-        this.runInAsyncScope(callback, null, err, { opaque });
-      });
-    }
-  }
-}
-
-function connect (opts, callback) {
-  if (callback === undefined) {
-    return new Promise((resolve, reject) => {
-      connect.call(this, opts, (err, data) => {
-        return err ? reject(err) : resolve(data)
-      });
-    })
-  }
-
-  try {
-    const connectHandler = new ConnectHandler(opts, callback);
-    this.dispatch({ ...opts, method: 'CONNECT' }, connectHandler);
-  } catch (err) {
-    if (typeof callback !== 'function') {
-      throw err
-    }
-    const opaque = opts && opts.opaque;
-    queueMicrotask(() => callback(err, { opaque }));
-  }
-}
-
-var apiConnect = connect;
-
-api$1.request = apiRequestExports;
-api$1.stream = apiStream;
-api$1.pipeline = apiPipeline;
-api$1.upgrade = apiUpgrade;
-api$1.connect = apiConnect;
-
-const { UndiciError: UndiciError$1 } = errors$1;
-
-let MockNotMatchedError$1 = class MockNotMatchedError extends UndiciError$1 {
-  constructor (message) {
-    super(message);
-    Error.captureStackTrace(this, MockNotMatchedError);
-    this.name = 'MockNotMatchedError';
-    this.message = message || 'The request does not match any registered mock dispatches';
-    this.code = 'UND_MOCK_ERR_MOCK_NOT_MATCHED';
-  }
-};
-
-var mockErrors$1 = {
-  MockNotMatchedError: MockNotMatchedError$1
-};
-
-var mockSymbols = {
-  kAgent: Symbol('agent'),
-  kOptions: Symbol('options'),
-  kFactory: Symbol('factory'),
-  kDispatches: Symbol('dispatches'),
-  kDispatchKey: Symbol('dispatch key'),
-  kDefaultHeaders: Symbol('default headers'),
-  kDefaultTrailers: Symbol('default trailers'),
-  kContentLength: Symbol('content length'),
-  kMockAgent: Symbol('mock agent'),
-  kMockAgentSet: Symbol('mock agent set'),
-  kMockAgentGet: Symbol('mock agent get'),
-  kMockDispatch: Symbol('mock dispatch'),
-  kClose: Symbol('close'),
-  kOriginalClose: Symbol('original agent close'),
-  kOrigin: Symbol('origin'),
-  kIsMockActive: Symbol('is mock active'),
-  kNetConnect: Symbol('net connect'),
-  kGetNetConnect: Symbol('get net connect'),
-  kConnected: Symbol('connected')
-};
-
-const { MockNotMatchedError } = mockErrors$1;
-const {
-  kDispatches: kDispatches$4,
-  kMockAgent: kMockAgent$2,
-  kOriginalDispatch: kOriginalDispatch$2,
-  kOrigin: kOrigin$2,
-  kGetNetConnect: kGetNetConnect$1
-} = mockSymbols;
-const { buildURL: buildURL$1, nop } = util$j;
-const { STATUS_CODES } = require$$2$1;
-const {
-  types: {
-    isPromise
-  }
-} = require$$1;
-
-function matchValue$1 (match, value) {
-  if (typeof match === 'string') {
-    return match === value
-  }
-  if (match instanceof RegExp) {
-    return match.test(value)
-  }
-  if (typeof match === 'function') {
-    return match(value) === true
-  }
-  return false
-}
-
-function lowerCaseEntries (headers) {
-  return Object.fromEntries(
-    Object.entries(headers).map(([headerName, headerValue]) => {
-      return [headerName.toLocaleLowerCase(), headerValue]
-    })
-  )
-}
-
-/**
- * @param {import('../../index').Headers|string[]|Record<string, string>} headers
- * @param {string} key
- */
-function getHeaderByName (headers, key) {
-  if (Array.isArray(headers)) {
-    for (let i = 0; i < headers.length; i += 2) {
-      if (headers[i].toLocaleLowerCase() === key.toLocaleLowerCase()) {
-        return headers[i + 1]
-      }
-    }
-
-    return undefined
-  } else if (typeof headers.get === 'function') {
-    return headers.get(key)
-  } else {
-    return lowerCaseEntries(headers)[key.toLocaleLowerCase()]
-  }
-}
-
-/** @param {string[]} headers */
-function buildHeadersFromArray (headers) { // fetch HeadersList
-  const clone = headers.slice();
-  const entries = [];
-  for (let index = 0; index < clone.length; index += 2) {
-    entries.push([clone[index], clone[index + 1]]);
-  }
-  return Object.fromEntries(entries)
-}
-
-function matchHeaders (mockDispatch, headers) {
-  if (typeof mockDispatch.headers === 'function') {
-    if (Array.isArray(headers)) { // fetch HeadersList
-      headers = buildHeadersFromArray(headers);
-    }
-    return mockDispatch.headers(headers ? lowerCaseEntries(headers) : {})
-  }
-  if (typeof mockDispatch.headers === 'undefined') {
-    return true
-  }
-  if (typeof headers !== 'object' || typeof mockDispatch.headers !== 'object') {
-    return false
-  }
-
-  for (const [matchHeaderName, matchHeaderValue] of Object.entries(mockDispatch.headers)) {
-    const headerValue = getHeaderByName(headers, matchHeaderName);
-
-    if (!matchValue$1(matchHeaderValue, headerValue)) {
-      return false
-    }
-  }
-  return true
-}
-
-function safeUrl (path) {
-  if (typeof path !== 'string') {
-    return path
-  }
-
-  const pathSegments = path.split('?');
-
-  if (pathSegments.length !== 2) {
-    return path
-  }
-
-  const qp = new URLSearchParams(pathSegments.pop());
-  qp.sort();
-  return [...pathSegments, qp.toString()].join('?')
-}
-
-function matchKey (mockDispatch, { path, method, body, headers }) {
-  const pathMatch = matchValue$1(mockDispatch.path, path);
-  const methodMatch = matchValue$1(mockDispatch.method, method);
-  const bodyMatch = typeof mockDispatch.body !== 'undefined' ? matchValue$1(mockDispatch.body, body) : true;
-  const headersMatch = matchHeaders(mockDispatch, headers);
-  return pathMatch && methodMatch && bodyMatch && headersMatch
-}
-
-function getResponseData$2 (data) {
-  if (Buffer.isBuffer(data)) {
-    return data
-  } else if (typeof data === 'object') {
-    return JSON.stringify(data)
-  } else {
-    return data.toString()
-  }
-}
-
-function getMockDispatch (mockDispatches, key) {
-  const basePath = key.query ? buildURL$1(key.path, key.query) : key.path;
-  const resolvedPath = typeof basePath === 'string' ? safeUrl(basePath) : basePath;
-
-  // Match path
-  let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path }) => matchValue$1(safeUrl(path), resolvedPath));
-  if (matchedMockDispatches.length === 0) {
-    throw new MockNotMatchedError(`Mock dispatch not matched for path '${resolvedPath}'`)
-  }
-
-  // Match method
-  matchedMockDispatches = matchedMockDispatches.filter(({ method }) => matchValue$1(method, key.method));
-  if (matchedMockDispatches.length === 0) {
-    throw new MockNotMatchedError(`Mock dispatch not matched for method '${key.method}'`)
-  }
-
-  // Match body
-  matchedMockDispatches = matchedMockDispatches.filter(({ body }) => typeof body !== 'undefined' ? matchValue$1(body, key.body) : true);
-  if (matchedMockDispatches.length === 0) {
-    throw new MockNotMatchedError(`Mock dispatch not matched for body '${key.body}'`)
-  }
-
-  // Match headers
-  matchedMockDispatches = matchedMockDispatches.filter((mockDispatch) => matchHeaders(mockDispatch, key.headers));
-  if (matchedMockDispatches.length === 0) {
-    throw new MockNotMatchedError(`Mock dispatch not matched for headers '${typeof key.headers === 'object' ? JSON.stringify(key.headers) : key.headers}'`)
-  }
-
-  return matchedMockDispatches[0]
-}
-
-function addMockDispatch$1 (mockDispatches, key, data) {
-  const baseData = { timesInvoked: 0, times: 1, persist: false, consumed: false };
-  const replyData = typeof data === 'function' ? { callback: data } : { ...data };
-  const newMockDispatch = { ...baseData, ...key, pending: true, data: { error: null, ...replyData } };
-  mockDispatches.push(newMockDispatch);
-  return newMockDispatch
-}
-
-function deleteMockDispatch (mockDispatches, key) {
-  const index = mockDispatches.findIndex(dispatch => {
-    if (!dispatch.consumed) {
-      return false
-    }
-    return matchKey(dispatch, key)
-  });
-  if (index !== -1) {
-    mockDispatches.splice(index, 1);
-  }
-}
-
-function buildKey$1 (opts) {
-  const { path, method, body, headers, query } = opts;
-  return {
-    path,
-    method,
-    body,
-    headers,
-    query
-  }
-}
-
-function generateKeyValues (data) {
-  return Object.entries(data).reduce((keyValuePairs, [key, value]) => [
-    ...keyValuePairs,
-    Buffer.from(`${key}`),
-    Array.isArray(value) ? value.map(x => Buffer.from(`${x}`)) : Buffer.from(`${value}`)
-  ], [])
-}
-
-/**
- * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
- * @param {number} statusCode
- */
-function getStatusText (statusCode) {
-  return STATUS_CODES[statusCode] || 'unknown'
-}
-
-async function getResponse (body) {
-  const buffers = [];
-  for await (const data of body) {
-    buffers.push(data);
-  }
-  return Buffer.concat(buffers).toString('utf8')
-}
-
-/**
- * Mock dispatch function used to simulate undici dispatches
- */
-function mockDispatch (opts, handler) {
-  // Get mock dispatch from built key
-  const key = buildKey$1(opts);
-  const mockDispatch = getMockDispatch(this[kDispatches$4], key);
-
-  mockDispatch.timesInvoked++;
-
-  // Here's where we resolve a callback if a callback is present for the dispatch data.
-  if (mockDispatch.data.callback) {
-    mockDispatch.data = { ...mockDispatch.data, ...mockDispatch.data.callback(opts) };
-  }
-
-  // Parse mockDispatch data
-  const { data: { statusCode, data, headers, trailers, error }, delay, persist } = mockDispatch;
-  const { timesInvoked, times } = mockDispatch;
-
-  // If it's used up and not persistent, mark as consumed
-  mockDispatch.consumed = !persist && timesInvoked >= times;
-  mockDispatch.pending = timesInvoked < times;
-
-  // If specified, trigger dispatch error
-  if (error !== null) {
-    deleteMockDispatch(this[kDispatches$4], key);
-    handler.onError(error);
-    return true
-  }
-
-  // Handle the request with a delay if necessary
-  if (typeof delay === 'number' && delay > 0) {
-    setTimeout(() => {
-      handleReply(this[kDispatches$4]);
-    }, delay);
-  } else {
-    handleReply(this[kDispatches$4]);
-  }
-
-  function handleReply (mockDispatches, _data = data) {
-    // fetch's HeadersList is a 1D string array
-    const optsHeaders = Array.isArray(opts.headers)
-      ? buildHeadersFromArray(opts.headers)
-      : opts.headers;
-    const body = typeof _data === 'function'
-      ? _data({ ...opts, headers: optsHeaders })
-      : _data;
-
-    // util.types.isPromise is likely needed for jest.
-    if (isPromise(body)) {
-      // If handleReply is asynchronous, throwing an error
-      // in the callback will reject the promise, rather than
-      // synchronously throw the error, which breaks some tests.
-      // Rather, we wait for the callback to resolve if it is a
-      // promise, and then re-run handleReply with the new body.
-      body.then((newData) => handleReply(mockDispatches, newData));
-      return
-    }
-
-    const responseData = getResponseData$2(body);
-    const responseHeaders = generateKeyValues(headers);
-    const responseTrailers = generateKeyValues(trailers);
-
-    handler.abort = nop;
-    handler.onHeaders(statusCode, responseHeaders, resume, getStatusText(statusCode));
-    handler.onData(Buffer.from(responseData));
-    handler.onComplete(responseTrailers);
-    deleteMockDispatch(mockDispatches, key);
-  }
-
-  function resume () {}
-
-  return true
-}
-
-function buildMockDispatch$2 () {
-  const agent = this[kMockAgent$2];
-  const origin = this[kOrigin$2];
-  const originalDispatch = this[kOriginalDispatch$2];
-
-  return function dispatch (opts, handler) {
-    if (agent.isMockActive) {
-      try {
-        mockDispatch.call(this, opts, handler);
-      } catch (error) {
-        if (error instanceof MockNotMatchedError) {
-          const netConnect = agent[kGetNetConnect$1]();
-          if (netConnect === false) {
-            throw new MockNotMatchedError(`${error.message}: subsequent request to origin ${origin} was not allowed (net.connect disabled)`)
-          }
-          if (checkNetConnect(netConnect, origin)) {
-            originalDispatch.call(this, opts, handler);
-          } else {
-            throw new MockNotMatchedError(`${error.message}: subsequent request to origin ${origin} was not allowed (net.connect is not enabled for this origin)`)
-          }
-        } else {
-          throw error
-        }
-      }
-    } else {
-      originalDispatch.call(this, opts, handler);
-    }
-  }
-}
-
-function checkNetConnect (netConnect, origin) {
-  const url = new URL(origin);
-  if (netConnect === true) {
-    return true
-  } else if (Array.isArray(netConnect) && netConnect.some((matcher) => matchValue$1(matcher, url.host))) {
-    return true
-  }
-  return false
-}
-
-function buildMockOptions$1 (opts) {
-  if (opts) {
-    const { agent, ...mockOptions } = opts;
-    return mockOptions
-  }
-}
-
-var mockUtils = {
-  getResponseData: getResponseData$2,
-  getMockDispatch,
-  addMockDispatch: addMockDispatch$1,
-  deleteMockDispatch,
-  buildKey: buildKey$1,
-  generateKeyValues,
-  matchValue: matchValue$1,
-  getResponse,
-  getStatusText,
-  mockDispatch,
-  buildMockDispatch: buildMockDispatch$2,
-  checkNetConnect,
-  buildMockOptions: buildMockOptions$1,
-  getHeaderByName
-};
 
 var mockInterceptor = {};
 
-const { getResponseData: getResponseData$1, buildKey, addMockDispatch } = mockUtils;
-const {
-  kDispatches: kDispatches$3,
-  kDispatchKey,
-  kDefaultHeaders,
-  kDefaultTrailers,
-  kContentLength,
-  kMockDispatch
-} = mockSymbols;
-const { InvalidArgumentError: InvalidArgumentError$6 } = errors$1;
-const { buildURL } = util$j;
+var hasRequiredMockInterceptor;
 
-/**
- * Defines the scope API for an interceptor reply
- */
-class MockScope {
-  constructor (mockDispatch) {
-    this[kMockDispatch] = mockDispatch;
-  }
+function requireMockInterceptor () {
+	if (hasRequiredMockInterceptor) return mockInterceptor;
+	hasRequiredMockInterceptor = 1;
 
-  /**
-   * Delay a reply by a set amount in ms.
-   */
-  delay (waitInMs) {
-    if (typeof waitInMs !== 'number' || !Number.isInteger(waitInMs) || waitInMs <= 0) {
-      throw new InvalidArgumentError$6('waitInMs must be a valid integer > 0')
-    }
+	const { getResponseData, buildKey, addMockDispatch } = requireMockUtils();
+	const {
+	  kDispatches,
+	  kDispatchKey,
+	  kDefaultHeaders,
+	  kDefaultTrailers,
+	  kContentLength,
+	  kMockDispatch
+	} = requireMockSymbols();
+	const { InvalidArgumentError } = requireErrors();
+	const { buildURL } = requireUtil$6();
 
-    this[kMockDispatch].delay = waitInMs;
-    return this
-  }
+	/**
+	 * Defines the scope API for an interceptor reply
+	 */
+	class MockScope {
+	  constructor (mockDispatch) {
+	    this[kMockDispatch] = mockDispatch;
+	  }
 
-  /**
-   * For a defined reply, never mark as consumed.
-   */
-  persist () {
-    this[kMockDispatch].persist = true;
-    return this
-  }
+	  /**
+	   * Delay a reply by a set amount in ms.
+	   */
+	  delay (waitInMs) {
+	    if (typeof waitInMs !== 'number' || !Number.isInteger(waitInMs) || waitInMs <= 0) {
+	      throw new InvalidArgumentError('waitInMs must be a valid integer > 0')
+	    }
 
-  /**
-   * Allow one to define a reply for a set amount of matching requests.
-   */
-  times (repeatTimes) {
-    if (typeof repeatTimes !== 'number' || !Number.isInteger(repeatTimes) || repeatTimes <= 0) {
-      throw new InvalidArgumentError$6('repeatTimes must be a valid integer > 0')
-    }
+	    this[kMockDispatch].delay = waitInMs;
+	    return this
+	  }
 
-    this[kMockDispatch].times = repeatTimes;
-    return this
-  }
+	  /**
+	   * For a defined reply, never mark as consumed.
+	   */
+	  persist () {
+	    this[kMockDispatch].persist = true;
+	    return this
+	  }
+
+	  /**
+	   * Allow one to define a reply for a set amount of matching requests.
+	   */
+	  times (repeatTimes) {
+	    if (typeof repeatTimes !== 'number' || !Number.isInteger(repeatTimes) || repeatTimes <= 0) {
+	      throw new InvalidArgumentError('repeatTimes must be a valid integer > 0')
+	    }
+
+	    this[kMockDispatch].times = repeatTimes;
+	    return this
+	  }
+	}
+
+	/**
+	 * Defines an interceptor for a Mock
+	 */
+	class MockInterceptor {
+	  constructor (opts, mockDispatches) {
+	    if (typeof opts !== 'object') {
+	      throw new InvalidArgumentError('opts must be an object')
+	    }
+	    if (typeof opts.path === 'undefined') {
+	      throw new InvalidArgumentError('opts.path must be defined')
+	    }
+	    if (typeof opts.method === 'undefined') {
+	      opts.method = 'GET';
+	    }
+	    // See https://github.com/nodejs/undici/issues/1245
+	    // As per RFC 3986, clients are not supposed to send URI
+	    // fragments to servers when they retrieve a document,
+	    if (typeof opts.path === 'string') {
+	      if (opts.query) {
+	        opts.path = buildURL(opts.path, opts.query);
+	      } else {
+	        // Matches https://github.com/nodejs/undici/blob/main/lib/fetch/index.js#L1811
+	        const parsedURL = new URL(opts.path, 'data://');
+	        opts.path = parsedURL.pathname + parsedURL.search;
+	      }
+	    }
+	    if (typeof opts.method === 'string') {
+	      opts.method = opts.method.toUpperCase();
+	    }
+
+	    this[kDispatchKey] = buildKey(opts);
+	    this[kDispatches] = mockDispatches;
+	    this[kDefaultHeaders] = {};
+	    this[kDefaultTrailers] = {};
+	    this[kContentLength] = false;
+	  }
+
+	  createMockScopeDispatchData (statusCode, data, responseOptions = {}) {
+	    const responseData = getResponseData(data);
+	    const contentLength = this[kContentLength] ? { 'content-length': responseData.length } : {};
+	    const headers = { ...this[kDefaultHeaders], ...contentLength, ...responseOptions.headers };
+	    const trailers = { ...this[kDefaultTrailers], ...responseOptions.trailers };
+
+	    return { statusCode, data, headers, trailers }
+	  }
+
+	  validateReplyParameters (statusCode, data, responseOptions) {
+	    if (typeof statusCode === 'undefined') {
+	      throw new InvalidArgumentError('statusCode must be defined')
+	    }
+	    if (typeof data === 'undefined') {
+	      throw new InvalidArgumentError('data must be defined')
+	    }
+	    if (typeof responseOptions !== 'object') {
+	      throw new InvalidArgumentError('responseOptions must be an object')
+	    }
+	  }
+
+	  /**
+	   * Mock an undici request with a defined reply.
+	   */
+	  reply (replyData) {
+	    // Values of reply aren't available right now as they
+	    // can only be available when the reply callback is invoked.
+	    if (typeof replyData === 'function') {
+	      // We'll first wrap the provided callback in another function,
+	      // this function will properly resolve the data from the callback
+	      // when invoked.
+	      const wrappedDefaultsCallback = (opts) => {
+	        // Our reply options callback contains the parameter for statusCode, data and options.
+	        const resolvedData = replyData(opts);
+
+	        // Check if it is in the right format
+	        if (typeof resolvedData !== 'object') {
+	          throw new InvalidArgumentError('reply options callback must return an object')
+	        }
+
+	        const { statusCode, data = '', responseOptions = {} } = resolvedData;
+	        this.validateReplyParameters(statusCode, data, responseOptions);
+	        // Since the values can be obtained immediately we return them
+	        // from this higher order function that will be resolved later.
+	        return {
+	          ...this.createMockScopeDispatchData(statusCode, data, responseOptions)
+	        }
+	      };
+
+	      // Add usual dispatch data, but this time set the data parameter to function that will eventually provide data.
+	      const newMockDispatch = addMockDispatch(this[kDispatches], this[kDispatchKey], wrappedDefaultsCallback);
+	      return new MockScope(newMockDispatch)
+	    }
+
+	    // We can have either one or three parameters, if we get here,
+	    // we should have 1-3 parameters. So we spread the arguments of
+	    // this function to obtain the parameters, since replyData will always
+	    // just be the statusCode.
+	    const [statusCode, data = '', responseOptions = {}] = [...arguments];
+	    this.validateReplyParameters(statusCode, data, responseOptions);
+
+	    // Send in-already provided data like usual
+	    const dispatchData = this.createMockScopeDispatchData(statusCode, data, responseOptions);
+	    const newMockDispatch = addMockDispatch(this[kDispatches], this[kDispatchKey], dispatchData);
+	    return new MockScope(newMockDispatch)
+	  }
+
+	  /**
+	   * Mock an undici request with a defined error.
+	   */
+	  replyWithError (error) {
+	    if (typeof error === 'undefined') {
+	      throw new InvalidArgumentError('error must be defined')
+	    }
+
+	    const newMockDispatch = addMockDispatch(this[kDispatches], this[kDispatchKey], { error });
+	    return new MockScope(newMockDispatch)
+	  }
+
+	  /**
+	   * Set default reply headers on the interceptor for subsequent replies
+	   */
+	  defaultReplyHeaders (headers) {
+	    if (typeof headers === 'undefined') {
+	      throw new InvalidArgumentError('headers must be defined')
+	    }
+
+	    this[kDefaultHeaders] = headers;
+	    return this
+	  }
+
+	  /**
+	   * Set default reply trailers on the interceptor for subsequent replies
+	   */
+	  defaultReplyTrailers (trailers) {
+	    if (typeof trailers === 'undefined') {
+	      throw new InvalidArgumentError('trailers must be defined')
+	    }
+
+	    this[kDefaultTrailers] = trailers;
+	    return this
+	  }
+
+	  /**
+	   * Set reply content length header for replies on the interceptor
+	   */
+	  replyContentLength () {
+	    this[kContentLength] = true;
+	    return this
+	  }
+	}
+
+	mockInterceptor.MockInterceptor = MockInterceptor;
+	mockInterceptor.MockScope = MockScope;
+	return mockInterceptor;
 }
 
-/**
- * Defines an interceptor for a Mock
- */
-let MockInterceptor$2 = class MockInterceptor {
-  constructor (opts, mockDispatches) {
-    if (typeof opts !== 'object') {
-      throw new InvalidArgumentError$6('opts must be an object')
-    }
-    if (typeof opts.path === 'undefined') {
-      throw new InvalidArgumentError$6('opts.path must be defined')
-    }
-    if (typeof opts.method === 'undefined') {
-      opts.method = 'GET';
-    }
-    // See https://github.com/nodejs/undici/issues/1245
-    // As per RFC 3986, clients are not supposed to send URI
-    // fragments to servers when they retrieve a document,
-    if (typeof opts.path === 'string') {
-      if (opts.query) {
-        opts.path = buildURL(opts.path, opts.query);
-      } else {
-        // Matches https://github.com/nodejs/undici/blob/main/lib/fetch/index.js#L1811
-        const parsedURL = new URL(opts.path, 'data://');
-        opts.path = parsedURL.pathname + parsedURL.search;
-      }
-    }
-    if (typeof opts.method === 'string') {
-      opts.method = opts.method.toUpperCase();
-    }
+var mockClient;
+var hasRequiredMockClient;
 
-    this[kDispatchKey] = buildKey(opts);
-    this[kDispatches$3] = mockDispatches;
-    this[kDefaultHeaders] = {};
-    this[kDefaultTrailers] = {};
-    this[kContentLength] = false;
-  }
+function requireMockClient () {
+	if (hasRequiredMockClient) return mockClient;
+	hasRequiredMockClient = 1;
 
-  createMockScopeDispatchData (statusCode, data, responseOptions = {}) {
-    const responseData = getResponseData$1(data);
-    const contentLength = this[kContentLength] ? { 'content-length': responseData.length } : {};
-    const headers = { ...this[kDefaultHeaders], ...contentLength, ...responseOptions.headers };
-    const trailers = { ...this[kDefaultTrailers], ...responseOptions.trailers };
+	const { promisify } = require$$1$1;
+	const Client = requireClient();
+	const { buildMockDispatch } = requireMockUtils();
+	const {
+	  kDispatches,
+	  kMockAgent,
+	  kClose,
+	  kOriginalClose,
+	  kOrigin,
+	  kOriginalDispatch,
+	  kConnected
+	} = requireMockSymbols();
+	const { MockInterceptor } = requireMockInterceptor();
+	const Symbols = requireSymbols$4();
+	const { InvalidArgumentError } = requireErrors();
 
-    return { statusCode, data, headers, trailers }
-  }
+	/**
+	 * MockClient provides an API that extends the Client to influence the mockDispatches.
+	 */
+	class MockClient extends Client {
+	  constructor (origin, opts) {
+	    super(origin, opts);
 
-  validateReplyParameters (statusCode, data, responseOptions) {
-    if (typeof statusCode === 'undefined') {
-      throw new InvalidArgumentError$6('statusCode must be defined')
-    }
-    if (typeof data === 'undefined') {
-      throw new InvalidArgumentError$6('data must be defined')
-    }
-    if (typeof responseOptions !== 'object') {
-      throw new InvalidArgumentError$6('responseOptions must be an object')
-    }
-  }
+	    if (!opts || !opts.agent || typeof opts.agent.dispatch !== 'function') {
+	      throw new InvalidArgumentError('Argument opts.agent must implement Agent')
+	    }
 
-  /**
-   * Mock an undici request with a defined reply.
-   */
-  reply (replyData) {
-    // Values of reply aren't available right now as they
-    // can only be available when the reply callback is invoked.
-    if (typeof replyData === 'function') {
-      // We'll first wrap the provided callback in another function,
-      // this function will properly resolve the data from the callback
-      // when invoked.
-      const wrappedDefaultsCallback = (opts) => {
-        // Our reply options callback contains the parameter for statusCode, data and options.
-        const resolvedData = replyData(opts);
+	    this[kMockAgent] = opts.agent;
+	    this[kOrigin] = origin;
+	    this[kDispatches] = [];
+	    this[kConnected] = 1;
+	    this[kOriginalDispatch] = this.dispatch;
+	    this[kOriginalClose] = this.close.bind(this);
 
-        // Check if it is in the right format
-        if (typeof resolvedData !== 'object') {
-          throw new InvalidArgumentError$6('reply options callback must return an object')
-        }
+	    this.dispatch = buildMockDispatch.call(this);
+	    this.close = this[kClose];
+	  }
 
-        const { statusCode, data = '', responseOptions = {} } = resolvedData;
-        this.validateReplyParameters(statusCode, data, responseOptions);
-        // Since the values can be obtained immediately we return them
-        // from this higher order function that will be resolved later.
-        return {
-          ...this.createMockScopeDispatchData(statusCode, data, responseOptions)
-        }
-      };
+	  get [Symbols.kConnected] () {
+	    return this[kConnected]
+	  }
 
-      // Add usual dispatch data, but this time set the data parameter to function that will eventually provide data.
-      const newMockDispatch = addMockDispatch(this[kDispatches$3], this[kDispatchKey], wrappedDefaultsCallback);
-      return new MockScope(newMockDispatch)
-    }
+	  /**
+	   * Sets up the base interceptor for mocking replies from undici.
+	   */
+	  intercept (opts) {
+	    return new MockInterceptor(opts, this[kDispatches])
+	  }
 
-    // We can have either one or three parameters, if we get here,
-    // we should have 1-3 parameters. So we spread the arguments of
-    // this function to obtain the parameters, since replyData will always
-    // just be the statusCode.
-    const [statusCode, data = '', responseOptions = {}] = [...arguments];
-    this.validateReplyParameters(statusCode, data, responseOptions);
+	  async [kClose] () {
+	    await promisify(this[kOriginalClose])();
+	    this[kConnected] = 0;
+	    this[kMockAgent][Symbols.kClients].delete(this[kOrigin]);
+	  }
+	}
 
-    // Send in-already provided data like usual
-    const dispatchData = this.createMockScopeDispatchData(statusCode, data, responseOptions);
-    const newMockDispatch = addMockDispatch(this[kDispatches$3], this[kDispatchKey], dispatchData);
-    return new MockScope(newMockDispatch)
-  }
-
-  /**
-   * Mock an undici request with a defined error.
-   */
-  replyWithError (error) {
-    if (typeof error === 'undefined') {
-      throw new InvalidArgumentError$6('error must be defined')
-    }
-
-    const newMockDispatch = addMockDispatch(this[kDispatches$3], this[kDispatchKey], { error });
-    return new MockScope(newMockDispatch)
-  }
-
-  /**
-   * Set default reply headers on the interceptor for subsequent replies
-   */
-  defaultReplyHeaders (headers) {
-    if (typeof headers === 'undefined') {
-      throw new InvalidArgumentError$6('headers must be defined')
-    }
-
-    this[kDefaultHeaders] = headers;
-    return this
-  }
-
-  /**
-   * Set default reply trailers on the interceptor for subsequent replies
-   */
-  defaultReplyTrailers (trailers) {
-    if (typeof trailers === 'undefined') {
-      throw new InvalidArgumentError$6('trailers must be defined')
-    }
-
-    this[kDefaultTrailers] = trailers;
-    return this
-  }
-
-  /**
-   * Set reply content length header for replies on the interceptor
-   */
-  replyContentLength () {
-    this[kContentLength] = true;
-    return this
-  }
-};
-
-mockInterceptor.MockInterceptor = MockInterceptor$2;
-mockInterceptor.MockScope = MockScope;
-
-const { promisify: promisify$1 } = require$$1;
-const Client$1 = client;
-const { buildMockDispatch: buildMockDispatch$1 } = mockUtils;
-const {
-  kDispatches: kDispatches$2,
-  kMockAgent: kMockAgent$1,
-  kClose: kClose$2,
-  kOriginalClose: kOriginalClose$1,
-  kOrigin: kOrigin$1,
-  kOriginalDispatch: kOriginalDispatch$1,
-  kConnected: kConnected$1
-} = mockSymbols;
-const { MockInterceptor: MockInterceptor$1 } = mockInterceptor;
-const Symbols$1 = symbols$4;
-const { InvalidArgumentError: InvalidArgumentError$5 } = errors$1;
-
-/**
- * MockClient provides an API that extends the Client to influence the mockDispatches.
- */
-let MockClient$2 = class MockClient extends Client$1 {
-  constructor (origin, opts) {
-    super(origin, opts);
-
-    if (!opts || !opts.agent || typeof opts.agent.dispatch !== 'function') {
-      throw new InvalidArgumentError$5('Argument opts.agent must implement Agent')
-    }
-
-    this[kMockAgent$1] = opts.agent;
-    this[kOrigin$1] = origin;
-    this[kDispatches$2] = [];
-    this[kConnected$1] = 1;
-    this[kOriginalDispatch$1] = this.dispatch;
-    this[kOriginalClose$1] = this.close.bind(this);
-
-    this.dispatch = buildMockDispatch$1.call(this);
-    this.close = this[kClose$2];
-  }
-
-  get [Symbols$1.kConnected] () {
-    return this[kConnected$1]
-  }
-
-  /**
-   * Sets up the base interceptor for mocking replies from undici.
-   */
-  intercept (opts) {
-    return new MockInterceptor$1(opts, this[kDispatches$2])
-  }
-
-  async [kClose$2] () {
-    await promisify$1(this[kOriginalClose$1])();
-    this[kConnected$1] = 0;
-    this[kMockAgent$1][Symbols$1.kClients].delete(this[kOrigin$1]);
-  }
-};
-
-var mockClient = MockClient$2;
-
-const { promisify } = require$$1;
-const Pool$2 = pool;
-const { buildMockDispatch } = mockUtils;
-const {
-  kDispatches: kDispatches$1,
-  kMockAgent,
-  kClose: kClose$1,
-  kOriginalClose,
-  kOrigin,
-  kOriginalDispatch,
-  kConnected
-} = mockSymbols;
-const { MockInterceptor } = mockInterceptor;
-const Symbols = symbols$4;
-const { InvalidArgumentError: InvalidArgumentError$4 } = errors$1;
-
-/**
- * MockPool provides an API that extends the Pool to influence the mockDispatches.
- */
-let MockPool$2 = class MockPool extends Pool$2 {
-  constructor (origin, opts) {
-    super(origin, opts);
-
-    if (!opts || !opts.agent || typeof opts.agent.dispatch !== 'function') {
-      throw new InvalidArgumentError$4('Argument opts.agent must implement Agent')
-    }
-
-    this[kMockAgent] = opts.agent;
-    this[kOrigin] = origin;
-    this[kDispatches$1] = [];
-    this[kConnected] = 1;
-    this[kOriginalDispatch] = this.dispatch;
-    this[kOriginalClose] = this.close.bind(this);
-
-    this.dispatch = buildMockDispatch.call(this);
-    this.close = this[kClose$1];
-  }
-
-  get [Symbols.kConnected] () {
-    return this[kConnected]
-  }
-
-  /**
-   * Sets up the base interceptor for mocking replies from undici.
-   */
-  intercept (opts) {
-    return new MockInterceptor(opts, this[kDispatches$1])
-  }
-
-  async [kClose$1] () {
-    await promisify(this[kOriginalClose])();
-    this[kConnected] = 0;
-    this[kMockAgent][Symbols.kClients].delete(this[kOrigin]);
-  }
-};
-
-var mockPool = MockPool$2;
-
-const singulars = {
-  pronoun: 'it',
-  is: 'is',
-  was: 'was',
-  this: 'this'
-};
-
-const plurals = {
-  pronoun: 'they',
-  is: 'are',
-  was: 'were',
-  this: 'these'
-};
-
-var pluralizer = class Pluralizer {
-  constructor (singular, plural) {
-    this.singular = singular;
-    this.plural = plural;
-  }
-
-  pluralize (count) {
-    const one = count === 1;
-    const keys = one ? singulars : plurals;
-    const noun = one ? this.singular : this.plural;
-    return { ...keys, count, noun }
-  }
-};
-
-const { Transform } = require$$0$4;
-const { Console } = require$$1$2;
-
-/**
- * Gets the output of `console.table(…)` as a string.
- */
-var pendingInterceptorsFormatter = class PendingInterceptorsFormatter {
-  constructor ({ disableColors } = {}) {
-    this.transform = new Transform({
-      transform (chunk, _enc, cb) {
-        cb(null, chunk);
-      }
-    });
-
-    this.logger = new Console({
-      stdout: this.transform,
-      inspectOptions: {
-        colors: !disableColors && !process.env.CI
-      }
-    });
-  }
-
-  format (pendingInterceptors) {
-    const withPrettyHeaders = pendingInterceptors.map(
-      ({ method, path, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
-        Method: method,
-        Origin: origin,
-        Path: path,
-        'Status code': statusCode,
-        Persistent: persist ? '✅' : '❌',
-        Invocations: timesInvoked,
-        Remaining: persist ? Infinity : times - timesInvoked
-      }));
-
-    this.logger.table(withPrettyHeaders);
-    return this.transform.read().toString()
-  }
-};
-
-const { kClients } = symbols$4;
-const Agent$3 = agent;
-const {
-  kAgent: kAgent$1,
-  kMockAgentSet,
-  kMockAgentGet,
-  kDispatches,
-  kIsMockActive,
-  kNetConnect,
-  kGetNetConnect,
-  kOptions,
-  kFactory
-} = mockSymbols;
-const MockClient$1 = mockClient;
-const MockPool$1 = mockPool;
-const { matchValue, buildMockOptions } = mockUtils;
-const { InvalidArgumentError: InvalidArgumentError$3, UndiciError } = errors$1;
-const Dispatcher$1 = dispatcher;
-const Pluralizer = pluralizer;
-const PendingInterceptorsFormatter = pendingInterceptorsFormatter;
-
-class FakeWeakRef {
-  constructor (value) {
-    this.value = value;
-  }
-
-  deref () {
-    return this.value
-  }
+	mockClient = MockClient;
+	return mockClient;
 }
 
-let MockAgent$1 = class MockAgent extends Dispatcher$1 {
-  constructor (opts) {
-    super(opts);
+var mockPool;
+var hasRequiredMockPool;
 
-    this[kNetConnect] = true;
-    this[kIsMockActive] = true;
+function requireMockPool () {
+	if (hasRequiredMockPool) return mockPool;
+	hasRequiredMockPool = 1;
 
-    // Instantiate Agent and encapsulate
-    if ((opts && opts.agent && typeof opts.agent.dispatch !== 'function')) {
-      throw new InvalidArgumentError$3('Argument opts.agent must implement Agent')
-    }
-    const agent = opts && opts.agent ? opts.agent : new Agent$3(opts);
-    this[kAgent$1] = agent;
+	const { promisify } = require$$1$1;
+	const Pool = requirePool();
+	const { buildMockDispatch } = requireMockUtils();
+	const {
+	  kDispatches,
+	  kMockAgent,
+	  kClose,
+	  kOriginalClose,
+	  kOrigin,
+	  kOriginalDispatch,
+	  kConnected
+	} = requireMockSymbols();
+	const { MockInterceptor } = requireMockInterceptor();
+	const Symbols = requireSymbols$4();
+	const { InvalidArgumentError } = requireErrors();
 
-    this[kClients] = agent[kClients];
-    this[kOptions] = buildMockOptions(opts);
-  }
+	/**
+	 * MockPool provides an API that extends the Pool to influence the mockDispatches.
+	 */
+	class MockPool extends Pool {
+	  constructor (origin, opts) {
+	    super(origin, opts);
 
-  get (origin) {
-    let dispatcher = this[kMockAgentGet](origin);
+	    if (!opts || !opts.agent || typeof opts.agent.dispatch !== 'function') {
+	      throw new InvalidArgumentError('Argument opts.agent must implement Agent')
+	    }
 
-    if (!dispatcher) {
-      dispatcher = this[kFactory](origin);
-      this[kMockAgentSet](origin, dispatcher);
-    }
-    return dispatcher
-  }
+	    this[kMockAgent] = opts.agent;
+	    this[kOrigin] = origin;
+	    this[kDispatches] = [];
+	    this[kConnected] = 1;
+	    this[kOriginalDispatch] = this.dispatch;
+	    this[kOriginalClose] = this.close.bind(this);
 
-  dispatch (opts, handler) {
-    // Call MockAgent.get to perform additional setup before dispatching as normal
-    this.get(opts.origin);
-    return this[kAgent$1].dispatch(opts, handler)
-  }
+	    this.dispatch = buildMockDispatch.call(this);
+	    this.close = this[kClose];
+	  }
 
-  async close () {
-    await this[kAgent$1].close();
-    this[kClients].clear();
-  }
+	  get [Symbols.kConnected] () {
+	    return this[kConnected]
+	  }
 
-  deactivate () {
-    this[kIsMockActive] = false;
-  }
+	  /**
+	   * Sets up the base interceptor for mocking replies from undici.
+	   */
+	  intercept (opts) {
+	    return new MockInterceptor(opts, this[kDispatches])
+	  }
 
-  activate () {
-    this[kIsMockActive] = true;
-  }
+	  async [kClose] () {
+	    await promisify(this[kOriginalClose])();
+	    this[kConnected] = 0;
+	    this[kMockAgent][Symbols.kClients].delete(this[kOrigin]);
+	  }
+	}
 
-  enableNetConnect (matcher) {
-    if (typeof matcher === 'string' || typeof matcher === 'function' || matcher instanceof RegExp) {
-      if (Array.isArray(this[kNetConnect])) {
-        this[kNetConnect].push(matcher);
-      } else {
-        this[kNetConnect] = [matcher];
-      }
-    } else if (typeof matcher === 'undefined') {
-      this[kNetConnect] = true;
-    } else {
-      throw new InvalidArgumentError$3('Unsupported matcher. Must be one of String|Function|RegExp.')
-    }
-  }
+	mockPool = MockPool;
+	return mockPool;
+}
 
-  disableNetConnect () {
-    this[kNetConnect] = false;
-  }
+var pluralizer;
+var hasRequiredPluralizer;
 
-  // This is required to bypass issues caused by using global symbols - see:
-  // https://github.com/nodejs/undici/issues/1447
-  get isMockActive () {
-    return this[kIsMockActive]
-  }
+function requirePluralizer () {
+	if (hasRequiredPluralizer) return pluralizer;
+	hasRequiredPluralizer = 1;
 
-  [kMockAgentSet] (origin, dispatcher) {
-    this[kClients].set(origin, new FakeWeakRef(dispatcher));
-  }
+	const singulars = {
+	  pronoun: 'it',
+	  is: 'is',
+	  was: 'was',
+	  this: 'this'
+	};
 
-  [kFactory] (origin) {
-    const mockOptions = Object.assign({ agent: this }, this[kOptions]);
-    return this[kOptions] && this[kOptions].connections === 1
-      ? new MockClient$1(origin, mockOptions)
-      : new MockPool$1(origin, mockOptions)
-  }
+	const plurals = {
+	  pronoun: 'they',
+	  is: 'are',
+	  was: 'were',
+	  this: 'these'
+	};
 
-  [kMockAgentGet] (origin) {
-    // First check if we can immediately find it
-    const ref = this[kClients].get(origin);
-    if (ref) {
-      return ref.deref()
-    }
+	pluralizer = class Pluralizer {
+	  constructor (singular, plural) {
+	    this.singular = singular;
+	    this.plural = plural;
+	  }
 
-    // If the origin is not a string create a dummy parent pool and return to user
-    if (typeof origin !== 'string') {
-      const dispatcher = this[kFactory]('http://localhost:9999');
-      this[kMockAgentSet](origin, dispatcher);
-      return dispatcher
-    }
+	  pluralize (count) {
+	    const one = count === 1;
+	    const keys = one ? singulars : plurals;
+	    const noun = one ? this.singular : this.plural;
+	    return { ...keys, count, noun }
+	  }
+	};
+	return pluralizer;
+}
 
-    // If we match, create a pool and assign the same dispatches
-    for (const [keyMatcher, nonExplicitRef] of Array.from(this[kClients])) {
-      const nonExplicitDispatcher = nonExplicitRef.deref();
-      if (nonExplicitDispatcher && typeof keyMatcher !== 'string' && matchValue(keyMatcher, origin)) {
-        const dispatcher = this[kFactory](origin);
-        this[kMockAgentSet](origin, dispatcher);
-        dispatcher[kDispatches] = nonExplicitDispatcher[kDispatches];
-        return dispatcher
-      }
-    }
-  }
+var pendingInterceptorsFormatter;
+var hasRequiredPendingInterceptorsFormatter;
 
-  [kGetNetConnect] () {
-    return this[kNetConnect]
-  }
+function requirePendingInterceptorsFormatter () {
+	if (hasRequiredPendingInterceptorsFormatter) return pendingInterceptorsFormatter;
+	hasRequiredPendingInterceptorsFormatter = 1;
 
-  pendingInterceptors () {
-    const mockAgentClients = this[kClients];
+	const { Transform } = require$$0$4;
+	const { Console } = require$$1$2;
 
-    return Array.from(mockAgentClients.entries())
-      .flatMap(([origin, scope]) => scope.deref()[kDispatches].map(dispatch => ({ ...dispatch, origin })))
-      .filter(({ pending }) => pending)
-  }
+	/**
+	 * Gets the output of `console.table(…)` as a string.
+	 */
+	pendingInterceptorsFormatter = class PendingInterceptorsFormatter {
+	  constructor ({ disableColors } = {}) {
+	    this.transform = new Transform({
+	      transform (chunk, _enc, cb) {
+	        cb(null, chunk);
+	      }
+	    });
 
-  assertNoPendingInterceptors ({ pendingInterceptorsFormatter = new PendingInterceptorsFormatter() } = {}) {
-    const pending = this.pendingInterceptors();
+	    this.logger = new Console({
+	      stdout: this.transform,
+	      inspectOptions: {
+	        colors: !disableColors && !process.env.CI
+	      }
+	    });
+	  }
 
-    if (pending.length === 0) {
-      return
-    }
+	  format (pendingInterceptors) {
+	    const withPrettyHeaders = pendingInterceptors.map(
+	      ({ method, path, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
+	        Method: method,
+	        Origin: origin,
+	        Path: path,
+	        'Status code': statusCode,
+	        Persistent: persist ? '✅' : '❌',
+	        Invocations: timesInvoked,
+	        Remaining: persist ? Infinity : times - timesInvoked
+	      }));
 
-    const pluralizer = new Pluralizer('interceptor', 'interceptors').pluralize(pending.length);
+	    this.logger.table(withPrettyHeaders);
+	    return this.transform.read().toString()
+	  }
+	};
+	return pendingInterceptorsFormatter;
+}
 
-    throw new UndiciError(`
+var mockAgent;
+var hasRequiredMockAgent;
+
+function requireMockAgent () {
+	if (hasRequiredMockAgent) return mockAgent;
+	hasRequiredMockAgent = 1;
+
+	const { kClients } = requireSymbols$4();
+	const Agent = requireAgent();
+	const {
+	  kAgent,
+	  kMockAgentSet,
+	  kMockAgentGet,
+	  kDispatches,
+	  kIsMockActive,
+	  kNetConnect,
+	  kGetNetConnect,
+	  kOptions,
+	  kFactory
+	} = requireMockSymbols();
+	const MockClient = requireMockClient();
+	const MockPool = requireMockPool();
+	const { matchValue, buildMockOptions } = requireMockUtils();
+	const { InvalidArgumentError, UndiciError } = requireErrors();
+	const Dispatcher = requireDispatcher();
+	const Pluralizer = requirePluralizer();
+	const PendingInterceptorsFormatter = requirePendingInterceptorsFormatter();
+
+	class FakeWeakRef {
+	  constructor (value) {
+	    this.value = value;
+	  }
+
+	  deref () {
+	    return this.value
+	  }
+	}
+
+	class MockAgent extends Dispatcher {
+	  constructor (opts) {
+	    super(opts);
+
+	    this[kNetConnect] = true;
+	    this[kIsMockActive] = true;
+
+	    // Instantiate Agent and encapsulate
+	    if ((opts && opts.agent && typeof opts.agent.dispatch !== 'function')) {
+	      throw new InvalidArgumentError('Argument opts.agent must implement Agent')
+	    }
+	    const agent = opts && opts.agent ? opts.agent : new Agent(opts);
+	    this[kAgent] = agent;
+
+	    this[kClients] = agent[kClients];
+	    this[kOptions] = buildMockOptions(opts);
+	  }
+
+	  get (origin) {
+	    let dispatcher = this[kMockAgentGet](origin);
+
+	    if (!dispatcher) {
+	      dispatcher = this[kFactory](origin);
+	      this[kMockAgentSet](origin, dispatcher);
+	    }
+	    return dispatcher
+	  }
+
+	  dispatch (opts, handler) {
+	    // Call MockAgent.get to perform additional setup before dispatching as normal
+	    this.get(opts.origin);
+	    return this[kAgent].dispatch(opts, handler)
+	  }
+
+	  async close () {
+	    await this[kAgent].close();
+	    this[kClients].clear();
+	  }
+
+	  deactivate () {
+	    this[kIsMockActive] = false;
+	  }
+
+	  activate () {
+	    this[kIsMockActive] = true;
+	  }
+
+	  enableNetConnect (matcher) {
+	    if (typeof matcher === 'string' || typeof matcher === 'function' || matcher instanceof RegExp) {
+	      if (Array.isArray(this[kNetConnect])) {
+	        this[kNetConnect].push(matcher);
+	      } else {
+	        this[kNetConnect] = [matcher];
+	      }
+	    } else if (typeof matcher === 'undefined') {
+	      this[kNetConnect] = true;
+	    } else {
+	      throw new InvalidArgumentError('Unsupported matcher. Must be one of String|Function|RegExp.')
+	    }
+	  }
+
+	  disableNetConnect () {
+	    this[kNetConnect] = false;
+	  }
+
+	  // This is required to bypass issues caused by using global symbols - see:
+	  // https://github.com/nodejs/undici/issues/1447
+	  get isMockActive () {
+	    return this[kIsMockActive]
+	  }
+
+	  [kMockAgentSet] (origin, dispatcher) {
+	    this[kClients].set(origin, new FakeWeakRef(dispatcher));
+	  }
+
+	  [kFactory] (origin) {
+	    const mockOptions = Object.assign({ agent: this }, this[kOptions]);
+	    return this[kOptions] && this[kOptions].connections === 1
+	      ? new MockClient(origin, mockOptions)
+	      : new MockPool(origin, mockOptions)
+	  }
+
+	  [kMockAgentGet] (origin) {
+	    // First check if we can immediately find it
+	    const ref = this[kClients].get(origin);
+	    if (ref) {
+	      return ref.deref()
+	    }
+
+	    // If the origin is not a string create a dummy parent pool and return to user
+	    if (typeof origin !== 'string') {
+	      const dispatcher = this[kFactory]('http://localhost:9999');
+	      this[kMockAgentSet](origin, dispatcher);
+	      return dispatcher
+	    }
+
+	    // If we match, create a pool and assign the same dispatches
+	    for (const [keyMatcher, nonExplicitRef] of Array.from(this[kClients])) {
+	      const nonExplicitDispatcher = nonExplicitRef.deref();
+	      if (nonExplicitDispatcher && typeof keyMatcher !== 'string' && matchValue(keyMatcher, origin)) {
+	        const dispatcher = this[kFactory](origin);
+	        this[kMockAgentSet](origin, dispatcher);
+	        dispatcher[kDispatches] = nonExplicitDispatcher[kDispatches];
+	        return dispatcher
+	      }
+	    }
+	  }
+
+	  [kGetNetConnect] () {
+	    return this[kNetConnect]
+	  }
+
+	  pendingInterceptors () {
+	    const mockAgentClients = this[kClients];
+
+	    return Array.from(mockAgentClients.entries())
+	      .flatMap(([origin, scope]) => scope.deref()[kDispatches].map(dispatch => ({ ...dispatch, origin })))
+	      .filter(({ pending }) => pending)
+	  }
+
+	  assertNoPendingInterceptors ({ pendingInterceptorsFormatter = new PendingInterceptorsFormatter() } = {}) {
+	    const pending = this.pendingInterceptors();
+
+	    if (pending.length === 0) {
+	      return
+	    }
+
+	    const pluralizer = new Pluralizer('interceptor', 'interceptors').pluralize(pending.length);
+
+	    throw new UndiciError(`
 ${pluralizer.count} ${pluralizer.noun} ${pluralizer.is} pending:
 
 ${pendingInterceptorsFormatter.format(pending)}
 `.trim())
-  }
-};
+	  }
+	}
 
-var mockAgent = MockAgent$1;
-
-const { kProxy, kClose, kDestroy, kInterceptors } = symbols$4;
-const { URL: URL$1 } = require$$1$3;
-const Agent$2 = agent;
-const Pool$1 = pool;
-const DispatcherBase = dispatcherBase;
-const { InvalidArgumentError: InvalidArgumentError$2, RequestAbortedError } = errors$1;
-const buildConnector$1 = connect$2;
-
-const kAgent = Symbol('proxy agent');
-const kClient = Symbol('proxy client');
-const kProxyHeaders = Symbol('proxy headers');
-const kRequestTls = Symbol('request tls settings');
-const kProxyTls = Symbol('proxy tls settings');
-const kConnectEndpoint = Symbol('connect endpoint function');
-
-function defaultProtocolPort (protocol) {
-  return protocol === 'https:' ? 443 : 80
+	mockAgent = MockAgent;
+	return mockAgent;
 }
 
-function buildProxyOptions (opts) {
-  if (typeof opts === 'string') {
-    opts = { uri: opts };
-  }
+var proxyAgent;
+var hasRequiredProxyAgent;
 
-  if (!opts || !opts.uri) {
-    throw new InvalidArgumentError$2('Proxy opts.uri is mandatory')
-  }
+function requireProxyAgent () {
+	if (hasRequiredProxyAgent) return proxyAgent;
+	hasRequiredProxyAgent = 1;
 
-  return {
-    uri: opts.uri,
-    protocol: opts.protocol || 'https'
-  }
+	const { kProxy, kClose, kDestroy, kInterceptors } = requireSymbols$4();
+	const { URL } = require$$1$3;
+	const Agent = requireAgent();
+	const Pool = requirePool();
+	const DispatcherBase = requireDispatcherBase();
+	const { InvalidArgumentError, RequestAbortedError } = requireErrors();
+	const buildConnector = requireConnect();
+
+	const kAgent = Symbol('proxy agent');
+	const kClient = Symbol('proxy client');
+	const kProxyHeaders = Symbol('proxy headers');
+	const kRequestTls = Symbol('request tls settings');
+	const kProxyTls = Symbol('proxy tls settings');
+	const kConnectEndpoint = Symbol('connect endpoint function');
+
+	function defaultProtocolPort (protocol) {
+	  return protocol === 'https:' ? 443 : 80
+	}
+
+	function buildProxyOptions (opts) {
+	  if (typeof opts === 'string') {
+	    opts = { uri: opts };
+	  }
+
+	  if (!opts || !opts.uri) {
+	    throw new InvalidArgumentError('Proxy opts.uri is mandatory')
+	  }
+
+	  return {
+	    uri: opts.uri,
+	    protocol: opts.protocol || 'https'
+	  }
+	}
+
+	function defaultFactory (origin, opts) {
+	  return new Pool(origin, opts)
+	}
+
+	class ProxyAgent extends DispatcherBase {
+	  constructor (opts) {
+	    super(opts);
+	    this[kProxy] = buildProxyOptions(opts);
+	    this[kAgent] = new Agent(opts);
+	    this[kInterceptors] = opts.interceptors && opts.interceptors.ProxyAgent && Array.isArray(opts.interceptors.ProxyAgent)
+	      ? opts.interceptors.ProxyAgent
+	      : [];
+
+	    if (typeof opts === 'string') {
+	      opts = { uri: opts };
+	    }
+
+	    if (!opts || !opts.uri) {
+	      throw new InvalidArgumentError('Proxy opts.uri is mandatory')
+	    }
+
+	    const { clientFactory = defaultFactory } = opts;
+
+	    if (typeof clientFactory !== 'function') {
+	      throw new InvalidArgumentError('Proxy opts.clientFactory must be a function.')
+	    }
+
+	    this[kRequestTls] = opts.requestTls;
+	    this[kProxyTls] = opts.proxyTls;
+	    this[kProxyHeaders] = opts.headers || {};
+
+	    const resolvedUrl = new URL(opts.uri);
+	    const { origin, port, host, username, password } = resolvedUrl;
+
+	    if (opts.auth && opts.token) {
+	      throw new InvalidArgumentError('opts.auth cannot be used in combination with opts.token')
+	    } else if (opts.auth) {
+	      /* @deprecated in favour of opts.token */
+	      this[kProxyHeaders]['proxy-authorization'] = `Basic ${opts.auth}`;
+	    } else if (opts.token) {
+	      this[kProxyHeaders]['proxy-authorization'] = opts.token;
+	    } else if (username && password) {
+	      this[kProxyHeaders]['proxy-authorization'] = `Basic ${Buffer.from(`${decodeURIComponent(username)}:${decodeURIComponent(password)}`).toString('base64')}`;
+	    }
+
+	    const connect = buildConnector({ ...opts.proxyTls });
+	    this[kConnectEndpoint] = buildConnector({ ...opts.requestTls });
+	    this[kClient] = clientFactory(resolvedUrl, { connect });
+	    this[kAgent] = new Agent({
+	      ...opts,
+	      connect: async (opts, callback) => {
+	        let requestedHost = opts.host;
+	        if (!opts.port) {
+	          requestedHost += `:${defaultProtocolPort(opts.protocol)}`;
+	        }
+	        try {
+	          const { socket, statusCode } = await this[kClient].connect({
+	            origin,
+	            port,
+	            path: requestedHost,
+	            signal: opts.signal,
+	            headers: {
+	              ...this[kProxyHeaders],
+	              host
+	            }
+	          });
+	          if (statusCode !== 200) {
+	            socket.on('error', () => {}).destroy();
+	            callback(new RequestAbortedError(`Proxy response (${statusCode}) !== 200 when HTTP Tunneling`));
+	          }
+	          if (opts.protocol !== 'https:') {
+	            callback(null, socket);
+	            return
+	          }
+	          let servername;
+	          if (this[kRequestTls]) {
+	            servername = this[kRequestTls].servername;
+	          } else {
+	            servername = opts.servername;
+	          }
+	          this[kConnectEndpoint]({ ...opts, servername, httpSocket: socket }, callback);
+	        } catch (err) {
+	          callback(err);
+	        }
+	      }
+	    });
+	  }
+
+	  dispatch (opts, handler) {
+	    const { host } = new URL(opts.origin);
+	    const headers = buildHeaders(opts.headers);
+	    throwIfProxyAuthIsSent(headers);
+	    return this[kAgent].dispatch(
+	      {
+	        ...opts,
+	        headers: {
+	          ...headers,
+	          host
+	        }
+	      },
+	      handler
+	    )
+	  }
+
+	  async [kClose] () {
+	    await this[kAgent].close();
+	    await this[kClient].close();
+	  }
+
+	  async [kDestroy] () {
+	    await this[kAgent].destroy();
+	    await this[kClient].destroy();
+	  }
+	}
+
+	/**
+	 * @param {string[] | Record<string, string>} headers
+	 * @returns {Record<string, string>}
+	 */
+	function buildHeaders (headers) {
+	  // When using undici.fetch, the headers list is stored
+	  // as an array.
+	  if (Array.isArray(headers)) {
+	    /** @type {Record<string, string>} */
+	    const headersPair = {};
+
+	    for (let i = 0; i < headers.length; i += 2) {
+	      headersPair[headers[i]] = headers[i + 1];
+	    }
+
+	    return headersPair
+	  }
+
+	  return headers
+	}
+
+	/**
+	 * @param {Record<string, string>} headers
+	 *
+	 * Previous versions of ProxyAgent suggests the Proxy-Authorization in request headers
+	 * Nevertheless, it was changed and to avoid a security vulnerability by end users
+	 * this check was created.
+	 * It should be removed in the next major version for performance reasons
+	 */
+	function throwIfProxyAuthIsSent (headers) {
+	  const existProxyAuth = headers && Object.keys(headers)
+	    .find((key) => key.toLowerCase() === 'proxy-authorization');
+	  if (existProxyAuth) {
+	    throw new InvalidArgumentError('Proxy-Authorization should be sent in ProxyAgent constructor')
+	  }
+	}
+
+	proxyAgent = ProxyAgent;
+	return proxyAgent;
 }
 
-function defaultFactory (origin, opts) {
-  return new Pool$1(origin, opts)
+var RetryHandler_1;
+var hasRequiredRetryHandler;
+
+function requireRetryHandler () {
+	if (hasRequiredRetryHandler) return RetryHandler_1;
+	hasRequiredRetryHandler = 1;
+	const assert = require$$0$3;
+
+	const { kRetryHandlerDefaultRetry } = requireSymbols$4();
+	const { RequestRetryError } = requireErrors();
+	const { isDisturbed, parseHeaders, parseRangeHeader } = requireUtil$6();
+
+	function calculateRetryAfterHeader (retryAfter) {
+	  const current = Date.now();
+	  const diff = new Date(retryAfter).getTime() - current;
+
+	  return diff
+	}
+
+	class RetryHandler {
+	  constructor (opts, handlers) {
+	    const { retryOptions, ...dispatchOpts } = opts;
+	    const {
+	      // Retry scoped
+	      retry: retryFn,
+	      maxRetries,
+	      maxTimeout,
+	      minTimeout,
+	      timeoutFactor,
+	      // Response scoped
+	      methods,
+	      errorCodes,
+	      retryAfter,
+	      statusCodes
+	    } = retryOptions ?? {};
+
+	    this.dispatch = handlers.dispatch;
+	    this.handler = handlers.handler;
+	    this.opts = dispatchOpts;
+	    this.abort = null;
+	    this.aborted = false;
+	    this.retryOpts = {
+	      retry: retryFn ?? RetryHandler[kRetryHandlerDefaultRetry],
+	      retryAfter: retryAfter ?? true,
+	      maxTimeout: maxTimeout ?? 30 * 1000, // 30s,
+	      timeout: minTimeout ?? 500, // .5s
+	      timeoutFactor: timeoutFactor ?? 2,
+	      maxRetries: maxRetries ?? 5,
+	      // What errors we should retry
+	      methods: methods ?? ['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE', 'TRACE'],
+	      // Indicates which errors to retry
+	      statusCodes: statusCodes ?? [500, 502, 503, 504, 429],
+	      // List of errors to retry
+	      errorCodes: errorCodes ?? [
+	        'ECONNRESET',
+	        'ECONNREFUSED',
+	        'ENOTFOUND',
+	        'ENETDOWN',
+	        'ENETUNREACH',
+	        'EHOSTDOWN',
+	        'EHOSTUNREACH',
+	        'EPIPE'
+	      ]
+	    };
+
+	    this.retryCount = 0;
+	    this.start = 0;
+	    this.end = null;
+	    this.etag = null;
+	    this.resume = null;
+
+	    // Handle possible onConnect duplication
+	    this.handler.onConnect(reason => {
+	      this.aborted = true;
+	      if (this.abort) {
+	        this.abort(reason);
+	      } else {
+	        this.reason = reason;
+	      }
+	    });
+	  }
+
+	  onRequestSent () {
+	    if (this.handler.onRequestSent) {
+	      this.handler.onRequestSent();
+	    }
+	  }
+
+	  onUpgrade (statusCode, headers, socket) {
+	    if (this.handler.onUpgrade) {
+	      this.handler.onUpgrade(statusCode, headers, socket);
+	    }
+	  }
+
+	  onConnect (abort) {
+	    if (this.aborted) {
+	      abort(this.reason);
+	    } else {
+	      this.abort = abort;
+	    }
+	  }
+
+	  onBodySent (chunk) {
+	    if (this.handler.onBodySent) return this.handler.onBodySent(chunk)
+	  }
+
+	  static [kRetryHandlerDefaultRetry] (err, { state, opts }, cb) {
+	    const { statusCode, code, headers } = err;
+	    const { method, retryOptions } = opts;
+	    const {
+	      maxRetries,
+	      timeout,
+	      maxTimeout,
+	      timeoutFactor,
+	      statusCodes,
+	      errorCodes,
+	      methods
+	    } = retryOptions;
+	    let { counter, currentTimeout } = state;
+
+	    currentTimeout =
+	      currentTimeout != null && currentTimeout > 0 ? currentTimeout : timeout;
+
+	    // Any code that is not a Undici's originated and allowed to retry
+	    if (
+	      code &&
+	      code !== 'UND_ERR_REQ_RETRY' &&
+	      code !== 'UND_ERR_SOCKET' &&
+	      !errorCodes.includes(code)
+	    ) {
+	      cb(err);
+	      return
+	    }
+
+	    // If a set of method are provided and the current method is not in the list
+	    if (Array.isArray(methods) && !methods.includes(method)) {
+	      cb(err);
+	      return
+	    }
+
+	    // If a set of status code are provided and the current status code is not in the list
+	    if (
+	      statusCode != null &&
+	      Array.isArray(statusCodes) &&
+	      !statusCodes.includes(statusCode)
+	    ) {
+	      cb(err);
+	      return
+	    }
+
+	    // If we reached the max number of retries
+	    if (counter > maxRetries) {
+	      cb(err);
+	      return
+	    }
+
+	    let retryAfterHeader = headers != null && headers['retry-after'];
+	    if (retryAfterHeader) {
+	      retryAfterHeader = Number(retryAfterHeader);
+	      retryAfterHeader = isNaN(retryAfterHeader)
+	        ? calculateRetryAfterHeader(retryAfterHeader)
+	        : retryAfterHeader * 1e3; // Retry-After is in seconds
+	    }
+
+	    const retryTimeout =
+	      retryAfterHeader > 0
+	        ? Math.min(retryAfterHeader, maxTimeout)
+	        : Math.min(currentTimeout * timeoutFactor ** counter, maxTimeout);
+
+	    state.currentTimeout = retryTimeout;
+
+	    setTimeout(() => cb(null), retryTimeout);
+	  }
+
+	  onHeaders (statusCode, rawHeaders, resume, statusMessage) {
+	    const headers = parseHeaders(rawHeaders);
+
+	    this.retryCount += 1;
+
+	    if (statusCode >= 300) {
+	      this.abort(
+	        new RequestRetryError('Request failed', statusCode, {
+	          headers,
+	          count: this.retryCount
+	        })
+	      );
+	      return false
+	    }
+
+	    // Checkpoint for resume from where we left it
+	    if (this.resume != null) {
+	      this.resume = null;
+
+	      if (statusCode !== 206) {
+	        return true
+	      }
+
+	      const contentRange = parseRangeHeader(headers['content-range']);
+	      // If no content range
+	      if (!contentRange) {
+	        this.abort(
+	          new RequestRetryError('Content-Range mismatch', statusCode, {
+	            headers,
+	            count: this.retryCount
+	          })
+	        );
+	        return false
+	      }
+
+	      // Let's start with a weak etag check
+	      if (this.etag != null && this.etag !== headers.etag) {
+	        this.abort(
+	          new RequestRetryError('ETag mismatch', statusCode, {
+	            headers,
+	            count: this.retryCount
+	          })
+	        );
+	        return false
+	      }
+
+	      const { start, size, end = size } = contentRange;
+
+	      assert(this.start === start, 'content-range mismatch');
+	      assert(this.end == null || this.end === end, 'content-range mismatch');
+
+	      this.resume = resume;
+	      return true
+	    }
+
+	    if (this.end == null) {
+	      if (statusCode === 206) {
+	        // First time we receive 206
+	        const range = parseRangeHeader(headers['content-range']);
+
+	        if (range == null) {
+	          return this.handler.onHeaders(
+	            statusCode,
+	            rawHeaders,
+	            resume,
+	            statusMessage
+	          )
+	        }
+
+	        const { start, size, end = size } = range;
+
+	        assert(
+	          start != null && Number.isFinite(start) && this.start !== start,
+	          'content-range mismatch'
+	        );
+	        assert(Number.isFinite(start));
+	        assert(
+	          end != null && Number.isFinite(end) && this.end !== end,
+	          'invalid content-length'
+	        );
+
+	        this.start = start;
+	        this.end = end;
+	      }
+
+	      // We make our best to checkpoint the body for further range headers
+	      if (this.end == null) {
+	        const contentLength = headers['content-length'];
+	        this.end = contentLength != null ? Number(contentLength) : null;
+	      }
+
+	      assert(Number.isFinite(this.start));
+	      assert(
+	        this.end == null || Number.isFinite(this.end),
+	        'invalid content-length'
+	      );
+
+	      this.resume = resume;
+	      this.etag = headers.etag != null ? headers.etag : null;
+
+	      return this.handler.onHeaders(
+	        statusCode,
+	        rawHeaders,
+	        resume,
+	        statusMessage
+	      )
+	    }
+
+	    const err = new RequestRetryError('Request failed', statusCode, {
+	      headers,
+	      count: this.retryCount
+	    });
+
+	    this.abort(err);
+
+	    return false
+	  }
+
+	  onData (chunk) {
+	    this.start += chunk.length;
+
+	    return this.handler.onData(chunk)
+	  }
+
+	  onComplete (rawTrailers) {
+	    this.retryCount = 0;
+	    return this.handler.onComplete(rawTrailers)
+	  }
+
+	  onError (err) {
+	    if (this.aborted || isDisturbed(this.opts.body)) {
+	      return this.handler.onError(err)
+	    }
+
+	    this.retryOpts.retry(
+	      err,
+	      {
+	        state: { counter: this.retryCount++, currentTimeout: this.retryAfter },
+	        opts: { retryOptions: this.retryOpts, ...this.opts }
+	      },
+	      onRetry.bind(this)
+	    );
+
+	    function onRetry (err) {
+	      if (err != null || this.aborted || isDisturbed(this.opts.body)) {
+	        return this.handler.onError(err)
+	      }
+
+	      if (this.start !== 0) {
+	        this.opts = {
+	          ...this.opts,
+	          headers: {
+	            ...this.opts.headers,
+	            range: `bytes=${this.start}-${this.end ?? ''}`
+	          }
+	        };
+	      }
+
+	      try {
+	        this.dispatch(this.opts, this);
+	      } catch (err) {
+	        this.handler.onError(err);
+	      }
+	    }
+	  }
+	}
+
+	RetryHandler_1 = RetryHandler;
+	return RetryHandler_1;
 }
 
-let ProxyAgent$1 = class ProxyAgent extends DispatcherBase {
-  constructor (opts) {
-    super(opts);
-    this[kProxy] = buildProxyOptions(opts);
-    this[kAgent] = new Agent$2(opts);
-    this[kInterceptors] = opts.interceptors && opts.interceptors.ProxyAgent && Array.isArray(opts.interceptors.ProxyAgent)
-      ? opts.interceptors.ProxyAgent
-      : [];
+var global$1;
+var hasRequiredGlobal;
 
-    if (typeof opts === 'string') {
-      opts = { uri: opts };
-    }
+function requireGlobal () {
+	if (hasRequiredGlobal) return global$1;
+	hasRequiredGlobal = 1;
 
-    if (!opts || !opts.uri) {
-      throw new InvalidArgumentError$2('Proxy opts.uri is mandatory')
-    }
+	// We include a version number for the Dispatcher API. In case of breaking changes,
+	// this version number must be increased to avoid conflicts.
+	const globalDispatcher = Symbol.for('undici.globalDispatcher.1');
+	const { InvalidArgumentError } = requireErrors();
+	const Agent = requireAgent();
 
-    const { clientFactory = defaultFactory } = opts;
+	if (getGlobalDispatcher() === undefined) {
+	  setGlobalDispatcher(new Agent());
+	}
 
-    if (typeof clientFactory !== 'function') {
-      throw new InvalidArgumentError$2('Proxy opts.clientFactory must be a function.')
-    }
+	function setGlobalDispatcher (agent) {
+	  if (!agent || typeof agent.dispatch !== 'function') {
+	    throw new InvalidArgumentError('Argument agent must implement Agent')
+	  }
+	  Object.defineProperty(globalThis, globalDispatcher, {
+	    value: agent,
+	    writable: true,
+	    enumerable: false,
+	    configurable: false
+	  });
+	}
 
-    this[kRequestTls] = opts.requestTls;
-    this[kProxyTls] = opts.proxyTls;
-    this[kProxyHeaders] = opts.headers || {};
+	function getGlobalDispatcher () {
+	  return globalThis[globalDispatcher]
+	}
 
-    const resolvedUrl = new URL$1(opts.uri);
-    const { origin, port, host, username, password } = resolvedUrl;
-
-    if (opts.auth && opts.token) {
-      throw new InvalidArgumentError$2('opts.auth cannot be used in combination with opts.token')
-    } else if (opts.auth) {
-      /* @deprecated in favour of opts.token */
-      this[kProxyHeaders]['proxy-authorization'] = `Basic ${opts.auth}`;
-    } else if (opts.token) {
-      this[kProxyHeaders]['proxy-authorization'] = opts.token;
-    } else if (username && password) {
-      this[kProxyHeaders]['proxy-authorization'] = `Basic ${Buffer.from(`${decodeURIComponent(username)}:${decodeURIComponent(password)}`).toString('base64')}`;
-    }
-
-    const connect = buildConnector$1({ ...opts.proxyTls });
-    this[kConnectEndpoint] = buildConnector$1({ ...opts.requestTls });
-    this[kClient] = clientFactory(resolvedUrl, { connect });
-    this[kAgent] = new Agent$2({
-      ...opts,
-      connect: async (opts, callback) => {
-        let requestedHost = opts.host;
-        if (!opts.port) {
-          requestedHost += `:${defaultProtocolPort(opts.protocol)}`;
-        }
-        try {
-          const { socket, statusCode } = await this[kClient].connect({
-            origin,
-            port,
-            path: requestedHost,
-            signal: opts.signal,
-            headers: {
-              ...this[kProxyHeaders],
-              host
-            }
-          });
-          if (statusCode !== 200) {
-            socket.on('error', () => {}).destroy();
-            callback(new RequestAbortedError(`Proxy response (${statusCode}) !== 200 when HTTP Tunneling`));
-          }
-          if (opts.protocol !== 'https:') {
-            callback(null, socket);
-            return
-          }
-          let servername;
-          if (this[kRequestTls]) {
-            servername = this[kRequestTls].servername;
-          } else {
-            servername = opts.servername;
-          }
-          this[kConnectEndpoint]({ ...opts, servername, httpSocket: socket }, callback);
-        } catch (err) {
-          callback(err);
-        }
-      }
-    });
-  }
-
-  dispatch (opts, handler) {
-    const { host } = new URL$1(opts.origin);
-    const headers = buildHeaders(opts.headers);
-    throwIfProxyAuthIsSent(headers);
-    return this[kAgent].dispatch(
-      {
-        ...opts,
-        headers: {
-          ...headers,
-          host
-        }
-      },
-      handler
-    )
-  }
-
-  async [kClose] () {
-    await this[kAgent].close();
-    await this[kClient].close();
-  }
-
-  async [kDestroy] () {
-    await this[kAgent].destroy();
-    await this[kClient].destroy();
-  }
-};
-
-/**
- * @param {string[] | Record<string, string>} headers
- * @returns {Record<string, string>}
- */
-function buildHeaders (headers) {
-  // When using undici.fetch, the headers list is stored
-  // as an array.
-  if (Array.isArray(headers)) {
-    /** @type {Record<string, string>} */
-    const headersPair = {};
-
-    for (let i = 0; i < headers.length; i += 2) {
-      headersPair[headers[i]] = headers[i + 1];
-    }
-
-    return headersPair
-  }
-
-  return headers
+	global$1 = {
+	  setGlobalDispatcher,
+	  getGlobalDispatcher
+	};
+	return global$1;
 }
 
-/**
- * @param {Record<string, string>} headers
- *
- * Previous versions of ProxyAgent suggests the Proxy-Authorization in request headers
- * Nevertheless, it was changed and to avoid a security vulnerability by end users
- * this check was created.
- * It should be removed in the next major version for performance reasons
- */
-function throwIfProxyAuthIsSent (headers) {
-  const existProxyAuth = headers && Object.keys(headers)
-    .find((key) => key.toLowerCase() === 'proxy-authorization');
-  if (existProxyAuth) {
-    throw new InvalidArgumentError$2('Proxy-Authorization should be sent in ProxyAgent constructor')
-  }
+var DecoratorHandler_1;
+var hasRequiredDecoratorHandler;
+
+function requireDecoratorHandler () {
+	if (hasRequiredDecoratorHandler) return DecoratorHandler_1;
+	hasRequiredDecoratorHandler = 1;
+
+	DecoratorHandler_1 = class DecoratorHandler {
+	  constructor (handler) {
+	    this.handler = handler;
+	  }
+
+	  onConnect (...args) {
+	    return this.handler.onConnect(...args)
+	  }
+
+	  onError (...args) {
+	    return this.handler.onError(...args)
+	  }
+
+	  onUpgrade (...args) {
+	    return this.handler.onUpgrade(...args)
+	  }
+
+	  onHeaders (...args) {
+	    return this.handler.onHeaders(...args)
+	  }
+
+	  onData (...args) {
+	    return this.handler.onData(...args)
+	  }
+
+	  onComplete (...args) {
+	    return this.handler.onComplete(...args)
+	  }
+
+	  onBodySent (...args) {
+	    return this.handler.onBodySent(...args)
+	  }
+	};
+	return DecoratorHandler_1;
 }
-
-var proxyAgent = ProxyAgent$1;
-
-const assert = require$$0$3;
-
-const { kRetryHandlerDefaultRetry } = symbols$4;
-const { RequestRetryError } = errors$1;
-const { isDisturbed, parseHeaders, parseRangeHeader } = util$j;
-
-function calculateRetryAfterHeader (retryAfter) {
-  const current = Date.now();
-  const diff = new Date(retryAfter).getTime() - current;
-
-  return diff
-}
-
-let RetryHandler$1 = class RetryHandler {
-  constructor (opts, handlers) {
-    const { retryOptions, ...dispatchOpts } = opts;
-    const {
-      // Retry scoped
-      retry: retryFn,
-      maxRetries,
-      maxTimeout,
-      minTimeout,
-      timeoutFactor,
-      // Response scoped
-      methods,
-      errorCodes,
-      retryAfter,
-      statusCodes
-    } = retryOptions ?? {};
-
-    this.dispatch = handlers.dispatch;
-    this.handler = handlers.handler;
-    this.opts = dispatchOpts;
-    this.abort = null;
-    this.aborted = false;
-    this.retryOpts = {
-      retry: retryFn ?? RetryHandler[kRetryHandlerDefaultRetry],
-      retryAfter: retryAfter ?? true,
-      maxTimeout: maxTimeout ?? 30 * 1000, // 30s,
-      timeout: minTimeout ?? 500, // .5s
-      timeoutFactor: timeoutFactor ?? 2,
-      maxRetries: maxRetries ?? 5,
-      // What errors we should retry
-      methods: methods ?? ['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE', 'TRACE'],
-      // Indicates which errors to retry
-      statusCodes: statusCodes ?? [500, 502, 503, 504, 429],
-      // List of errors to retry
-      errorCodes: errorCodes ?? [
-        'ECONNRESET',
-        'ECONNREFUSED',
-        'ENOTFOUND',
-        'ENETDOWN',
-        'ENETUNREACH',
-        'EHOSTDOWN',
-        'EHOSTUNREACH',
-        'EPIPE'
-      ]
-    };
-
-    this.retryCount = 0;
-    this.start = 0;
-    this.end = null;
-    this.etag = null;
-    this.resume = null;
-
-    // Handle possible onConnect duplication
-    this.handler.onConnect(reason => {
-      this.aborted = true;
-      if (this.abort) {
-        this.abort(reason);
-      } else {
-        this.reason = reason;
-      }
-    });
-  }
-
-  onRequestSent () {
-    if (this.handler.onRequestSent) {
-      this.handler.onRequestSent();
-    }
-  }
-
-  onUpgrade (statusCode, headers, socket) {
-    if (this.handler.onUpgrade) {
-      this.handler.onUpgrade(statusCode, headers, socket);
-    }
-  }
-
-  onConnect (abort) {
-    if (this.aborted) {
-      abort(this.reason);
-    } else {
-      this.abort = abort;
-    }
-  }
-
-  onBodySent (chunk) {
-    if (this.handler.onBodySent) return this.handler.onBodySent(chunk)
-  }
-
-  static [kRetryHandlerDefaultRetry] (err, { state, opts }, cb) {
-    const { statusCode, code, headers } = err;
-    const { method, retryOptions } = opts;
-    const {
-      maxRetries,
-      timeout,
-      maxTimeout,
-      timeoutFactor,
-      statusCodes,
-      errorCodes,
-      methods
-    } = retryOptions;
-    let { counter, currentTimeout } = state;
-
-    currentTimeout =
-      currentTimeout != null && currentTimeout > 0 ? currentTimeout : timeout;
-
-    // Any code that is not a Undici's originated and allowed to retry
-    if (
-      code &&
-      code !== 'UND_ERR_REQ_RETRY' &&
-      code !== 'UND_ERR_SOCKET' &&
-      !errorCodes.includes(code)
-    ) {
-      cb(err);
-      return
-    }
-
-    // If a set of method are provided and the current method is not in the list
-    if (Array.isArray(methods) && !methods.includes(method)) {
-      cb(err);
-      return
-    }
-
-    // If a set of status code are provided and the current status code is not in the list
-    if (
-      statusCode != null &&
-      Array.isArray(statusCodes) &&
-      !statusCodes.includes(statusCode)
-    ) {
-      cb(err);
-      return
-    }
-
-    // If we reached the max number of retries
-    if (counter > maxRetries) {
-      cb(err);
-      return
-    }
-
-    let retryAfterHeader = headers != null && headers['retry-after'];
-    if (retryAfterHeader) {
-      retryAfterHeader = Number(retryAfterHeader);
-      retryAfterHeader = isNaN(retryAfterHeader)
-        ? calculateRetryAfterHeader(retryAfterHeader)
-        : retryAfterHeader * 1e3; // Retry-After is in seconds
-    }
-
-    const retryTimeout =
-      retryAfterHeader > 0
-        ? Math.min(retryAfterHeader, maxTimeout)
-        : Math.min(currentTimeout * timeoutFactor ** counter, maxTimeout);
-
-    state.currentTimeout = retryTimeout;
-
-    setTimeout(() => cb(null), retryTimeout);
-  }
-
-  onHeaders (statusCode, rawHeaders, resume, statusMessage) {
-    const headers = parseHeaders(rawHeaders);
-
-    this.retryCount += 1;
-
-    if (statusCode >= 300) {
-      this.abort(
-        new RequestRetryError('Request failed', statusCode, {
-          headers,
-          count: this.retryCount
-        })
-      );
-      return false
-    }
-
-    // Checkpoint for resume from where we left it
-    if (this.resume != null) {
-      this.resume = null;
-
-      if (statusCode !== 206) {
-        return true
-      }
-
-      const contentRange = parseRangeHeader(headers['content-range']);
-      // If no content range
-      if (!contentRange) {
-        this.abort(
-          new RequestRetryError('Content-Range mismatch', statusCode, {
-            headers,
-            count: this.retryCount
-          })
-        );
-        return false
-      }
-
-      // Let's start with a weak etag check
-      if (this.etag != null && this.etag !== headers.etag) {
-        this.abort(
-          new RequestRetryError('ETag mismatch', statusCode, {
-            headers,
-            count: this.retryCount
-          })
-        );
-        return false
-      }
-
-      const { start, size, end = size } = contentRange;
-
-      assert(this.start === start, 'content-range mismatch');
-      assert(this.end == null || this.end === end, 'content-range mismatch');
-
-      this.resume = resume;
-      return true
-    }
-
-    if (this.end == null) {
-      if (statusCode === 206) {
-        // First time we receive 206
-        const range = parseRangeHeader(headers['content-range']);
-
-        if (range == null) {
-          return this.handler.onHeaders(
-            statusCode,
-            rawHeaders,
-            resume,
-            statusMessage
-          )
-        }
-
-        const { start, size, end = size } = range;
-
-        assert(
-          start != null && Number.isFinite(start) && this.start !== start,
-          'content-range mismatch'
-        );
-        assert(Number.isFinite(start));
-        assert(
-          end != null && Number.isFinite(end) && this.end !== end,
-          'invalid content-length'
-        );
-
-        this.start = start;
-        this.end = end;
-      }
-
-      // We make our best to checkpoint the body for further range headers
-      if (this.end == null) {
-        const contentLength = headers['content-length'];
-        this.end = contentLength != null ? Number(contentLength) : null;
-      }
-
-      assert(Number.isFinite(this.start));
-      assert(
-        this.end == null || Number.isFinite(this.end),
-        'invalid content-length'
-      );
-
-      this.resume = resume;
-      this.etag = headers.etag != null ? headers.etag : null;
-
-      return this.handler.onHeaders(
-        statusCode,
-        rawHeaders,
-        resume,
-        statusMessage
-      )
-    }
-
-    const err = new RequestRetryError('Request failed', statusCode, {
-      headers,
-      count: this.retryCount
-    });
-
-    this.abort(err);
-
-    return false
-  }
-
-  onData (chunk) {
-    this.start += chunk.length;
-
-    return this.handler.onData(chunk)
-  }
-
-  onComplete (rawTrailers) {
-    this.retryCount = 0;
-    return this.handler.onComplete(rawTrailers)
-  }
-
-  onError (err) {
-    if (this.aborted || isDisturbed(this.opts.body)) {
-      return this.handler.onError(err)
-    }
-
-    this.retryOpts.retry(
-      err,
-      {
-        state: { counter: this.retryCount++, currentTimeout: this.retryAfter },
-        opts: { retryOptions: this.retryOpts, ...this.opts }
-      },
-      onRetry.bind(this)
-    );
-
-    function onRetry (err) {
-      if (err != null || this.aborted || isDisturbed(this.opts.body)) {
-        return this.handler.onError(err)
-      }
-
-      if (this.start !== 0) {
-        this.opts = {
-          ...this.opts,
-          headers: {
-            ...this.opts.headers,
-            range: `bytes=${this.start}-${this.end ?? ''}`
-          }
-        };
-      }
-
-      try {
-        this.dispatch(this.opts, this);
-      } catch (err) {
-        this.handler.onError(err);
-      }
-    }
-  }
-};
-
-var RetryHandler_1 = RetryHandler$1;
-
-// We include a version number for the Dispatcher API. In case of breaking changes,
-// this version number must be increased to avoid conflicts.
-const globalDispatcher = Symbol.for('undici.globalDispatcher.1');
-const { InvalidArgumentError: InvalidArgumentError$1 } = errors$1;
-const Agent$1 = agent;
-
-if (getGlobalDispatcher$1() === undefined) {
-  setGlobalDispatcher$1(new Agent$1());
-}
-
-function setGlobalDispatcher$1 (agent) {
-  if (!agent || typeof agent.dispatch !== 'function') {
-    throw new InvalidArgumentError$1('Argument agent must implement Agent')
-  }
-  Object.defineProperty(globalThis, globalDispatcher, {
-    value: agent,
-    writable: true,
-    enumerable: false,
-    configurable: false
-  });
-}
-
-function getGlobalDispatcher$1 () {
-  return globalThis[globalDispatcher]
-}
-
-var global$1 = {
-  setGlobalDispatcher: setGlobalDispatcher$1,
-  getGlobalDispatcher: getGlobalDispatcher$1
-};
-
-var DecoratorHandler_1 = class DecoratorHandler {
-  constructor (handler) {
-    this.handler = handler;
-  }
-
-  onConnect (...args) {
-    return this.handler.onConnect(...args)
-  }
-
-  onError (...args) {
-    return this.handler.onError(...args)
-  }
-
-  onUpgrade (...args) {
-    return this.handler.onUpgrade(...args)
-  }
-
-  onHeaders (...args) {
-    return this.handler.onHeaders(...args)
-  }
-
-  onData (...args) {
-    return this.handler.onData(...args)
-  }
-
-  onComplete (...args) {
-    return this.handler.onComplete(...args)
-  }
-
-  onBodySent (...args) {
-    return this.handler.onBodySent(...args)
-  }
-};
 
 var headers;
 var hasRequiredHeaders;
@@ -14929,14 +15335,14 @@ function requireHeaders () {
 	if (hasRequiredHeaders) return headers;
 	hasRequiredHeaders = 1;
 
-	const { kHeadersList, kConstruct } = symbols$4;
+	const { kHeadersList, kConstruct } = requireSymbols$4();
 	const { kGuard } = requireSymbols$3();
-	const { kEnumerableProperty } = util$j;
+	const { kEnumerableProperty } = requireUtil$6();
 	const {
 	  makeIterator,
 	  isValidHeaderName,
 	  isValidHeaderValue
-	} = requireUtil$4();
+	} = requireUtil$5();
 	const { webidl } = requireWebidl();
 	const assert = require$$0$3;
 
@@ -15519,7 +15925,7 @@ function requireResponse () {
 
 	const { Headers, HeadersList, fill } = requireHeaders();
 	const { extractBody, cloneBody, mixinBody } = requireBody();
-	const util = util$j;
+	const util = requireUtil$6();
 	const { kEnumerableProperty } = util;
 	const {
 	  isValidReasonPhrase,
@@ -15529,7 +15935,7 @@ function requireResponse () {
 	  serializeJavascriptValueToJSONString,
 	  isErrorLike,
 	  isomorphicEncode
-	} = requireUtil$4();
+	} = requireUtil$5();
 	const {
 	  redirectStatusSet,
 	  nullBodyStatus,
@@ -15538,11 +15944,11 @@ function requireResponse () {
 	const { kState, kHeaders, kGuard, kRealm } = requireSymbols$3();
 	const { webidl } = requireWebidl();
 	const { FormData } = requireFormdata();
-	const { getGlobalOrigin } = requireGlobal();
+	const { getGlobalOrigin } = requireGlobal$1();
 	const { URLSerializer } = requireDataURL();
-	const { kHeadersList, kConstruct } = symbols$4;
+	const { kHeadersList, kConstruct } = requireSymbols$4();
 	const assert = require$$0$3;
-	const { types } = require$$1;
+	const { types } = require$$1$1;
 
 	const ReadableStream = globalThis.ReadableStream || require$$13.ReadableStream;
 	const textEncoder = new TextEncoder('utf-8');
@@ -16091,24 +16497,24 @@ function requireResponse () {
 
 /* globals AbortController */
 
-var request$1;
+var request;
 var hasRequiredRequest;
 
 function requireRequest () {
-	if (hasRequiredRequest) return request$1;
+	if (hasRequiredRequest) return request;
 	hasRequiredRequest = 1;
 
 	const { extractBody, mixinBody, cloneBody } = requireBody();
 	const { Headers, fill: fillHeaders, HeadersList } = requireHeaders();
-	const { FinalizationRegistry } = dispatcherWeakref();
-	const util = util$j;
+	const { FinalizationRegistry } = requireDispatcherWeakref()();
+	const util = requireUtil$6();
 	const {
 	  isValidHTTPToken,
 	  sameOrigin,
 	  normalizeMethod,
 	  makePolicyContainer,
 	  normalizeMethodRecord
-	} = requireUtil$4();
+	} = requireUtil$5();
 	const {
 	  forbiddenMethodsSet,
 	  corsSafeListedMethodsSet,
@@ -16122,9 +16528,9 @@ function requireRequest () {
 	const { kEnumerableProperty } = util;
 	const { kHeaders, kSignal, kState, kGuard, kRealm } = requireSymbols$3();
 	const { webidl } = requireWebidl();
-	const { getGlobalOrigin } = requireGlobal();
+	const { getGlobalOrigin } = requireGlobal$1();
 	const { URLSerializer } = requireDataURL();
-	const { kHeadersList, kConstruct } = symbols$4;
+	const { kHeadersList, kConstruct } = requireSymbols$4();
 	const assert = require$$0$3;
 	const { getMaxListeners, setMaxListeners, getEventListeners, defaultMaxListeners } = require$$0$2;
 
@@ -17039,8 +17445,8 @@ function requireRequest () {
 	  }
 	]);
 
-	request$1 = { Request, makeRequest };
-	return request$1;
+	request = { Request, makeRequest };
+	return request;
 }
 
 var fetch_1;
@@ -17089,7 +17495,7 @@ function requireFetch () {
 	  urlIsLocal,
 	  urlIsHttpHttpsScheme,
 	  urlHasHttpsScheme
-	} = requireUtil$4();
+	} = requireUtil$5();
 	const { kState, kHeaders, kGuard, kRealm } = requireSymbols$3();
 	const assert = require$$0$3;
 	const { safelyExtractBody } = requireBody();
@@ -17101,13 +17507,13 @@ function requireFetch () {
 	  subresourceSet,
 	  DOMException
 	} = requireConstants$3();
-	const { kHeadersList } = symbols$4;
+	const { kHeadersList } = requireSymbols$4();
 	const EE = require$$0$2;
 	const { Readable, pipeline } = require$$0$4;
-	const { addAbortListener, isErrored, isReadable, nodeMajor, nodeMinor } = util$j;
+	const { addAbortListener, isErrored, isReadable, nodeMajor, nodeMinor } = requireUtil$6();
 	const { dataURLProcessor, serializeAMimeType } = requireDataURL();
 	const { TransformStream } = require$$13;
-	const { getGlobalDispatcher } = global$1;
+	const { getGlobalDispatcher } = requireGlobal();
 	const { webidl } = requireWebidl();
 	const { STATUS_CODES } = require$$2$1;
 	const GET_OR_HEAD = ['GET', 'HEAD'];
@@ -19525,11 +19931,11 @@ function requireEncoding () {
 	return encoding;
 }
 
-var util$4;
+var util$3;
 var hasRequiredUtil$3;
 
 function requireUtil$3 () {
-	if (hasRequiredUtil$3) return util$4;
+	if (hasRequiredUtil$3) return util$3;
 	hasRequiredUtil$3 = 1;
 
 	const {
@@ -19543,7 +19949,7 @@ function requireUtil$3 () {
 	const { getEncoding } = requireEncoding();
 	const { DOMException } = requireConstants$3();
 	const { serializeAMimeType, parseMIMEType } = requireDataURL();
-	const { types } = require$$1;
+	const { types } = require$$1$1;
 	const { StringDecoder } = require$$6;
 	const { btoa } = require$$7;
 
@@ -19917,12 +20323,12 @@ function requireUtil$3 () {
 	  }, new Uint8Array(size))
 	}
 
-	util$4 = {
+	util$3 = {
 	  staticPropertyDescriptors,
 	  readOperation,
 	  fireAProgressEvent
 	};
-	return util$4;
+	return util$3;
 }
 
 var filereader;
@@ -19945,7 +20351,7 @@ function requireFilereader () {
 	  kAborted
 	} = requireSymbols$2();
 	const { webidl } = requireWebidl();
-	const { kEnumerableProperty } = util$j;
+	const { kEnumerableProperty } = requireUtil$6();
 
 	class FileReader extends EventTarget {
 	  constructor () {
@@ -20285,21 +20691,21 @@ function requireSymbols$1 () {
 	hasRequiredSymbols$1 = 1;
 
 	symbols$1 = {
-	  kConstruct: symbols$4.kConstruct
+	  kConstruct: requireSymbols$4().kConstruct
 	};
 	return symbols$1;
 }
 
-var util$3;
+var util$2;
 var hasRequiredUtil$2;
 
 function requireUtil$2 () {
-	if (hasRequiredUtil$2) return util$3;
+	if (hasRequiredUtil$2) return util$2;
 	hasRequiredUtil$2 = 1;
 
 	const assert = require$$0$3;
 	const { URLSerializer } = requireDataURL();
-	const { isValidHeaderName } = requireUtil$4();
+	const { isValidHeaderName } = requireUtil$5();
 
 	/**
 	 * @see https://url.spec.whatwg.org/#concept-url-equals
@@ -20340,11 +20746,11 @@ function requireUtil$2 () {
 	  return values
 	}
 
-	util$3 = {
+	util$2 = {
 	  urlEquals,
 	  fieldValues
 	};
-	return util$3;
+	return util$2;
 }
 
 var cache;
@@ -20356,16 +20762,16 @@ function requireCache () {
 
 	const { kConstruct } = requireSymbols$1();
 	const { urlEquals, fieldValues: getFieldValues } = requireUtil$2();
-	const { kEnumerableProperty, isDisturbed } = util$j;
-	const { kHeadersList } = symbols$4;
+	const { kEnumerableProperty, isDisturbed } = requireUtil$6();
+	const { kHeadersList } = requireSymbols$4();
 	const { webidl } = requireWebidl();
 	const { Response, cloneResponse } = requireResponse();
 	const { Request } = requireRequest();
 	const { kState, kHeaders, kGuard, kRealm } = requireSymbols$3();
 	const { fetching } = requireFetch();
-	const { urlIsHttpHttpsScheme, createDeferredPromise, readAllBytes } = requireUtil$4();
+	const { urlIsHttpHttpsScheme, createDeferredPromise, readAllBytes } = requireUtil$5();
 	const assert = require$$0$3;
-	const { getGlobalDispatcher } = global$1;
+	const { getGlobalDispatcher } = requireGlobal();
 
 	/**
 	 * @see https://w3c.github.io/ServiceWorker/#dfn-cache-batch-operation
@@ -21203,7 +21609,7 @@ function requireCachestorage () {
 	const { kConstruct } = requireSymbols$1();
 	const { Cache } = requireCache();
 	const { webidl } = requireWebidl();
-	const { kEnumerableProperty } = util$j;
+	const { kEnumerableProperty } = requireUtil$6();
 
 	class CacheStorage {
 	  /**
@@ -21365,15 +21771,15 @@ function requireConstants$1 () {
 	return constants$1;
 }
 
-var util$2;
+var util$1;
 var hasRequiredUtil$1;
 
 function requireUtil$1 () {
-	if (hasRequiredUtil$1) return util$2;
+	if (hasRequiredUtil$1) return util$1;
 	hasRequiredUtil$1 = 1;
 
 	const assert = require$$0$3;
-	const { kHeadersList } = symbols$4;
+	const { kHeadersList } = requireSymbols$4();
 
 	function isCTLExcludingHtab (value) {
 	  if (value.length === 0) {
@@ -21656,19 +22062,19 @@ function requireUtil$1 () {
 	  return headersList
 	}
 
-	util$2 = {
+	util$1 = {
 	  isCTLExcludingHtab,
 	  stringify,
 	  getHeadersList
 	};
-	return util$2;
+	return util$1;
 }
 
-var parse$3;
+var parse$1;
 var hasRequiredParse;
 
 function requireParse () {
-	if (hasRequiredParse) return parse$3;
+	if (hasRequiredParse) return parse$1;
 	hasRequiredParse = 1;
 
 	const { maxNameValuePairSize, maxAttributeValueSize } = requireConstants$1();
@@ -21982,11 +22388,11 @@ function requireParse () {
 	  return parseUnparsedAttributes(unparsedAttributes, cookieAttributeList)
 	}
 
-	parse$3 = {
+	parse$1 = {
 	  parseSetCookie,
 	  parseUnparsedAttributes
 	};
-	return parse$3;
+	return parse$1;
 }
 
 var cookies;
@@ -22268,7 +22674,7 @@ function requireEvents () {
 	hasRequiredEvents = 1;
 
 	const { webidl } = requireWebidl();
-	const { kEnumerableProperty } = util$j;
+	const { kEnumerableProperty } = requireUtil$6();
 	const { MessagePort } = require$$0$6;
 
 	/**
@@ -22571,11 +22977,11 @@ function requireEvents () {
 	return events;
 }
 
-var util$1;
+var util;
 var hasRequiredUtil;
 
 function requireUtil () {
-	if (hasRequiredUtil) return util$1;
+	if (hasRequiredUtil) return util;
 	hasRequiredUtil = 1;
 
 	const { kReadyState, kController, kResponse, kBinaryType, kWebSocketURL } = requireSymbols();
@@ -22766,7 +23172,7 @@ function requireUtil () {
 	  }
 	}
 
-	util$1 = {
+	util = {
 	  isEstablished,
 	  isClosing,
 	  isClosed,
@@ -22776,7 +23182,7 @@ function requireUtil () {
 	  failWebsocketConnection,
 	  websocketMessageReceived
 	};
-	return util$1;
+	return util;
 }
 
 var connection;
@@ -22799,8 +23205,8 @@ function requireConnection () {
 	const { makeRequest } = requireRequest();
 	const { fetching } = requireFetch();
 	const { Headers } = requireHeaders();
-	const { getGlobalDispatcher } = global$1;
-	const { kHeadersList } = symbols$4;
+	const { getGlobalDispatcher } = requireGlobal();
+	const { kHeadersList } = requireSymbols$4();
 
 	const channels = {};
 	channels.open = diagnosticsChannel.channel('undici:websocket:open');
@@ -23521,7 +23927,7 @@ function requireWebsocket () {
 	const { webidl } = requireWebidl();
 	const { DOMException } = requireConstants$3();
 	const { URLSerializer } = requireDataURL();
-	const { getGlobalOrigin } = requireGlobal();
+	const { getGlobalOrigin } = requireGlobal$1();
 	const { staticPropertyDescriptors, states, opcodes, emptyBuffer } = requireConstants();
 	const {
 	  kWebSocketURL,
@@ -23536,9 +23942,9 @@ function requireWebsocket () {
 	const { establishWebSocketConnection } = requireConnection();
 	const { WebsocketFrameSend } = requireFrame();
 	const { ByteParser } = requireReceiver();
-	const { kEnumerableProperty, isBlobLike } = util$j;
-	const { getGlobalDispatcher } = global$1;
-	const { types } = require$$1;
+	const { kEnumerableProperty, isBlobLike } = requireUtil$6();
+	const { getGlobalDispatcher } = requireGlobal();
+	const { types } = require$$1$1;
 
 	let experimentalWarned = false;
 
@@ -24157,915 +24563,939 @@ function requireWebsocket () {
 	return websocket;
 }
 
-const Client = client;
-const Dispatcher = dispatcher;
-const errors = errors$1;
-const Pool = pool;
-const BalancedPool = balancedPool;
-const Agent = agent;
-const util = util$j;
-const { InvalidArgumentError } = errors;
-const api = api$1;
-const buildConnector = connect$2;
-const MockClient = mockClient;
-const MockAgent = mockAgent;
-const MockPool = mockPool;
-const mockErrors = mockErrors$1;
-const ProxyAgent = proxyAgent;
-const RetryHandler = RetryHandler_1;
-const { getGlobalDispatcher, setGlobalDispatcher } = global$1;
-const DecoratorHandler = DecoratorHandler_1;
-const RedirectHandler = RedirectHandler_1;
-const createRedirectInterceptor = redirectInterceptor;
+var hasRequiredUndici;
 
-let hasCrypto;
-try {
-  require('crypto');
-  hasCrypto = true;
-} catch {
-  hasCrypto = false;
+function requireUndici () {
+	if (hasRequiredUndici) return undici;
+	hasRequiredUndici = 1;
+
+	const Client = requireClient();
+	const Dispatcher = requireDispatcher();
+	const errors = requireErrors();
+	const Pool = requirePool();
+	const BalancedPool = requireBalancedPool();
+	const Agent = requireAgent();
+	const util = requireUtil$6();
+	const { InvalidArgumentError } = errors;
+	const api = requireApi();
+	const buildConnector = requireConnect();
+	const MockClient = requireMockClient();
+	const MockAgent = requireMockAgent();
+	const MockPool = requireMockPool();
+	const mockErrors = requireMockErrors();
+	const ProxyAgent = requireProxyAgent();
+	const RetryHandler = requireRetryHandler();
+	const { getGlobalDispatcher, setGlobalDispatcher } = requireGlobal();
+	const DecoratorHandler = requireDecoratorHandler();
+	const RedirectHandler = requireRedirectHandler();
+	const createRedirectInterceptor = requireRedirectInterceptor();
+
+	let hasCrypto;
+	try {
+	  require('crypto');
+	  hasCrypto = true;
+	} catch {
+	  hasCrypto = false;
+	}
+
+	Object.assign(Dispatcher.prototype, api);
+
+	undici.Dispatcher = Dispatcher;
+	undici.Client = Client;
+	undici.Pool = Pool;
+	undici.BalancedPool = BalancedPool;
+	undici.Agent = Agent;
+	undici.ProxyAgent = ProxyAgent;
+	undici.RetryHandler = RetryHandler;
+
+	undici.DecoratorHandler = DecoratorHandler;
+	undici.RedirectHandler = RedirectHandler;
+	undici.createRedirectInterceptor = createRedirectInterceptor;
+
+	undici.buildConnector = buildConnector;
+	undici.errors = errors;
+
+	function makeDispatcher (fn) {
+	  return (url, opts, handler) => {
+	    if (typeof opts === 'function') {
+	      handler = opts;
+	      opts = null;
+	    }
+
+	    if (!url || (typeof url !== 'string' && typeof url !== 'object' && !(url instanceof URL))) {
+	      throw new InvalidArgumentError('invalid url')
+	    }
+
+	    if (opts != null && typeof opts !== 'object') {
+	      throw new InvalidArgumentError('invalid opts')
+	    }
+
+	    if (opts && opts.path != null) {
+	      if (typeof opts.path !== 'string') {
+	        throw new InvalidArgumentError('invalid opts.path')
+	      }
+
+	      let path = opts.path;
+	      if (!opts.path.startsWith('/')) {
+	        path = `/${path}`;
+	      }
+
+	      url = new URL(util.parseOrigin(url).origin + path);
+	    } else {
+	      if (!opts) {
+	        opts = typeof url === 'object' ? url : {};
+	      }
+
+	      url = util.parseURL(url);
+	    }
+
+	    const { agent, dispatcher = getGlobalDispatcher() } = opts;
+
+	    if (agent) {
+	      throw new InvalidArgumentError('unsupported opts.agent. Did you mean opts.client?')
+	    }
+
+	    return fn.call(dispatcher, {
+	      ...opts,
+	      origin: url.origin,
+	      path: url.search ? `${url.pathname}${url.search}` : url.pathname,
+	      method: opts.method || (opts.body ? 'PUT' : 'GET')
+	    }, handler)
+	  }
+	}
+
+	undici.setGlobalDispatcher = setGlobalDispatcher;
+	undici.getGlobalDispatcher = getGlobalDispatcher;
+
+	if (util.nodeMajor > 16 || (util.nodeMajor === 16 && util.nodeMinor >= 8)) {
+	  let fetchImpl = null;
+	  undici.fetch = async function fetch (resource) {
+	    if (!fetchImpl) {
+	      fetchImpl = requireFetch().fetch;
+	    }
+
+	    try {
+	      return await fetchImpl(...arguments)
+	    } catch (err) {
+	      if (typeof err === 'object') {
+	        Error.captureStackTrace(err, this);
+	      }
+
+	      throw err
+	    }
+	  };
+	  undici.Headers = requireHeaders().Headers;
+	  undici.Response = requireResponse().Response;
+	  undici.Request = requireRequest().Request;
+	  undici.FormData = requireFormdata().FormData;
+	  undici.File = requireFile().File;
+	  undici.FileReader = requireFilereader().FileReader;
+
+	  const { setGlobalOrigin, getGlobalOrigin } = requireGlobal$1();
+
+	  undici.setGlobalOrigin = setGlobalOrigin;
+	  undici.getGlobalOrigin = getGlobalOrigin;
+
+	  const { CacheStorage } = requireCachestorage();
+	  const { kConstruct } = requireSymbols$1();
+
+	  // Cache & CacheStorage are tightly coupled with fetch. Even if it may run
+	  // in an older version of Node, it doesn't have any use without fetch.
+	  undici.caches = new CacheStorage(kConstruct);
+	}
+
+	if (util.nodeMajor >= 16) {
+	  const { deleteCookie, getCookies, getSetCookies, setCookie } = requireCookies();
+
+	  undici.deleteCookie = deleteCookie;
+	  undici.getCookies = getCookies;
+	  undici.getSetCookies = getSetCookies;
+	  undici.setCookie = setCookie;
+
+	  const { parseMIMEType, serializeAMimeType } = requireDataURL();
+
+	  undici.parseMIMEType = parseMIMEType;
+	  undici.serializeAMimeType = serializeAMimeType;
+	}
+
+	if (util.nodeMajor >= 18 && hasCrypto) {
+	  const { WebSocket } = requireWebsocket();
+
+	  undici.WebSocket = WebSocket;
+	}
+
+	undici.request = makeDispatcher(api.request);
+	undici.stream = makeDispatcher(api.stream);
+	undici.pipeline = makeDispatcher(api.pipeline);
+	undici.connect = makeDispatcher(api.connect);
+	undici.upgrade = makeDispatcher(api.upgrade);
+
+	undici.MockClient = MockClient;
+	undici.MockPool = MockPool;
+	undici.MockAgent = MockAgent;
+	undici.mockErrors = mockErrors;
+	return undici;
 }
 
-Object.assign(Dispatcher.prototype, api);
+var hasRequiredLib$1;
 
-undici.Dispatcher = Dispatcher;
-undici.Client = Client;
-undici.Pool = Pool;
-undici.BalancedPool = BalancedPool;
-undici.Agent = Agent;
-undici.ProxyAgent = ProxyAgent;
-undici.RetryHandler = RetryHandler;
-
-undici.DecoratorHandler = DecoratorHandler;
-undici.RedirectHandler = RedirectHandler;
-undici.createRedirectInterceptor = createRedirectInterceptor;
-
-undici.buildConnector = buildConnector;
-undici.errors = errors;
-
-function makeDispatcher (fn) {
-  return (url, opts, handler) => {
-    if (typeof opts === 'function') {
-      handler = opts;
-      opts = null;
-    }
-
-    if (!url || (typeof url !== 'string' && typeof url !== 'object' && !(url instanceof URL))) {
-      throw new InvalidArgumentError('invalid url')
-    }
-
-    if (opts != null && typeof opts !== 'object') {
-      throw new InvalidArgumentError('invalid opts')
-    }
-
-    if (opts && opts.path != null) {
-      if (typeof opts.path !== 'string') {
-        throw new InvalidArgumentError('invalid opts.path')
-      }
-
-      let path = opts.path;
-      if (!opts.path.startsWith('/')) {
-        path = `/${path}`;
-      }
-
-      url = new URL(util.parseOrigin(url).origin + path);
-    } else {
-      if (!opts) {
-        opts = typeof url === 'object' ? url : {};
-      }
-
-      url = util.parseURL(url);
-    }
-
-    const { agent, dispatcher = getGlobalDispatcher() } = opts;
-
-    if (agent) {
-      throw new InvalidArgumentError('unsupported opts.agent. Did you mean opts.client?')
-    }
-
-    return fn.call(dispatcher, {
-      ...opts,
-      origin: url.origin,
-      path: url.search ? `${url.pathname}${url.search}` : url.pathname,
-      method: opts.method || (opts.body ? 'PUT' : 'GET')
-    }, handler)
-  }
+function requireLib$1 () {
+	if (hasRequiredLib$1) return lib$1;
+	hasRequiredLib$1 = 1;
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+	var __createBinding = (lib$1 && lib$1.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    var desc = Object.getOwnPropertyDescriptor(m, k);
+	    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+	      desc = { enumerable: true, get: function() { return m[k]; } };
+	    }
+	    Object.defineProperty(o, k2, desc);
+	}) : (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    o[k2] = m[k];
+	}));
+	var __setModuleDefault = (lib$1 && lib$1.__setModuleDefault) || (Object.create ? (function(o, v) {
+	    Object.defineProperty(o, "default", { enumerable: true, value: v });
+	}) : function(o, v) {
+	    o["default"] = v;
+	});
+	var __importStar = (lib$1 && lib$1.__importStar) || function (mod) {
+	    if (mod && mod.__esModule) return mod;
+	    var result = {};
+	    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+	    __setModuleDefault(result, mod);
+	    return result;
+	};
+	var __awaiter = (lib$1 && lib$1.__awaiter) || function (thisArg, _arguments, P, generator) {
+	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+	    return new (P || (P = Promise))(function (resolve, reject) {
+	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+	        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+	        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+	        step((generator = generator.apply(thisArg, _arguments || [])).next());
+	    });
+	};
+	Object.defineProperty(lib$1, "__esModule", { value: true });
+	lib$1.HttpClient = lib$1.isHttps = lib$1.HttpClientResponse = lib$1.HttpClientError = lib$1.getProxyUrl = lib$1.MediaTypes = lib$1.Headers = lib$1.HttpCodes = void 0;
+	const http = __importStar(require$$2$1);
+	const https = __importStar(require$$3);
+	const pm = __importStar(requireProxy());
+	const tunnel = __importStar(requireTunnel());
+	const undici_1 = requireUndici();
+	var HttpCodes;
+	(function (HttpCodes) {
+	    HttpCodes[HttpCodes["OK"] = 200] = "OK";
+	    HttpCodes[HttpCodes["MultipleChoices"] = 300] = "MultipleChoices";
+	    HttpCodes[HttpCodes["MovedPermanently"] = 301] = "MovedPermanently";
+	    HttpCodes[HttpCodes["ResourceMoved"] = 302] = "ResourceMoved";
+	    HttpCodes[HttpCodes["SeeOther"] = 303] = "SeeOther";
+	    HttpCodes[HttpCodes["NotModified"] = 304] = "NotModified";
+	    HttpCodes[HttpCodes["UseProxy"] = 305] = "UseProxy";
+	    HttpCodes[HttpCodes["SwitchProxy"] = 306] = "SwitchProxy";
+	    HttpCodes[HttpCodes["TemporaryRedirect"] = 307] = "TemporaryRedirect";
+	    HttpCodes[HttpCodes["PermanentRedirect"] = 308] = "PermanentRedirect";
+	    HttpCodes[HttpCodes["BadRequest"] = 400] = "BadRequest";
+	    HttpCodes[HttpCodes["Unauthorized"] = 401] = "Unauthorized";
+	    HttpCodes[HttpCodes["PaymentRequired"] = 402] = "PaymentRequired";
+	    HttpCodes[HttpCodes["Forbidden"] = 403] = "Forbidden";
+	    HttpCodes[HttpCodes["NotFound"] = 404] = "NotFound";
+	    HttpCodes[HttpCodes["MethodNotAllowed"] = 405] = "MethodNotAllowed";
+	    HttpCodes[HttpCodes["NotAcceptable"] = 406] = "NotAcceptable";
+	    HttpCodes[HttpCodes["ProxyAuthenticationRequired"] = 407] = "ProxyAuthenticationRequired";
+	    HttpCodes[HttpCodes["RequestTimeout"] = 408] = "RequestTimeout";
+	    HttpCodes[HttpCodes["Conflict"] = 409] = "Conflict";
+	    HttpCodes[HttpCodes["Gone"] = 410] = "Gone";
+	    HttpCodes[HttpCodes["TooManyRequests"] = 429] = "TooManyRequests";
+	    HttpCodes[HttpCodes["InternalServerError"] = 500] = "InternalServerError";
+	    HttpCodes[HttpCodes["NotImplemented"] = 501] = "NotImplemented";
+	    HttpCodes[HttpCodes["BadGateway"] = 502] = "BadGateway";
+	    HttpCodes[HttpCodes["ServiceUnavailable"] = 503] = "ServiceUnavailable";
+	    HttpCodes[HttpCodes["GatewayTimeout"] = 504] = "GatewayTimeout";
+	})(HttpCodes || (lib$1.HttpCodes = HttpCodes = {}));
+	var Headers;
+	(function (Headers) {
+	    Headers["Accept"] = "accept";
+	    Headers["ContentType"] = "content-type";
+	})(Headers || (lib$1.Headers = Headers = {}));
+	var MediaTypes;
+	(function (MediaTypes) {
+	    MediaTypes["ApplicationJson"] = "application/json";
+	})(MediaTypes || (lib$1.MediaTypes = MediaTypes = {}));
+	/**
+	 * Returns the proxy URL, depending upon the supplied url and proxy environment variables.
+	 * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
+	 */
+	function getProxyUrl(serverUrl) {
+	    const proxyUrl = pm.getProxyUrl(new URL(serverUrl));
+	    return proxyUrl ? proxyUrl.href : '';
+	}
+	lib$1.getProxyUrl = getProxyUrl;
+	const HttpRedirectCodes = [
+	    HttpCodes.MovedPermanently,
+	    HttpCodes.ResourceMoved,
+	    HttpCodes.SeeOther,
+	    HttpCodes.TemporaryRedirect,
+	    HttpCodes.PermanentRedirect
+	];
+	const HttpResponseRetryCodes = [
+	    HttpCodes.BadGateway,
+	    HttpCodes.ServiceUnavailable,
+	    HttpCodes.GatewayTimeout
+	];
+	const RetryableHttpVerbs = ['OPTIONS', 'GET', 'DELETE', 'HEAD'];
+	const ExponentialBackoffCeiling = 10;
+	const ExponentialBackoffTimeSlice = 5;
+	class HttpClientError extends Error {
+	    constructor(message, statusCode) {
+	        super(message);
+	        this.name = 'HttpClientError';
+	        this.statusCode = statusCode;
+	        Object.setPrototypeOf(this, HttpClientError.prototype);
+	    }
+	}
+	lib$1.HttpClientError = HttpClientError;
+	class HttpClientResponse {
+	    constructor(message) {
+	        this.message = message;
+	    }
+	    readBody() {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+	                let output = Buffer.alloc(0);
+	                this.message.on('data', (chunk) => {
+	                    output = Buffer.concat([output, chunk]);
+	                });
+	                this.message.on('end', () => {
+	                    resolve(output.toString());
+	                });
+	            }));
+	        });
+	    }
+	    readBodyBuffer() {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+	                const chunks = [];
+	                this.message.on('data', (chunk) => {
+	                    chunks.push(chunk);
+	                });
+	                this.message.on('end', () => {
+	                    resolve(Buffer.concat(chunks));
+	                });
+	            }));
+	        });
+	    }
+	}
+	lib$1.HttpClientResponse = HttpClientResponse;
+	function isHttps(requestUrl) {
+	    const parsedUrl = new URL(requestUrl);
+	    return parsedUrl.protocol === 'https:';
+	}
+	lib$1.isHttps = isHttps;
+	class HttpClient {
+	    constructor(userAgent, handlers, requestOptions) {
+	        this._ignoreSslError = false;
+	        this._allowRedirects = true;
+	        this._allowRedirectDowngrade = false;
+	        this._maxRedirects = 50;
+	        this._allowRetries = false;
+	        this._maxRetries = 1;
+	        this._keepAlive = false;
+	        this._disposed = false;
+	        this.userAgent = userAgent;
+	        this.handlers = handlers || [];
+	        this.requestOptions = requestOptions;
+	        if (requestOptions) {
+	            if (requestOptions.ignoreSslError != null) {
+	                this._ignoreSslError = requestOptions.ignoreSslError;
+	            }
+	            this._socketTimeout = requestOptions.socketTimeout;
+	            if (requestOptions.allowRedirects != null) {
+	                this._allowRedirects = requestOptions.allowRedirects;
+	            }
+	            if (requestOptions.allowRedirectDowngrade != null) {
+	                this._allowRedirectDowngrade = requestOptions.allowRedirectDowngrade;
+	            }
+	            if (requestOptions.maxRedirects != null) {
+	                this._maxRedirects = Math.max(requestOptions.maxRedirects, 0);
+	            }
+	            if (requestOptions.keepAlive != null) {
+	                this._keepAlive = requestOptions.keepAlive;
+	            }
+	            if (requestOptions.allowRetries != null) {
+	                this._allowRetries = requestOptions.allowRetries;
+	            }
+	            if (requestOptions.maxRetries != null) {
+	                this._maxRetries = requestOptions.maxRetries;
+	            }
+	        }
+	    }
+	    options(requestUrl, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('OPTIONS', requestUrl, null, additionalHeaders || {});
+	        });
+	    }
+	    get(requestUrl, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('GET', requestUrl, null, additionalHeaders || {});
+	        });
+	    }
+	    del(requestUrl, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('DELETE', requestUrl, null, additionalHeaders || {});
+	        });
+	    }
+	    post(requestUrl, data, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('POST', requestUrl, data, additionalHeaders || {});
+	        });
+	    }
+	    patch(requestUrl, data, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('PATCH', requestUrl, data, additionalHeaders || {});
+	        });
+	    }
+	    put(requestUrl, data, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('PUT', requestUrl, data, additionalHeaders || {});
+	        });
+	    }
+	    head(requestUrl, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('HEAD', requestUrl, null, additionalHeaders || {});
+	        });
+	    }
+	    sendStream(verb, requestUrl, stream, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request(verb, requestUrl, stream, additionalHeaders);
+	        });
+	    }
+	    /**
+	     * Gets a typed object from an endpoint
+	     * Be aware that not found returns a null.  Other errors (4xx, 5xx) reject the promise
+	     */
+	    getJson(requestUrl, additionalHeaders = {}) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+	            const res = yield this.get(requestUrl, additionalHeaders);
+	            return this._processResponse(res, this.requestOptions);
+	        });
+	    }
+	    postJson(requestUrl, obj, additionalHeaders = {}) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const data = JSON.stringify(obj, null, 2);
+	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+	            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+	            const res = yield this.post(requestUrl, data, additionalHeaders);
+	            return this._processResponse(res, this.requestOptions);
+	        });
+	    }
+	    putJson(requestUrl, obj, additionalHeaders = {}) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const data = JSON.stringify(obj, null, 2);
+	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+	            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+	            const res = yield this.put(requestUrl, data, additionalHeaders);
+	            return this._processResponse(res, this.requestOptions);
+	        });
+	    }
+	    patchJson(requestUrl, obj, additionalHeaders = {}) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const data = JSON.stringify(obj, null, 2);
+	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+	            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+	            const res = yield this.patch(requestUrl, data, additionalHeaders);
+	            return this._processResponse(res, this.requestOptions);
+	        });
+	    }
+	    /**
+	     * Makes a raw http request.
+	     * All other methods such as get, post, patch, and request ultimately call this.
+	     * Prefer get, del, post and patch
+	     */
+	    request(verb, requestUrl, data, headers) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            if (this._disposed) {
+	                throw new Error('Client has already been disposed.');
+	            }
+	            const parsedUrl = new URL(requestUrl);
+	            let info = this._prepareRequest(verb, parsedUrl, headers);
+	            // Only perform retries on reads since writes may not be idempotent.
+	            const maxTries = this._allowRetries && RetryableHttpVerbs.includes(verb)
+	                ? this._maxRetries + 1
+	                : 1;
+	            let numTries = 0;
+	            let response;
+	            do {
+	                response = yield this.requestRaw(info, data);
+	                // Check if it's an authentication challenge
+	                if (response &&
+	                    response.message &&
+	                    response.message.statusCode === HttpCodes.Unauthorized) {
+	                    let authenticationHandler;
+	                    for (const handler of this.handlers) {
+	                        if (handler.canHandleAuthentication(response)) {
+	                            authenticationHandler = handler;
+	                            break;
+	                        }
+	                    }
+	                    if (authenticationHandler) {
+	                        return authenticationHandler.handleAuthentication(this, info, data);
+	                    }
+	                    else {
+	                        // We have received an unauthorized response but have no handlers to handle it.
+	                        // Let the response return to the caller.
+	                        return response;
+	                    }
+	                }
+	                let redirectsRemaining = this._maxRedirects;
+	                while (response.message.statusCode &&
+	                    HttpRedirectCodes.includes(response.message.statusCode) &&
+	                    this._allowRedirects &&
+	                    redirectsRemaining > 0) {
+	                    const redirectUrl = response.message.headers['location'];
+	                    if (!redirectUrl) {
+	                        // if there's no location to redirect to, we won't
+	                        break;
+	                    }
+	                    const parsedRedirectUrl = new URL(redirectUrl);
+	                    if (parsedUrl.protocol === 'https:' &&
+	                        parsedUrl.protocol !== parsedRedirectUrl.protocol &&
+	                        !this._allowRedirectDowngrade) {
+	                        throw new Error('Redirect from HTTPS to HTTP protocol. This downgrade is not allowed for security reasons. If you want to allow this behavior, set the allowRedirectDowngrade option to true.');
+	                    }
+	                    // we need to finish reading the response before reassigning response
+	                    // which will leak the open socket.
+	                    yield response.readBody();
+	                    // strip authorization header if redirected to a different hostname
+	                    if (parsedRedirectUrl.hostname !== parsedUrl.hostname) {
+	                        for (const header in headers) {
+	                            // header names are case insensitive
+	                            if (header.toLowerCase() === 'authorization') {
+	                                delete headers[header];
+	                            }
+	                        }
+	                    }
+	                    // let's make the request with the new redirectUrl
+	                    info = this._prepareRequest(verb, parsedRedirectUrl, headers);
+	                    response = yield this.requestRaw(info, data);
+	                    redirectsRemaining--;
+	                }
+	                if (!response.message.statusCode ||
+	                    !HttpResponseRetryCodes.includes(response.message.statusCode)) {
+	                    // If not a retry code, return immediately instead of retrying
+	                    return response;
+	                }
+	                numTries += 1;
+	                if (numTries < maxTries) {
+	                    yield response.readBody();
+	                    yield this._performExponentialBackoff(numTries);
+	                }
+	            } while (numTries < maxTries);
+	            return response;
+	        });
+	    }
+	    /**
+	     * Needs to be called if keepAlive is set to true in request options.
+	     */
+	    dispose() {
+	        if (this._agent) {
+	            this._agent.destroy();
+	        }
+	        this._disposed = true;
+	    }
+	    /**
+	     * Raw request.
+	     * @param info
+	     * @param data
+	     */
+	    requestRaw(info, data) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return new Promise((resolve, reject) => {
+	                function callbackForResult(err, res) {
+	                    if (err) {
+	                        reject(err);
+	                    }
+	                    else if (!res) {
+	                        // If `err` is not passed, then `res` must be passed.
+	                        reject(new Error('Unknown error'));
+	                    }
+	                    else {
+	                        resolve(res);
+	                    }
+	                }
+	                this.requestRawWithCallback(info, data, callbackForResult);
+	            });
+	        });
+	    }
+	    /**
+	     * Raw request with callback.
+	     * @param info
+	     * @param data
+	     * @param onResult
+	     */
+	    requestRawWithCallback(info, data, onResult) {
+	        if (typeof data === 'string') {
+	            if (!info.options.headers) {
+	                info.options.headers = {};
+	            }
+	            info.options.headers['Content-Length'] = Buffer.byteLength(data, 'utf8');
+	        }
+	        let callbackCalled = false;
+	        function handleResult(err, res) {
+	            if (!callbackCalled) {
+	                callbackCalled = true;
+	                onResult(err, res);
+	            }
+	        }
+	        const req = info.httpModule.request(info.options, (msg) => {
+	            const res = new HttpClientResponse(msg);
+	            handleResult(undefined, res);
+	        });
+	        let socket;
+	        req.on('socket', sock => {
+	            socket = sock;
+	        });
+	        // If we ever get disconnected, we want the socket to timeout eventually
+	        req.setTimeout(this._socketTimeout || 3 * 60000, () => {
+	            if (socket) {
+	                socket.end();
+	            }
+	            handleResult(new Error(`Request timeout: ${info.options.path}`));
+	        });
+	        req.on('error', function (err) {
+	            // err has statusCode property
+	            // res should have headers
+	            handleResult(err);
+	        });
+	        if (data && typeof data === 'string') {
+	            req.write(data, 'utf8');
+	        }
+	        if (data && typeof data !== 'string') {
+	            data.on('close', function () {
+	                req.end();
+	            });
+	            data.pipe(req);
+	        }
+	        else {
+	            req.end();
+	        }
+	    }
+	    /**
+	     * Gets an http agent. This function is useful when you need an http agent that handles
+	     * routing through a proxy server - depending upon the url and proxy environment variables.
+	     * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
+	     */
+	    getAgent(serverUrl) {
+	        const parsedUrl = new URL(serverUrl);
+	        return this._getAgent(parsedUrl);
+	    }
+	    getAgentDispatcher(serverUrl) {
+	        const parsedUrl = new URL(serverUrl);
+	        const proxyUrl = pm.getProxyUrl(parsedUrl);
+	        const useProxy = proxyUrl && proxyUrl.hostname;
+	        if (!useProxy) {
+	            return;
+	        }
+	        return this._getProxyAgentDispatcher(parsedUrl, proxyUrl);
+	    }
+	    _prepareRequest(method, requestUrl, headers) {
+	        const info = {};
+	        info.parsedUrl = requestUrl;
+	        const usingSsl = info.parsedUrl.protocol === 'https:';
+	        info.httpModule = usingSsl ? https : http;
+	        const defaultPort = usingSsl ? 443 : 80;
+	        info.options = {};
+	        info.options.host = info.parsedUrl.hostname;
+	        info.options.port = info.parsedUrl.port
+	            ? parseInt(info.parsedUrl.port)
+	            : defaultPort;
+	        info.options.path =
+	            (info.parsedUrl.pathname || '') + (info.parsedUrl.search || '');
+	        info.options.method = method;
+	        info.options.headers = this._mergeHeaders(headers);
+	        if (this.userAgent != null) {
+	            info.options.headers['user-agent'] = this.userAgent;
+	        }
+	        info.options.agent = this._getAgent(info.parsedUrl);
+	        // gives handlers an opportunity to participate
+	        if (this.handlers) {
+	            for (const handler of this.handlers) {
+	                handler.prepareRequest(info.options);
+	            }
+	        }
+	        return info;
+	    }
+	    _mergeHeaders(headers) {
+	        if (this.requestOptions && this.requestOptions.headers) {
+	            return Object.assign({}, lowercaseKeys(this.requestOptions.headers), lowercaseKeys(headers || {}));
+	        }
+	        return lowercaseKeys(headers || {});
+	    }
+	    _getExistingOrDefaultHeader(additionalHeaders, header, _default) {
+	        let clientHeader;
+	        if (this.requestOptions && this.requestOptions.headers) {
+	            clientHeader = lowercaseKeys(this.requestOptions.headers)[header];
+	        }
+	        return additionalHeaders[header] || clientHeader || _default;
+	    }
+	    _getAgent(parsedUrl) {
+	        let agent;
+	        const proxyUrl = pm.getProxyUrl(parsedUrl);
+	        const useProxy = proxyUrl && proxyUrl.hostname;
+	        if (this._keepAlive && useProxy) {
+	            agent = this._proxyAgent;
+	        }
+	        if (this._keepAlive && !useProxy) {
+	            agent = this._agent;
+	        }
+	        // if agent is already assigned use that agent.
+	        if (agent) {
+	            return agent;
+	        }
+	        const usingSsl = parsedUrl.protocol === 'https:';
+	        let maxSockets = 100;
+	        if (this.requestOptions) {
+	            maxSockets = this.requestOptions.maxSockets || http.globalAgent.maxSockets;
+	        }
+	        // This is `useProxy` again, but we need to check `proxyURl` directly for TypeScripts's flow analysis.
+	        if (proxyUrl && proxyUrl.hostname) {
+	            const agentOptions = {
+	                maxSockets,
+	                keepAlive: this._keepAlive,
+	                proxy: Object.assign(Object.assign({}, ((proxyUrl.username || proxyUrl.password) && {
+	                    proxyAuth: `${proxyUrl.username}:${proxyUrl.password}`
+	                })), { host: proxyUrl.hostname, port: proxyUrl.port })
+	            };
+	            let tunnelAgent;
+	            const overHttps = proxyUrl.protocol === 'https:';
+	            if (usingSsl) {
+	                tunnelAgent = overHttps ? tunnel.httpsOverHttps : tunnel.httpsOverHttp;
+	            }
+	            else {
+	                tunnelAgent = overHttps ? tunnel.httpOverHttps : tunnel.httpOverHttp;
+	            }
+	            agent = tunnelAgent(agentOptions);
+	            this._proxyAgent = agent;
+	        }
+	        // if reusing agent across request and tunneling agent isn't assigned create a new agent
+	        if (this._keepAlive && !agent) {
+	            const options = { keepAlive: this._keepAlive, maxSockets };
+	            agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
+	            this._agent = agent;
+	        }
+	        // if not using private agent and tunnel agent isn't setup then use global agent
+	        if (!agent) {
+	            agent = usingSsl ? https.globalAgent : http.globalAgent;
+	        }
+	        if (usingSsl && this._ignoreSslError) {
+	            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
+	            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
+	            // we have to cast it to any and change it directly
+	            agent.options = Object.assign(agent.options || {}, {
+	                rejectUnauthorized: false
+	            });
+	        }
+	        return agent;
+	    }
+	    _getProxyAgentDispatcher(parsedUrl, proxyUrl) {
+	        let proxyAgent;
+	        if (this._keepAlive) {
+	            proxyAgent = this._proxyAgentDispatcher;
+	        }
+	        // if agent is already assigned use that agent.
+	        if (proxyAgent) {
+	            return proxyAgent;
+	        }
+	        const usingSsl = parsedUrl.protocol === 'https:';
+	        proxyAgent = new undici_1.ProxyAgent(Object.assign({ uri: proxyUrl.href, pipelining: !this._keepAlive ? 0 : 1 }, ((proxyUrl.username || proxyUrl.password) && {
+	            token: `${proxyUrl.username}:${proxyUrl.password}`
+	        })));
+	        this._proxyAgentDispatcher = proxyAgent;
+	        if (usingSsl && this._ignoreSslError) {
+	            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
+	            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
+	            // we have to cast it to any and change it directly
+	            proxyAgent.options = Object.assign(proxyAgent.options.requestTls || {}, {
+	                rejectUnauthorized: false
+	            });
+	        }
+	        return proxyAgent;
+	    }
+	    _performExponentialBackoff(retryNumber) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            retryNumber = Math.min(ExponentialBackoffCeiling, retryNumber);
+	            const ms = ExponentialBackoffTimeSlice * Math.pow(2, retryNumber);
+	            return new Promise(resolve => setTimeout(() => resolve(), ms));
+	        });
+	    }
+	    _processResponse(res, options) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+	                const statusCode = res.message.statusCode || 0;
+	                const response = {
+	                    statusCode,
+	                    result: null,
+	                    headers: {}
+	                };
+	                // not found leads to null obj returned
+	                if (statusCode === HttpCodes.NotFound) {
+	                    resolve(response);
+	                }
+	                // get the result from the body
+	                function dateTimeDeserializer(key, value) {
+	                    if (typeof value === 'string') {
+	                        const a = new Date(value);
+	                        if (!isNaN(a.valueOf())) {
+	                            return a;
+	                        }
+	                    }
+	                    return value;
+	                }
+	                let obj;
+	                let contents;
+	                try {
+	                    contents = yield res.readBody();
+	                    if (contents && contents.length > 0) {
+	                        if (options && options.deserializeDates) {
+	                            obj = JSON.parse(contents, dateTimeDeserializer);
+	                        }
+	                        else {
+	                            obj = JSON.parse(contents);
+	                        }
+	                        response.result = obj;
+	                    }
+	                    response.headers = res.message.headers;
+	                }
+	                catch (err) {
+	                    // Invalid resource (contents not json);  leaving result obj null
+	                }
+	                // note that 3xx redirects are handled by the http layer.
+	                if (statusCode > 299) {
+	                    let msg;
+	                    // if exception/error in body, attempt to get better error
+	                    if (obj && obj.message) {
+	                        msg = obj.message;
+	                    }
+	                    else if (contents && contents.length > 0) {
+	                        // it may be the case that the exception is in the body message as string
+	                        msg = contents;
+	                    }
+	                    else {
+	                        msg = `Failed request: (${statusCode})`;
+	                    }
+	                    const err = new HttpClientError(msg, statusCode);
+	                    err.result = response.result;
+	                    reject(err);
+	                }
+	                else {
+	                    resolve(response);
+	                }
+	            }));
+	        });
+	    }
+	}
+	lib$1.HttpClient = HttpClient;
+	const lowercaseKeys = (obj) => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCase()] = obj[k]), c), {});
+	
+	return lib$1;
 }
 
-undici.setGlobalDispatcher = setGlobalDispatcher;
-undici.getGlobalDispatcher = getGlobalDispatcher;
+var auth = {};
 
-if (util.nodeMajor > 16 || (util.nodeMajor === 16 && util.nodeMinor >= 8)) {
-  let fetchImpl = null;
-  undici.fetch = async function fetch (resource) {
-    if (!fetchImpl) {
-      fetchImpl = requireFetch().fetch;
-    }
+var hasRequiredAuth;
 
-    try {
-      return await fetchImpl(...arguments)
-    } catch (err) {
-      if (typeof err === 'object') {
-        Error.captureStackTrace(err, this);
-      }
-
-      throw err
-    }
-  };
-  undici.Headers = requireHeaders().Headers;
-  undici.Response = requireResponse().Response;
-  undici.Request = requireRequest().Request;
-  undici.FormData = requireFormdata().FormData;
-  undici.File = requireFile().File;
-  undici.FileReader = requireFilereader().FileReader;
-
-  const { setGlobalOrigin, getGlobalOrigin } = requireGlobal();
-
-  undici.setGlobalOrigin = setGlobalOrigin;
-  undici.getGlobalOrigin = getGlobalOrigin;
-
-  const { CacheStorage } = requireCachestorage();
-  const { kConstruct } = requireSymbols$1();
-
-  // Cache & CacheStorage are tightly coupled with fetch. Even if it may run
-  // in an older version of Node, it doesn't have any use without fetch.
-  undici.caches = new CacheStorage(kConstruct);
+function requireAuth () {
+	if (hasRequiredAuth) return auth;
+	hasRequiredAuth = 1;
+	var __awaiter = (auth && auth.__awaiter) || function (thisArg, _arguments, P, generator) {
+	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+	    return new (P || (P = Promise))(function (resolve, reject) {
+	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+	        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+	        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+	        step((generator = generator.apply(thisArg, _arguments || [])).next());
+	    });
+	};
+	Object.defineProperty(auth, "__esModule", { value: true });
+	auth.PersonalAccessTokenCredentialHandler = auth.BearerCredentialHandler = auth.BasicCredentialHandler = void 0;
+	class BasicCredentialHandler {
+	    constructor(username, password) {
+	        this.username = username;
+	        this.password = password;
+	    }
+	    prepareRequest(options) {
+	        if (!options.headers) {
+	            throw Error('The request has no headers');
+	        }
+	        options.headers['Authorization'] = `Basic ${Buffer.from(`${this.username}:${this.password}`).toString('base64')}`;
+	    }
+	    // This handler cannot handle 401
+	    canHandleAuthentication() {
+	        return false;
+	    }
+	    handleAuthentication() {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            throw new Error('not implemented');
+	        });
+	    }
+	}
+	auth.BasicCredentialHandler = BasicCredentialHandler;
+	class BearerCredentialHandler {
+	    constructor(token) {
+	        this.token = token;
+	    }
+	    // currently implements pre-authorization
+	    // TODO: support preAuth = false where it hooks on 401
+	    prepareRequest(options) {
+	        if (!options.headers) {
+	            throw Error('The request has no headers');
+	        }
+	        options.headers['Authorization'] = `Bearer ${this.token}`;
+	    }
+	    // This handler cannot handle 401
+	    canHandleAuthentication() {
+	        return false;
+	    }
+	    handleAuthentication() {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            throw new Error('not implemented');
+	        });
+	    }
+	}
+	auth.BearerCredentialHandler = BearerCredentialHandler;
+	class PersonalAccessTokenCredentialHandler {
+	    constructor(token) {
+	        this.token = token;
+	    }
+	    // currently implements pre-authorization
+	    // TODO: support preAuth = false where it hooks on 401
+	    prepareRequest(options) {
+	        if (!options.headers) {
+	            throw Error('The request has no headers');
+	        }
+	        options.headers['Authorization'] = `Basic ${Buffer.from(`PAT:${this.token}`).toString('base64')}`;
+	    }
+	    // This handler cannot handle 401
+	    canHandleAuthentication() {
+	        return false;
+	    }
+	    handleAuthentication() {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            throw new Error('not implemented');
+	        });
+	    }
+	}
+	auth.PersonalAccessTokenCredentialHandler = PersonalAccessTokenCredentialHandler;
+	
+	return auth;
 }
-
-if (util.nodeMajor >= 16) {
-  const { deleteCookie, getCookies, getSetCookies, setCookie } = requireCookies();
-
-  undici.deleteCookie = deleteCookie;
-  undici.getCookies = getCookies;
-  undici.getSetCookies = getSetCookies;
-  undici.setCookie = setCookie;
-
-  const { parseMIMEType, serializeAMimeType } = requireDataURL();
-
-  undici.parseMIMEType = parseMIMEType;
-  undici.serializeAMimeType = serializeAMimeType;
-}
-
-if (util.nodeMajor >= 18 && hasCrypto) {
-  const { WebSocket } = requireWebsocket();
-
-  undici.WebSocket = WebSocket;
-}
-
-undici.request = makeDispatcher(api.request);
-undici.stream = makeDispatcher(api.stream);
-undici.pipeline = makeDispatcher(api.pipeline);
-undici.connect = makeDispatcher(api.connect);
-undici.upgrade = makeDispatcher(api.upgrade);
-
-undici.MockClient = MockClient;
-undici.MockPool = MockPool;
-undici.MockAgent = MockAgent;
-undici.mockErrors = mockErrors;
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-var __createBinding$2 = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault$2 = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar$2 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding$2(result, mod, k);
-    __setModuleDefault$2(result, mod);
-    return result;
-};
-var __awaiter$2 = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(lib$1, "__esModule", { value: true });
-lib$1.HttpClient = lib$1.isHttps = lib$1.HttpClientResponse = lib$1.HttpClientError = lib$1.getProxyUrl = lib$1.MediaTypes = lib$1.Headers = lib$1.HttpCodes = void 0;
-const http = __importStar$2(require$$2$1);
-const https = __importStar$2(require$$3);
-const pm = __importStar$2(proxy);
-const tunnel = __importStar$2(tunnel$1);
-const undici_1$1 = undici;
-var HttpCodes;
-(function (HttpCodes) {
-    HttpCodes[HttpCodes["OK"] = 200] = "OK";
-    HttpCodes[HttpCodes["MultipleChoices"] = 300] = "MultipleChoices";
-    HttpCodes[HttpCodes["MovedPermanently"] = 301] = "MovedPermanently";
-    HttpCodes[HttpCodes["ResourceMoved"] = 302] = "ResourceMoved";
-    HttpCodes[HttpCodes["SeeOther"] = 303] = "SeeOther";
-    HttpCodes[HttpCodes["NotModified"] = 304] = "NotModified";
-    HttpCodes[HttpCodes["UseProxy"] = 305] = "UseProxy";
-    HttpCodes[HttpCodes["SwitchProxy"] = 306] = "SwitchProxy";
-    HttpCodes[HttpCodes["TemporaryRedirect"] = 307] = "TemporaryRedirect";
-    HttpCodes[HttpCodes["PermanentRedirect"] = 308] = "PermanentRedirect";
-    HttpCodes[HttpCodes["BadRequest"] = 400] = "BadRequest";
-    HttpCodes[HttpCodes["Unauthorized"] = 401] = "Unauthorized";
-    HttpCodes[HttpCodes["PaymentRequired"] = 402] = "PaymentRequired";
-    HttpCodes[HttpCodes["Forbidden"] = 403] = "Forbidden";
-    HttpCodes[HttpCodes["NotFound"] = 404] = "NotFound";
-    HttpCodes[HttpCodes["MethodNotAllowed"] = 405] = "MethodNotAllowed";
-    HttpCodes[HttpCodes["NotAcceptable"] = 406] = "NotAcceptable";
-    HttpCodes[HttpCodes["ProxyAuthenticationRequired"] = 407] = "ProxyAuthenticationRequired";
-    HttpCodes[HttpCodes["RequestTimeout"] = 408] = "RequestTimeout";
-    HttpCodes[HttpCodes["Conflict"] = 409] = "Conflict";
-    HttpCodes[HttpCodes["Gone"] = 410] = "Gone";
-    HttpCodes[HttpCodes["TooManyRequests"] = 429] = "TooManyRequests";
-    HttpCodes[HttpCodes["InternalServerError"] = 500] = "InternalServerError";
-    HttpCodes[HttpCodes["NotImplemented"] = 501] = "NotImplemented";
-    HttpCodes[HttpCodes["BadGateway"] = 502] = "BadGateway";
-    HttpCodes[HttpCodes["ServiceUnavailable"] = 503] = "ServiceUnavailable";
-    HttpCodes[HttpCodes["GatewayTimeout"] = 504] = "GatewayTimeout";
-})(HttpCodes || (lib$1.HttpCodes = HttpCodes = {}));
-var Headers;
-(function (Headers) {
-    Headers["Accept"] = "accept";
-    Headers["ContentType"] = "content-type";
-})(Headers || (lib$1.Headers = Headers = {}));
-var MediaTypes;
-(function (MediaTypes) {
-    MediaTypes["ApplicationJson"] = "application/json";
-})(MediaTypes || (lib$1.MediaTypes = MediaTypes = {}));
-/**
- * Returns the proxy URL, depending upon the supplied url and proxy environment variables.
- * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
- */
-function getProxyUrl(serverUrl) {
-    const proxyUrl = pm.getProxyUrl(new URL(serverUrl));
-    return proxyUrl ? proxyUrl.href : '';
-}
-lib$1.getProxyUrl = getProxyUrl;
-const HttpRedirectCodes = [
-    HttpCodes.MovedPermanently,
-    HttpCodes.ResourceMoved,
-    HttpCodes.SeeOther,
-    HttpCodes.TemporaryRedirect,
-    HttpCodes.PermanentRedirect
-];
-const HttpResponseRetryCodes = [
-    HttpCodes.BadGateway,
-    HttpCodes.ServiceUnavailable,
-    HttpCodes.GatewayTimeout
-];
-const RetryableHttpVerbs = ['OPTIONS', 'GET', 'DELETE', 'HEAD'];
-const ExponentialBackoffCeiling = 10;
-const ExponentialBackoffTimeSlice = 5;
-class HttpClientError extends Error {
-    constructor(message, statusCode) {
-        super(message);
-        this.name = 'HttpClientError';
-        this.statusCode = statusCode;
-        Object.setPrototypeOf(this, HttpClientError.prototype);
-    }
-}
-lib$1.HttpClientError = HttpClientError;
-class HttpClientResponse {
-    constructor(message) {
-        this.message = message;
-    }
-    readBody() {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            return new Promise((resolve) => __awaiter$2(this, void 0, void 0, function* () {
-                let output = Buffer.alloc(0);
-                this.message.on('data', (chunk) => {
-                    output = Buffer.concat([output, chunk]);
-                });
-                this.message.on('end', () => {
-                    resolve(output.toString());
-                });
-            }));
-        });
-    }
-    readBodyBuffer() {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            return new Promise((resolve) => __awaiter$2(this, void 0, void 0, function* () {
-                const chunks = [];
-                this.message.on('data', (chunk) => {
-                    chunks.push(chunk);
-                });
-                this.message.on('end', () => {
-                    resolve(Buffer.concat(chunks));
-                });
-            }));
-        });
-    }
-}
-lib$1.HttpClientResponse = HttpClientResponse;
-function isHttps(requestUrl) {
-    const parsedUrl = new URL(requestUrl);
-    return parsedUrl.protocol === 'https:';
-}
-lib$1.isHttps = isHttps;
-class HttpClient {
-    constructor(userAgent, handlers, requestOptions) {
-        this._ignoreSslError = false;
-        this._allowRedirects = true;
-        this._allowRedirectDowngrade = false;
-        this._maxRedirects = 50;
-        this._allowRetries = false;
-        this._maxRetries = 1;
-        this._keepAlive = false;
-        this._disposed = false;
-        this.userAgent = userAgent;
-        this.handlers = handlers || [];
-        this.requestOptions = requestOptions;
-        if (requestOptions) {
-            if (requestOptions.ignoreSslError != null) {
-                this._ignoreSslError = requestOptions.ignoreSslError;
-            }
-            this._socketTimeout = requestOptions.socketTimeout;
-            if (requestOptions.allowRedirects != null) {
-                this._allowRedirects = requestOptions.allowRedirects;
-            }
-            if (requestOptions.allowRedirectDowngrade != null) {
-                this._allowRedirectDowngrade = requestOptions.allowRedirectDowngrade;
-            }
-            if (requestOptions.maxRedirects != null) {
-                this._maxRedirects = Math.max(requestOptions.maxRedirects, 0);
-            }
-            if (requestOptions.keepAlive != null) {
-                this._keepAlive = requestOptions.keepAlive;
-            }
-            if (requestOptions.allowRetries != null) {
-                this._allowRetries = requestOptions.allowRetries;
-            }
-            if (requestOptions.maxRetries != null) {
-                this._maxRetries = requestOptions.maxRetries;
-            }
-        }
-    }
-    options(requestUrl, additionalHeaders) {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            return this.request('OPTIONS', requestUrl, null, additionalHeaders || {});
-        });
-    }
-    get(requestUrl, additionalHeaders) {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            return this.request('GET', requestUrl, null, additionalHeaders || {});
-        });
-    }
-    del(requestUrl, additionalHeaders) {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            return this.request('DELETE', requestUrl, null, additionalHeaders || {});
-        });
-    }
-    post(requestUrl, data, additionalHeaders) {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            return this.request('POST', requestUrl, data, additionalHeaders || {});
-        });
-    }
-    patch(requestUrl, data, additionalHeaders) {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            return this.request('PATCH', requestUrl, data, additionalHeaders || {});
-        });
-    }
-    put(requestUrl, data, additionalHeaders) {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            return this.request('PUT', requestUrl, data, additionalHeaders || {});
-        });
-    }
-    head(requestUrl, additionalHeaders) {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            return this.request('HEAD', requestUrl, null, additionalHeaders || {});
-        });
-    }
-    sendStream(verb, requestUrl, stream, additionalHeaders) {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            return this.request(verb, requestUrl, stream, additionalHeaders);
-        });
-    }
-    /**
-     * Gets a typed object from an endpoint
-     * Be aware that not found returns a null.  Other errors (4xx, 5xx) reject the promise
-     */
-    getJson(requestUrl, additionalHeaders = {}) {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-            const res = yield this.get(requestUrl, additionalHeaders);
-            return this._processResponse(res, this.requestOptions);
-        });
-    }
-    postJson(requestUrl, obj, additionalHeaders = {}) {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            const data = JSON.stringify(obj, null, 2);
-            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
-            const res = yield this.post(requestUrl, data, additionalHeaders);
-            return this._processResponse(res, this.requestOptions);
-        });
-    }
-    putJson(requestUrl, obj, additionalHeaders = {}) {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            const data = JSON.stringify(obj, null, 2);
-            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
-            const res = yield this.put(requestUrl, data, additionalHeaders);
-            return this._processResponse(res, this.requestOptions);
-        });
-    }
-    patchJson(requestUrl, obj, additionalHeaders = {}) {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            const data = JSON.stringify(obj, null, 2);
-            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
-            const res = yield this.patch(requestUrl, data, additionalHeaders);
-            return this._processResponse(res, this.requestOptions);
-        });
-    }
-    /**
-     * Makes a raw http request.
-     * All other methods such as get, post, patch, and request ultimately call this.
-     * Prefer get, del, post and patch
-     */
-    request(verb, requestUrl, data, headers) {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            if (this._disposed) {
-                throw new Error('Client has already been disposed.');
-            }
-            const parsedUrl = new URL(requestUrl);
-            let info = this._prepareRequest(verb, parsedUrl, headers);
-            // Only perform retries on reads since writes may not be idempotent.
-            const maxTries = this._allowRetries && RetryableHttpVerbs.includes(verb)
-                ? this._maxRetries + 1
-                : 1;
-            let numTries = 0;
-            let response;
-            do {
-                response = yield this.requestRaw(info, data);
-                // Check if it's an authentication challenge
-                if (response &&
-                    response.message &&
-                    response.message.statusCode === HttpCodes.Unauthorized) {
-                    let authenticationHandler;
-                    for (const handler of this.handlers) {
-                        if (handler.canHandleAuthentication(response)) {
-                            authenticationHandler = handler;
-                            break;
-                        }
-                    }
-                    if (authenticationHandler) {
-                        return authenticationHandler.handleAuthentication(this, info, data);
-                    }
-                    else {
-                        // We have received an unauthorized response but have no handlers to handle it.
-                        // Let the response return to the caller.
-                        return response;
-                    }
-                }
-                let redirectsRemaining = this._maxRedirects;
-                while (response.message.statusCode &&
-                    HttpRedirectCodes.includes(response.message.statusCode) &&
-                    this._allowRedirects &&
-                    redirectsRemaining > 0) {
-                    const redirectUrl = response.message.headers['location'];
-                    if (!redirectUrl) {
-                        // if there's no location to redirect to, we won't
-                        break;
-                    }
-                    const parsedRedirectUrl = new URL(redirectUrl);
-                    if (parsedUrl.protocol === 'https:' &&
-                        parsedUrl.protocol !== parsedRedirectUrl.protocol &&
-                        !this._allowRedirectDowngrade) {
-                        throw new Error('Redirect from HTTPS to HTTP protocol. This downgrade is not allowed for security reasons. If you want to allow this behavior, set the allowRedirectDowngrade option to true.');
-                    }
-                    // we need to finish reading the response before reassigning response
-                    // which will leak the open socket.
-                    yield response.readBody();
-                    // strip authorization header if redirected to a different hostname
-                    if (parsedRedirectUrl.hostname !== parsedUrl.hostname) {
-                        for (const header in headers) {
-                            // header names are case insensitive
-                            if (header.toLowerCase() === 'authorization') {
-                                delete headers[header];
-                            }
-                        }
-                    }
-                    // let's make the request with the new redirectUrl
-                    info = this._prepareRequest(verb, parsedRedirectUrl, headers);
-                    response = yield this.requestRaw(info, data);
-                    redirectsRemaining--;
-                }
-                if (!response.message.statusCode ||
-                    !HttpResponseRetryCodes.includes(response.message.statusCode)) {
-                    // If not a retry code, return immediately instead of retrying
-                    return response;
-                }
-                numTries += 1;
-                if (numTries < maxTries) {
-                    yield response.readBody();
-                    yield this._performExponentialBackoff(numTries);
-                }
-            } while (numTries < maxTries);
-            return response;
-        });
-    }
-    /**
-     * Needs to be called if keepAlive is set to true in request options.
-     */
-    dispose() {
-        if (this._agent) {
-            this._agent.destroy();
-        }
-        this._disposed = true;
-    }
-    /**
-     * Raw request.
-     * @param info
-     * @param data
-     */
-    requestRaw(info, data) {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => {
-                function callbackForResult(err, res) {
-                    if (err) {
-                        reject(err);
-                    }
-                    else if (!res) {
-                        // If `err` is not passed, then `res` must be passed.
-                        reject(new Error('Unknown error'));
-                    }
-                    else {
-                        resolve(res);
-                    }
-                }
-                this.requestRawWithCallback(info, data, callbackForResult);
-            });
-        });
-    }
-    /**
-     * Raw request with callback.
-     * @param info
-     * @param data
-     * @param onResult
-     */
-    requestRawWithCallback(info, data, onResult) {
-        if (typeof data === 'string') {
-            if (!info.options.headers) {
-                info.options.headers = {};
-            }
-            info.options.headers['Content-Length'] = Buffer.byteLength(data, 'utf8');
-        }
-        let callbackCalled = false;
-        function handleResult(err, res) {
-            if (!callbackCalled) {
-                callbackCalled = true;
-                onResult(err, res);
-            }
-        }
-        const req = info.httpModule.request(info.options, (msg) => {
-            const res = new HttpClientResponse(msg);
-            handleResult(undefined, res);
-        });
-        let socket;
-        req.on('socket', sock => {
-            socket = sock;
-        });
-        // If we ever get disconnected, we want the socket to timeout eventually
-        req.setTimeout(this._socketTimeout || 3 * 60000, () => {
-            if (socket) {
-                socket.end();
-            }
-            handleResult(new Error(`Request timeout: ${info.options.path}`));
-        });
-        req.on('error', function (err) {
-            // err has statusCode property
-            // res should have headers
-            handleResult(err);
-        });
-        if (data && typeof data === 'string') {
-            req.write(data, 'utf8');
-        }
-        if (data && typeof data !== 'string') {
-            data.on('close', function () {
-                req.end();
-            });
-            data.pipe(req);
-        }
-        else {
-            req.end();
-        }
-    }
-    /**
-     * Gets an http agent. This function is useful when you need an http agent that handles
-     * routing through a proxy server - depending upon the url and proxy environment variables.
-     * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
-     */
-    getAgent(serverUrl) {
-        const parsedUrl = new URL(serverUrl);
-        return this._getAgent(parsedUrl);
-    }
-    getAgentDispatcher(serverUrl) {
-        const parsedUrl = new URL(serverUrl);
-        const proxyUrl = pm.getProxyUrl(parsedUrl);
-        const useProxy = proxyUrl && proxyUrl.hostname;
-        if (!useProxy) {
-            return;
-        }
-        return this._getProxyAgentDispatcher(parsedUrl, proxyUrl);
-    }
-    _prepareRequest(method, requestUrl, headers) {
-        const info = {};
-        info.parsedUrl = requestUrl;
-        const usingSsl = info.parsedUrl.protocol === 'https:';
-        info.httpModule = usingSsl ? https : http;
-        const defaultPort = usingSsl ? 443 : 80;
-        info.options = {};
-        info.options.host = info.parsedUrl.hostname;
-        info.options.port = info.parsedUrl.port
-            ? parseInt(info.parsedUrl.port)
-            : defaultPort;
-        info.options.path =
-            (info.parsedUrl.pathname || '') + (info.parsedUrl.search || '');
-        info.options.method = method;
-        info.options.headers = this._mergeHeaders(headers);
-        if (this.userAgent != null) {
-            info.options.headers['user-agent'] = this.userAgent;
-        }
-        info.options.agent = this._getAgent(info.parsedUrl);
-        // gives handlers an opportunity to participate
-        if (this.handlers) {
-            for (const handler of this.handlers) {
-                handler.prepareRequest(info.options);
-            }
-        }
-        return info;
-    }
-    _mergeHeaders(headers) {
-        if (this.requestOptions && this.requestOptions.headers) {
-            return Object.assign({}, lowercaseKeys$1(this.requestOptions.headers), lowercaseKeys$1(headers || {}));
-        }
-        return lowercaseKeys$1(headers || {});
-    }
-    _getExistingOrDefaultHeader(additionalHeaders, header, _default) {
-        let clientHeader;
-        if (this.requestOptions && this.requestOptions.headers) {
-            clientHeader = lowercaseKeys$1(this.requestOptions.headers)[header];
-        }
-        return additionalHeaders[header] || clientHeader || _default;
-    }
-    _getAgent(parsedUrl) {
-        let agent;
-        const proxyUrl = pm.getProxyUrl(parsedUrl);
-        const useProxy = proxyUrl && proxyUrl.hostname;
-        if (this._keepAlive && useProxy) {
-            agent = this._proxyAgent;
-        }
-        if (this._keepAlive && !useProxy) {
-            agent = this._agent;
-        }
-        // if agent is already assigned use that agent.
-        if (agent) {
-            return agent;
-        }
-        const usingSsl = parsedUrl.protocol === 'https:';
-        let maxSockets = 100;
-        if (this.requestOptions) {
-            maxSockets = this.requestOptions.maxSockets || http.globalAgent.maxSockets;
-        }
-        // This is `useProxy` again, but we need to check `proxyURl` directly for TypeScripts's flow analysis.
-        if (proxyUrl && proxyUrl.hostname) {
-            const agentOptions = {
-                maxSockets,
-                keepAlive: this._keepAlive,
-                proxy: Object.assign(Object.assign({}, ((proxyUrl.username || proxyUrl.password) && {
-                    proxyAuth: `${proxyUrl.username}:${proxyUrl.password}`
-                })), { host: proxyUrl.hostname, port: proxyUrl.port })
-            };
-            let tunnelAgent;
-            const overHttps = proxyUrl.protocol === 'https:';
-            if (usingSsl) {
-                tunnelAgent = overHttps ? tunnel.httpsOverHttps : tunnel.httpsOverHttp;
-            }
-            else {
-                tunnelAgent = overHttps ? tunnel.httpOverHttps : tunnel.httpOverHttp;
-            }
-            agent = tunnelAgent(agentOptions);
-            this._proxyAgent = agent;
-        }
-        // if reusing agent across request and tunneling agent isn't assigned create a new agent
-        if (this._keepAlive && !agent) {
-            const options = { keepAlive: this._keepAlive, maxSockets };
-            agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
-            this._agent = agent;
-        }
-        // if not using private agent and tunnel agent isn't setup then use global agent
-        if (!agent) {
-            agent = usingSsl ? https.globalAgent : http.globalAgent;
-        }
-        if (usingSsl && this._ignoreSslError) {
-            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
-            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
-            // we have to cast it to any and change it directly
-            agent.options = Object.assign(agent.options || {}, {
-                rejectUnauthorized: false
-            });
-        }
-        return agent;
-    }
-    _getProxyAgentDispatcher(parsedUrl, proxyUrl) {
-        let proxyAgent;
-        if (this._keepAlive) {
-            proxyAgent = this._proxyAgentDispatcher;
-        }
-        // if agent is already assigned use that agent.
-        if (proxyAgent) {
-            return proxyAgent;
-        }
-        const usingSsl = parsedUrl.protocol === 'https:';
-        proxyAgent = new undici_1$1.ProxyAgent(Object.assign({ uri: proxyUrl.href, pipelining: !this._keepAlive ? 0 : 1 }, ((proxyUrl.username || proxyUrl.password) && {
-            token: `${proxyUrl.username}:${proxyUrl.password}`
-        })));
-        this._proxyAgentDispatcher = proxyAgent;
-        if (usingSsl && this._ignoreSslError) {
-            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
-            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
-            // we have to cast it to any and change it directly
-            proxyAgent.options = Object.assign(proxyAgent.options.requestTls || {}, {
-                rejectUnauthorized: false
-            });
-        }
-        return proxyAgent;
-    }
-    _performExponentialBackoff(retryNumber) {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            retryNumber = Math.min(ExponentialBackoffCeiling, retryNumber);
-            const ms = ExponentialBackoffTimeSlice * Math.pow(2, retryNumber);
-            return new Promise(resolve => setTimeout(() => resolve(), ms));
-        });
-    }
-    _processResponse(res, options) {
-        return __awaiter$2(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => __awaiter$2(this, void 0, void 0, function* () {
-                const statusCode = res.message.statusCode || 0;
-                const response = {
-                    statusCode,
-                    result: null,
-                    headers: {}
-                };
-                // not found leads to null obj returned
-                if (statusCode === HttpCodes.NotFound) {
-                    resolve(response);
-                }
-                // get the result from the body
-                function dateTimeDeserializer(key, value) {
-                    if (typeof value === 'string') {
-                        const a = new Date(value);
-                        if (!isNaN(a.valueOf())) {
-                            return a;
-                        }
-                    }
-                    return value;
-                }
-                let obj;
-                let contents;
-                try {
-                    contents = yield res.readBody();
-                    if (contents && contents.length > 0) {
-                        if (options && options.deserializeDates) {
-                            obj = JSON.parse(contents, dateTimeDeserializer);
-                        }
-                        else {
-                            obj = JSON.parse(contents);
-                        }
-                        response.result = obj;
-                    }
-                    response.headers = res.message.headers;
-                }
-                catch (err) {
-                    // Invalid resource (contents not json);  leaving result obj null
-                }
-                // note that 3xx redirects are handled by the http layer.
-                if (statusCode > 299) {
-                    let msg;
-                    // if exception/error in body, attempt to get better error
-                    if (obj && obj.message) {
-                        msg = obj.message;
-                    }
-                    else if (contents && contents.length > 0) {
-                        // it may be the case that the exception is in the body message as string
-                        msg = contents;
-                    }
-                    else {
-                        msg = `Failed request: (${statusCode})`;
-                    }
-                    const err = new HttpClientError(msg, statusCode);
-                    err.result = response.result;
-                    reject(err);
-                }
-                else {
-                    resolve(response);
-                }
-            }));
-        });
-    }
-}
-lib$1.HttpClient = HttpClient;
-const lowercaseKeys$1 = (obj) => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCase()] = obj[k]), c), {});
-
-var auth$1 = {};
-
-var __awaiter$1 = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(auth$1, "__esModule", { value: true });
-auth$1.PersonalAccessTokenCredentialHandler = auth$1.BearerCredentialHandler = auth$1.BasicCredentialHandler = void 0;
-class BasicCredentialHandler {
-    constructor(username, password) {
-        this.username = username;
-        this.password = password;
-    }
-    prepareRequest(options) {
-        if (!options.headers) {
-            throw Error('The request has no headers');
-        }
-        options.headers['Authorization'] = `Basic ${Buffer.from(`${this.username}:${this.password}`).toString('base64')}`;
-    }
-    // This handler cannot handle 401
-    canHandleAuthentication() {
-        return false;
-    }
-    handleAuthentication() {
-        return __awaiter$1(this, void 0, void 0, function* () {
-            throw new Error('not implemented');
-        });
-    }
-}
-auth$1.BasicCredentialHandler = BasicCredentialHandler;
-class BearerCredentialHandler {
-    constructor(token) {
-        this.token = token;
-    }
-    // currently implements pre-authorization
-    // TODO: support preAuth = false where it hooks on 401
-    prepareRequest(options) {
-        if (!options.headers) {
-            throw Error('The request has no headers');
-        }
-        options.headers['Authorization'] = `Bearer ${this.token}`;
-    }
-    // This handler cannot handle 401
-    canHandleAuthentication() {
-        return false;
-    }
-    handleAuthentication() {
-        return __awaiter$1(this, void 0, void 0, function* () {
-            throw new Error('not implemented');
-        });
-    }
-}
-auth$1.BearerCredentialHandler = BearerCredentialHandler;
-class PersonalAccessTokenCredentialHandler {
-    constructor(token) {
-        this.token = token;
-    }
-    // currently implements pre-authorization
-    // TODO: support preAuth = false where it hooks on 401
-    prepareRequest(options) {
-        if (!options.headers) {
-            throw Error('The request has no headers');
-        }
-        options.headers['Authorization'] = `Basic ${Buffer.from(`PAT:${this.token}`).toString('base64')}`;
-    }
-    // This handler cannot handle 401
-    canHandleAuthentication() {
-        return false;
-    }
-    handleAuthentication() {
-        return __awaiter$1(this, void 0, void 0, function* () {
-            throw new Error('not implemented');
-        });
-    }
-}
-auth$1.PersonalAccessTokenCredentialHandler = PersonalAccessTokenCredentialHandler;
 
 var hasRequiredOidcUtils;
 
 function requireOidcUtils () {
 	if (hasRequiredOidcUtils) return oidcUtils;
 	hasRequiredOidcUtils = 1;
-	var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
+	var __awaiter = (oidcUtils && oidcUtils.__awaiter) || function (thisArg, _arguments, P, generator) {
 	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 	    return new (P || (P = Promise))(function (resolve, reject) {
 	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -25076,8 +25506,8 @@ function requireOidcUtils () {
 	};
 	Object.defineProperty(oidcUtils, "__esModule", { value: true });
 	oidcUtils.OidcClient = void 0;
-	const http_client_1 = lib$1;
-	const auth_1 = auth$1;
+	const http_client_1 = requireLib$1();
+	const auth_1 = requireAuth();
 	const core_1 = requireCore();
 	class OidcClient {
 	    static createHttpClient(allowRetry = true, maxRetry = 10) {
@@ -25152,7 +25582,7 @@ function requireSummary () {
 	if (hasRequiredSummary) return summary$1;
 	hasRequiredSummary = 1;
 	(function (exports) {
-		var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
+		var __awaiter = (summary$1 && summary$1.__awaiter) || function (thisArg, _arguments, P, generator) {
 		    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 		    return new (P || (P = Promise))(function (resolve, reject) {
 		        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -25445,19 +25875,19 @@ var hasRequiredPathUtils;
 function requirePathUtils () {
 	if (hasRequiredPathUtils) return pathUtils;
 	hasRequiredPathUtils = 1;
-	var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+	var __createBinding = (pathUtils && pathUtils.__createBinding) || (Object.create ? (function(o, m, k, k2) {
 	    if (k2 === undefined) k2 = k;
 	    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 	}) : (function(o, m, k, k2) {
 	    if (k2 === undefined) k2 = k;
 	    o[k2] = m[k];
 	}));
-	var __setModuleDefault = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
+	var __setModuleDefault = (pathUtils && pathUtils.__setModuleDefault) || (Object.create ? (function(o, v) {
 	    Object.defineProperty(o, "default", { enumerable: true, value: v });
 	}) : function(o, v) {
 	    o["default"] = v;
 	});
-	var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+	var __importStar = (pathUtils && pathUtils.__importStar) || function (mod) {
 	    if (mod && mod.__esModule) return mod;
 	    var result = {};
 	    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
@@ -25511,26 +25941,26 @@ function requireCore () {
 	if (hasRequiredCore) return core$1;
 	hasRequiredCore = 1;
 	(function (exports) {
-		var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+		var __createBinding = (core$1 && core$1.__createBinding) || (Object.create ? (function(o, m, k, k2) {
 		    if (k2 === undefined) k2 = k;
 		    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 		}) : (function(o, m, k, k2) {
 		    if (k2 === undefined) k2 = k;
 		    o[k2] = m[k];
 		}));
-		var __setModuleDefault = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
+		var __setModuleDefault = (core$1 && core$1.__setModuleDefault) || (Object.create ? (function(o, v) {
 		    Object.defineProperty(o, "default", { enumerable: true, value: v });
 		}) : function(o, v) {
 		    o["default"] = v;
 		});
-		var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+		var __importStar = (core$1 && core$1.__importStar) || function (mod) {
 		    if (mod && mod.__esModule) return mod;
 		    var result = {};
 		    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
 		    __setModuleDefault(result, mod);
 		    return result;
 		};
-		var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
+		var __awaiter = (core$1 && core$1.__awaiter) || function (thisArg, _arguments, P, generator) {
 		    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 		    return new (P || (P = Promise))(function (resolve, reject) {
 		        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -25541,9 +25971,9 @@ function requireCore () {
 		};
 		Object.defineProperty(exports, "__esModule", { value: true });
 		exports.getIDToken = exports.getState = exports.saveState = exports.group = exports.endGroup = exports.startGroup = exports.info = exports.notice = exports.warning = exports.error = exports.debug = exports.isDebug = exports.setFailed = exports.setCommandEcho = exports.setOutput = exports.getBooleanInput = exports.getMultilineInput = exports.getInput = exports.addPath = exports.setSecret = exports.exportVariable = exports.ExitCode = void 0;
-		const command_1 = command;
-		const file_command_1 = fileCommand;
-		const utils_1 = utils$3;
+		const command_1 = requireCommand();
+		const file_command_1 = requireFileCommand();
+		const utils_1 = requireUtils$3();
 		const os = __importStar(require$$0);
 		const path = __importStar(require$$0$8);
 		const oidc_utils_1 = requireOidcUtils();
@@ -25855,3887 +26285,80 @@ var core = /*@__PURE__*/getDefaultExportFromCjs(coreExports);
 
 var github = {};
 
-var context$1 = {};
+var context = {};
 
-Object.defineProperty(context$1, "__esModule", { value: true });
-context$1.Context = void 0;
-const fs_1 = require$$0$1;
-const os_1 = require$$0;
-let Context$1 = class Context {
-    /**
-     * Hydrate the context from the environment
-     */
-    constructor() {
-        var _a, _b, _c;
-        this.payload = {};
-        if (process.env.GITHUB_EVENT_PATH) {
-            if ((0, fs_1.existsSync)(process.env.GITHUB_EVENT_PATH)) {
-                this.payload = JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, { encoding: 'utf8' }));
-            }
-            else {
-                const path = process.env.GITHUB_EVENT_PATH;
-                process.stdout.write(`GITHUB_EVENT_PATH ${path} does not exist${os_1.EOL}`);
-            }
-        }
-        this.eventName = process.env.GITHUB_EVENT_NAME;
-        this.sha = process.env.GITHUB_SHA;
-        this.ref = process.env.GITHUB_REF;
-        this.workflow = process.env.GITHUB_WORKFLOW;
-        this.action = process.env.GITHUB_ACTION;
-        this.actor = process.env.GITHUB_ACTOR;
-        this.job = process.env.GITHUB_JOB;
-        this.runNumber = parseInt(process.env.GITHUB_RUN_NUMBER, 10);
-        this.runId = parseInt(process.env.GITHUB_RUN_ID, 10);
-        this.apiUrl = (_a = process.env.GITHUB_API_URL) !== null && _a !== void 0 ? _a : `https://api.github.com`;
-        this.serverUrl = (_b = process.env.GITHUB_SERVER_URL) !== null && _b !== void 0 ? _b : `https://github.com`;
-        this.graphqlUrl =
-            (_c = process.env.GITHUB_GRAPHQL_URL) !== null && _c !== void 0 ? _c : `https://api.github.com/graphql`;
-    }
-    get issue() {
-        const payload = this.payload;
-        return Object.assign(Object.assign({}, this.repo), { number: (payload.issue || payload.pull_request || payload).number });
-    }
-    get repo() {
-        if (process.env.GITHUB_REPOSITORY) {
-            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-            return { owner, repo };
-        }
-        if (this.payload.repository) {
-            return {
-                owner: this.payload.repository.owner.login,
-                repo: this.payload.repository.name
-            };
-        }
-        throw new Error("context.repo requires a GITHUB_REPOSITORY environment variable like 'owner/repo'");
-    }
-};
-context$1.Context = Context$1;
+var hasRequiredContext;
+
+function requireContext () {
+	if (hasRequiredContext) return context;
+	hasRequiredContext = 1;
+	Object.defineProperty(context, "__esModule", { value: true });
+	context.Context = void 0;
+	const fs_1 = require$$0$1;
+	const os_1 = require$$0;
+	class Context {
+	    /**
+	     * Hydrate the context from the environment
+	     */
+	    constructor() {
+	        var _a, _b, _c;
+	        this.payload = {};
+	        if (process.env.GITHUB_EVENT_PATH) {
+	            if ((0, fs_1.existsSync)(process.env.GITHUB_EVENT_PATH)) {
+	                this.payload = JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, { encoding: 'utf8' }));
+	            }
+	            else {
+	                const path = process.env.GITHUB_EVENT_PATH;
+	                process.stdout.write(`GITHUB_EVENT_PATH ${path} does not exist${os_1.EOL}`);
+	            }
+	        }
+	        this.eventName = process.env.GITHUB_EVENT_NAME;
+	        this.sha = process.env.GITHUB_SHA;
+	        this.ref = process.env.GITHUB_REF;
+	        this.workflow = process.env.GITHUB_WORKFLOW;
+	        this.action = process.env.GITHUB_ACTION;
+	        this.actor = process.env.GITHUB_ACTOR;
+	        this.job = process.env.GITHUB_JOB;
+	        this.runNumber = parseInt(process.env.GITHUB_RUN_NUMBER, 10);
+	        this.runId = parseInt(process.env.GITHUB_RUN_ID, 10);
+	        this.apiUrl = (_a = process.env.GITHUB_API_URL) !== null && _a !== void 0 ? _a : `https://api.github.com`;
+	        this.serverUrl = (_b = process.env.GITHUB_SERVER_URL) !== null && _b !== void 0 ? _b : `https://github.com`;
+	        this.graphqlUrl =
+	            (_c = process.env.GITHUB_GRAPHQL_URL) !== null && _c !== void 0 ? _c : `https://api.github.com/graphql`;
+	    }
+	    get issue() {
+	        const payload = this.payload;
+	        return Object.assign(Object.assign({}, this.repo), { number: (payload.issue || payload.pull_request || payload).number });
+	    }
+	    get repo() {
+	        if (process.env.GITHUB_REPOSITORY) {
+	            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+	            return { owner, repo };
+	        }
+	        if (this.payload.repository) {
+	            return {
+	                owner: this.payload.repository.owner.login,
+	                repo: this.payload.repository.name
+	            };
+	        }
+	        throw new Error("context.repo requires a GITHUB_REPOSITORY environment variable like 'owner/repo'");
+	    }
+	}
+	context.Context = Context;
+	
+	return context;
+}
 
 var utils$1 = {};
 
 var utils = {};
 
-var __createBinding$1 = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault$1 = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar$1 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding$1(result, mod, k);
-    __setModuleDefault$1(result, mod);
-    return result;
-};
-var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(utils, "__esModule", { value: true });
-utils.getApiBaseUrl = utils.getProxyFetch = utils.getProxyAgentDispatcher = utils.getProxyAgent = utils.getAuthString = void 0;
-const httpClient = __importStar$1(lib$1);
-const undici_1 = undici;
-function getAuthString(token, options) {
-    if (!token && !options.auth) {
-        throw new Error('Parameter token or opts.auth is required');
-    }
-    else if (token && options.auth) {
-        throw new Error('Parameters token and opts.auth may not both be specified');
-    }
-    return typeof options.auth === 'string' ? options.auth : `token ${token}`;
-}
-utils.getAuthString = getAuthString;
-function getProxyAgent(destinationUrl) {
-    const hc = new httpClient.HttpClient();
-    return hc.getAgent(destinationUrl);
-}
-utils.getProxyAgent = getProxyAgent;
-function getProxyAgentDispatcher(destinationUrl) {
-    const hc = new httpClient.HttpClient();
-    return hc.getAgentDispatcher(destinationUrl);
-}
-utils.getProxyAgentDispatcher = getProxyAgentDispatcher;
-function getProxyFetch(destinationUrl) {
-    const httpDispatcher = getProxyAgentDispatcher(destinationUrl);
-    const proxyFetch = (url, opts) => __awaiter(this, void 0, void 0, function* () {
-        return (0, undici_1.fetch)(url, Object.assign(Object.assign({}, opts), { dispatcher: httpDispatcher }));
-    });
-    return proxyFetch;
-}
-utils.getProxyFetch = getProxyFetch;
-function getApiBaseUrl() {
-    return process.env['GITHUB_API_URL'] || 'https://api.github.com';
-}
-utils.getApiBaseUrl = getApiBaseUrl;
-
-var distNode$9 = {};
-
-Object.defineProperty(distNode$9, '__esModule', { value: true });
-
-function getUserAgent() {
-  if (typeof navigator === "object" && "userAgent" in navigator) {
-    return navigator.userAgent;
-  }
-
-  if (typeof process === "object" && "version" in process) {
-    return `Node.js/${process.version.substr(1)} (${process.platform}; ${process.arch})`;
-  }
-
-  return "<environment undetectable>";
-}
-
-distNode$9.getUserAgent = getUserAgent;
-
-var beforeAfterHook = {exports: {}};
-
-var register_1 = register$1;
-
-function register$1(state, name, method, options) {
-  if (typeof method !== "function") {
-    throw new Error("method for before hook must be a function");
-  }
-
-  if (!options) {
-    options = {};
-  }
-
-  if (Array.isArray(name)) {
-    return name.reverse().reduce(function (callback, name) {
-      return register$1.bind(null, state, name, callback, options);
-    }, method)();
-  }
-
-  return Promise.resolve().then(function () {
-    if (!state.registry[name]) {
-      return method(options);
-    }
-
-    return state.registry[name].reduce(function (method, registered) {
-      return registered.hook.bind(null, method, options);
-    }, method)();
-  });
-}
-
-var add = addHook$1;
-
-function addHook$1(state, kind, name, hook) {
-  var orig = hook;
-  if (!state.registry[name]) {
-    state.registry[name] = [];
-  }
-
-  if (kind === "before") {
-    hook = function (method, options) {
-      return Promise.resolve()
-        .then(orig.bind(null, options))
-        .then(method.bind(null, options));
-    };
-  }
-
-  if (kind === "after") {
-    hook = function (method, options) {
-      var result;
-      return Promise.resolve()
-        .then(method.bind(null, options))
-        .then(function (result_) {
-          result = result_;
-          return orig(result, options);
-        })
-        .then(function () {
-          return result;
-        });
-    };
-  }
-
-  if (kind === "error") {
-    hook = function (method, options) {
-      return Promise.resolve()
-        .then(method.bind(null, options))
-        .catch(function (error) {
-          return orig(error, options);
-        });
-    };
-  }
-
-  state.registry[name].push({
-    hook: hook,
-    orig: orig,
-  });
-}
-
-var remove = removeHook$1;
-
-function removeHook$1(state, name, method) {
-  if (!state.registry[name]) {
-    return;
-  }
-
-  var index = state.registry[name]
-    .map(function (registered) {
-      return registered.orig;
-    })
-    .indexOf(method);
-
-  if (index === -1) {
-    return;
-  }
-
-  state.registry[name].splice(index, 1);
-}
-
-var register = register_1;
-var addHook = add;
-var removeHook = remove;
-
-// bind with array of arguments: https://stackoverflow.com/a/21792913
-var bind = Function.bind;
-var bindable = bind.bind(bind);
-
-function bindApi(hook, state, name) {
-  var removeHookRef = bindable(removeHook, null).apply(
-    null,
-    name ? [state, name] : [state]
-  );
-  hook.api = { remove: removeHookRef };
-  hook.remove = removeHookRef;
-  ["before", "error", "after", "wrap"].forEach(function (kind) {
-    var args = name ? [state, kind, name] : [state, kind];
-    hook[kind] = hook.api[kind] = bindable(addHook, null).apply(null, args);
-  });
-}
-
-function HookSingular() {
-  var singularHookName = "h";
-  var singularHookState = {
-    registry: {},
-  };
-  var singularHook = register.bind(null, singularHookState, singularHookName);
-  bindApi(singularHook, singularHookState, singularHookName);
-  return singularHook;
-}
-
-function HookCollection() {
-  var state = {
-    registry: {},
-  };
-
-  var hook = register.bind(null, state);
-  bindApi(hook, state);
-
-  return hook;
-}
-
-var collectionHookDeprecationMessageDisplayed = false;
-function Hook() {
-  if (!collectionHookDeprecationMessageDisplayed) {
-    console.warn(
-      '[before-after-hook]: "Hook()" repurposing warning, use "Hook.Collection()". Read more: https://git.io/upgrade-before-after-hook-to-1.4'
-    );
-    collectionHookDeprecationMessageDisplayed = true;
-  }
-  return HookCollection();
-}
-
-Hook.Singular = HookSingular.bind();
-Hook.Collection = HookCollection.bind();
-
-beforeAfterHook.exports = Hook;
-// expose constructors as a named property for TypeScript
-beforeAfterHook.exports.Hook = Hook;
-beforeAfterHook.exports.Singular = Hook.Singular;
-beforeAfterHook.exports.Collection = Hook.Collection;
-
-var beforeAfterHookExports = beforeAfterHook.exports;
-
-var isPlainObject$1 = {};
-
-Object.defineProperty(isPlainObject$1, '__esModule', { value: true });
-
-/*!
- * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
- *
- * Copyright (c) 2014-2017, Jon Schlinkert.
- * Released under the MIT License.
- */
-
-function isObject(o) {
-  return Object.prototype.toString.call(o) === '[object Object]';
-}
-
-function isPlainObject(o) {
-  var ctor,prot;
-
-  if (isObject(o) === false) return false;
-
-  // If has modified constructor
-  ctor = o.constructor;
-  if (ctor === undefined) return true;
-
-  // If has modified prototype
-  prot = ctor.prototype;
-  if (isObject(prot) === false) return false;
-
-  // If constructor does not have an Object-specific method
-  if (prot.hasOwnProperty('isPrototypeOf') === false) {
-    return false;
-  }
-
-  // Most likely a plain Object
-  return true;
-}
-
-isPlainObject$1.isPlainObject = isPlainObject;
-
-var __defProp$7 = Object.defineProperty;
-var __getOwnPropDesc$7 = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames$7 = Object.getOwnPropertyNames;
-var __hasOwnProp$7 = Object.prototype.hasOwnProperty;
-var __export$7 = (target, all) => {
-  for (var name in all)
-    __defProp$7(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps$7 = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames$7(from))
-      if (!__hasOwnProp$7.call(to, key) && key !== except)
-        __defProp$7(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc$7(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS$7 = (mod) => __copyProps$7(__defProp$7({}, "__esModule", { value: true }), mod);
-
-// pkg/dist-src/index.js
-var dist_src_exports$7 = {};
-__export$7(dist_src_exports$7, {
-  endpoint: () => endpoint
-});
-var distNode$8 = __toCommonJS$7(dist_src_exports$7);
-
-// pkg/dist-src/defaults.js
-var import_universal_user_agent$3 = distNode$9;
-
-// pkg/dist-src/version.js
-var VERSION$5 = "9.0.1";
-
-// pkg/dist-src/defaults.js
-var userAgent = `octokit-endpoint.js/${VERSION$5} ${(0, import_universal_user_agent$3.getUserAgent)()}`;
-var DEFAULTS = {
-  method: "GET",
-  baseUrl: "https://api.github.com",
-  headers: {
-    accept: "application/vnd.github.v3+json",
-    "user-agent": userAgent
-  },
-  mediaType: {
-    format: ""
-  }
-};
-
-// pkg/dist-src/util/lowercase-keys.js
-function lowercaseKeys(object) {
-  if (!object) {
-    return {};
-  }
-  return Object.keys(object).reduce((newObj, key) => {
-    newObj[key.toLowerCase()] = object[key];
-    return newObj;
-  }, {});
-}
-
-// pkg/dist-src/util/merge-deep.js
-var import_is_plain_object$1 = isPlainObject$1;
-function mergeDeep(defaults, options) {
-  const result = Object.assign({}, defaults);
-  Object.keys(options).forEach((key) => {
-    if ((0, import_is_plain_object$1.isPlainObject)(options[key])) {
-      if (!(key in defaults))
-        Object.assign(result, { [key]: options[key] });
-      else
-        result[key] = mergeDeep(defaults[key], options[key]);
-    } else {
-      Object.assign(result, { [key]: options[key] });
-    }
-  });
-  return result;
-}
-
-// pkg/dist-src/util/remove-undefined-properties.js
-function removeUndefinedProperties(obj) {
-  for (const key in obj) {
-    if (obj[key] === void 0) {
-      delete obj[key];
-    }
-  }
-  return obj;
-}
-
-// pkg/dist-src/merge.js
-function merge(defaults, route, options) {
-  if (typeof route === "string") {
-    let [method, url] = route.split(" ");
-    options = Object.assign(url ? { method, url } : { url: method }, options);
-  } else {
-    options = Object.assign({}, route);
-  }
-  options.headers = lowercaseKeys(options.headers);
-  removeUndefinedProperties(options);
-  removeUndefinedProperties(options.headers);
-  const mergedOptions = mergeDeep(defaults || {}, options);
-  if (options.url === "/graphql") {
-    if (defaults && defaults.mediaType.previews?.length) {
-      mergedOptions.mediaType.previews = defaults.mediaType.previews.filter(
-        (preview) => !mergedOptions.mediaType.previews.includes(preview)
-      ).concat(mergedOptions.mediaType.previews);
-    }
-    mergedOptions.mediaType.previews = (mergedOptions.mediaType.previews || []).map((preview) => preview.replace(/-preview/, ""));
-  }
-  return mergedOptions;
-}
-
-// pkg/dist-src/util/add-query-parameters.js
-function addQueryParameters(url, parameters) {
-  const separator = /\?/.test(url) ? "&" : "?";
-  const names = Object.keys(parameters);
-  if (names.length === 0) {
-    return url;
-  }
-  return url + separator + names.map((name) => {
-    if (name === "q") {
-      return "q=" + parameters.q.split("+").map(encodeURIComponent).join("+");
-    }
-    return `${name}=${encodeURIComponent(parameters[name])}`;
-  }).join("&");
-}
-
-// pkg/dist-src/util/extract-url-variable-names.js
-var urlVariableRegex = /\{[^}]+\}/g;
-function removeNonChars(variableName) {
-  return variableName.replace(/^\W+|\W+$/g, "").split(/,/);
-}
-function extractUrlVariableNames(url) {
-  const matches = url.match(urlVariableRegex);
-  if (!matches) {
-    return [];
-  }
-  return matches.map(removeNonChars).reduce((a, b) => a.concat(b), []);
-}
-
-// pkg/dist-src/util/omit.js
-function omit(object, keysToOmit) {
-  return Object.keys(object).filter((option) => !keysToOmit.includes(option)).reduce((obj, key) => {
-    obj[key] = object[key];
-    return obj;
-  }, {});
-}
-
-// pkg/dist-src/util/url-template.js
-function encodeReserved(str) {
-  return str.split(/(%[0-9A-Fa-f]{2})/g).map(function(part) {
-    if (!/%[0-9A-Fa-f]/.test(part)) {
-      part = encodeURI(part).replace(/%5B/g, "[").replace(/%5D/g, "]");
-    }
-    return part;
-  }).join("");
-}
-function encodeUnreserved(str) {
-  return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
-    return "%" + c.charCodeAt(0).toString(16).toUpperCase();
-  });
-}
-function encodeValue(operator, value, key) {
-  value = operator === "+" || operator === "#" ? encodeReserved(value) : encodeUnreserved(value);
-  if (key) {
-    return encodeUnreserved(key) + "=" + value;
-  } else {
-    return value;
-  }
-}
-function isDefined(value) {
-  return value !== void 0 && value !== null;
-}
-function isKeyOperator(operator) {
-  return operator === ";" || operator === "&" || operator === "?";
-}
-function getValues(context, operator, key, modifier) {
-  var value = context[key], result = [];
-  if (isDefined(value) && value !== "") {
-    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-      value = value.toString();
-      if (modifier && modifier !== "*") {
-        value = value.substring(0, parseInt(modifier, 10));
-      }
-      result.push(
-        encodeValue(operator, value, isKeyOperator(operator) ? key : "")
-      );
-    } else {
-      if (modifier === "*") {
-        if (Array.isArray(value)) {
-          value.filter(isDefined).forEach(function(value2) {
-            result.push(
-              encodeValue(operator, value2, isKeyOperator(operator) ? key : "")
-            );
-          });
-        } else {
-          Object.keys(value).forEach(function(k) {
-            if (isDefined(value[k])) {
-              result.push(encodeValue(operator, value[k], k));
-            }
-          });
-        }
-      } else {
-        const tmp = [];
-        if (Array.isArray(value)) {
-          value.filter(isDefined).forEach(function(value2) {
-            tmp.push(encodeValue(operator, value2));
-          });
-        } else {
-          Object.keys(value).forEach(function(k) {
-            if (isDefined(value[k])) {
-              tmp.push(encodeUnreserved(k));
-              tmp.push(encodeValue(operator, value[k].toString()));
-            }
-          });
-        }
-        if (isKeyOperator(operator)) {
-          result.push(encodeUnreserved(key) + "=" + tmp.join(","));
-        } else if (tmp.length !== 0) {
-          result.push(tmp.join(","));
-        }
-      }
-    }
-  } else {
-    if (operator === ";") {
-      if (isDefined(value)) {
-        result.push(encodeUnreserved(key));
-      }
-    } else if (value === "" && (operator === "&" || operator === "?")) {
-      result.push(encodeUnreserved(key) + "=");
-    } else if (value === "") {
-      result.push("");
-    }
-  }
-  return result;
-}
-function parseUrl(template) {
-  return {
-    expand: expand.bind(null, template)
-  };
-}
-function expand(template, context) {
-  var operators = ["+", "#", ".", "/", ";", "?", "&"];
-  return template.replace(
-    /\{([^\{\}]+)\}|([^\{\}]+)/g,
-    function(_, expression, literal) {
-      if (expression) {
-        let operator = "";
-        const values = [];
-        if (operators.indexOf(expression.charAt(0)) !== -1) {
-          operator = expression.charAt(0);
-          expression = expression.substr(1);
-        }
-        expression.split(/,/g).forEach(function(variable) {
-          var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
-          values.push(getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
-        });
-        if (operator && operator !== "+") {
-          var separator = ",";
-          if (operator === "?") {
-            separator = "&";
-          } else if (operator !== "#") {
-            separator = operator;
-          }
-          return (values.length !== 0 ? operator : "") + values.join(separator);
-        } else {
-          return values.join(",");
-        }
-      } else {
-        return encodeReserved(literal);
-      }
-    }
-  );
-}
-
-// pkg/dist-src/parse.js
-function parse$2(options) {
-  let method = options.method.toUpperCase();
-  let url = (options.url || "/").replace(/:([a-z]\w+)/g, "{$1}");
-  let headers = Object.assign({}, options.headers);
-  let body;
-  let parameters = omit(options, [
-    "method",
-    "baseUrl",
-    "url",
-    "headers",
-    "request",
-    "mediaType"
-  ]);
-  const urlVariableNames = extractUrlVariableNames(url);
-  url = parseUrl(url).expand(parameters);
-  if (!/^http/.test(url)) {
-    url = options.baseUrl + url;
-  }
-  const omittedParameters = Object.keys(options).filter((option) => urlVariableNames.includes(option)).concat("baseUrl");
-  const remainingParameters = omit(parameters, omittedParameters);
-  const isBinaryRequest = /application\/octet-stream/i.test(headers.accept);
-  if (!isBinaryRequest) {
-    if (options.mediaType.format) {
-      headers.accept = headers.accept.split(/,/).map(
-        (format) => format.replace(
-          /application\/vnd(\.\w+)(\.v3)?(\.\w+)?(\+json)?$/,
-          `application/vnd$1$2.${options.mediaType.format}`
-        )
-      ).join(",");
-    }
-    if (url.endsWith("/graphql")) {
-      if (options.mediaType.previews?.length) {
-        const previewsFromAcceptHeader = headers.accept.match(/[\w-]+(?=-preview)/g) || [];
-        headers.accept = previewsFromAcceptHeader.concat(options.mediaType.previews).map((preview) => {
-          const format = options.mediaType.format ? `.${options.mediaType.format}` : "+json";
-          return `application/vnd.github.${preview}-preview${format}`;
-        }).join(",");
-      }
-    }
-  }
-  if (["GET", "HEAD"].includes(method)) {
-    url = addQueryParameters(url, remainingParameters);
-  } else {
-    if ("data" in remainingParameters) {
-      body = remainingParameters.data;
-    } else {
-      if (Object.keys(remainingParameters).length) {
-        body = remainingParameters;
-      }
-    }
-  }
-  if (!headers["content-type"] && typeof body !== "undefined") {
-    headers["content-type"] = "application/json; charset=utf-8";
-  }
-  if (["PATCH", "PUT"].includes(method) && typeof body === "undefined") {
-    body = "";
-  }
-  return Object.assign(
-    { method, url, headers },
-    typeof body !== "undefined" ? { body } : null,
-    options.request ? { request: options.request } : null
-  );
-}
-
-// pkg/dist-src/endpoint-with-defaults.js
-function endpointWithDefaults(defaults, route, options) {
-  return parse$2(merge(defaults, route, options));
-}
-
-// pkg/dist-src/with-defaults.js
-function withDefaults$2(oldDefaults, newDefaults) {
-  const DEFAULTS2 = merge(oldDefaults, newDefaults);
-  const endpoint2 = endpointWithDefaults.bind(null, DEFAULTS2);
-  return Object.assign(endpoint2, {
-    DEFAULTS: DEFAULTS2,
-    defaults: withDefaults$2.bind(null, DEFAULTS2),
-    merge: merge.bind(null, DEFAULTS2),
-    parse: parse$2
-  });
-}
-
-// pkg/dist-src/index.js
-var endpoint = withDefaults$2(null, DEFAULTS);
-
-var distNode$7 = {};
-
-Object.defineProperty(distNode$7, '__esModule', { value: true });
-
-class Deprecation extends Error {
-  constructor(message) {
-    super(message); // Maintains proper stack trace (only available on V8)
-
-    /* istanbul ignore next */
-
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, this.constructor);
-    }
-
-    this.name = 'Deprecation';
-  }
-
-}
-
-distNode$7.Deprecation = Deprecation;
-
-var once$1 = {exports: {}};
-
-// Returns a wrapper function that returns a wrapped callback
-// The wrapper function should do some stuff, and return a
-// presumably different callback function.
-// This makes sure that own properties are retained, so that
-// decorations and such are not lost along the way.
-var wrappy_1 = wrappy$1;
-function wrappy$1 (fn, cb) {
-  if (fn && cb) return wrappy$1(fn)(cb)
-
-  if (typeof fn !== 'function')
-    throw new TypeError('need wrapper function')
-
-  Object.keys(fn).forEach(function (k) {
-    wrapper[k] = fn[k];
-  });
-
-  return wrapper
-
-  function wrapper() {
-    var args = new Array(arguments.length);
-    for (var i = 0; i < args.length; i++) {
-      args[i] = arguments[i];
-    }
-    var ret = fn.apply(this, args);
-    var cb = args[args.length-1];
-    if (typeof ret === 'function' && ret !== cb) {
-      Object.keys(cb).forEach(function (k) {
-        ret[k] = cb[k];
-      });
-    }
-    return ret
-  }
-}
-
-var wrappy = wrappy_1;
-once$1.exports = wrappy(once);
-once$1.exports.strict = wrappy(onceStrict);
-
-once.proto = once(function () {
-  Object.defineProperty(Function.prototype, 'once', {
-    value: function () {
-      return once(this)
-    },
-    configurable: true
-  });
-
-  Object.defineProperty(Function.prototype, 'onceStrict', {
-    value: function () {
-      return onceStrict(this)
-    },
-    configurable: true
-  });
-});
-
-function once (fn) {
-  var f = function () {
-    if (f.called) return f.value
-    f.called = true;
-    return f.value = fn.apply(this, arguments)
-  };
-  f.called = false;
-  return f
-}
-
-function onceStrict (fn) {
-  var f = function () {
-    if (f.called)
-      throw new Error(f.onceError)
-    f.called = true;
-    return f.value = fn.apply(this, arguments)
-  };
-  var name = fn.name || 'Function wrapped with `once`';
-  f.onceError = name + " shouldn't be called more than once";
-  f.called = false;
-  return f
-}
-
-var onceExports = once$1.exports;
-
-var __create = Object.create;
-var __defProp$6 = Object.defineProperty;
-var __getOwnPropDesc$6 = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames$6 = Object.getOwnPropertyNames;
-var __getProtoOf = Object.getPrototypeOf;
-var __hasOwnProp$6 = Object.prototype.hasOwnProperty;
-var __export$6 = (target, all) => {
-  for (var name in all)
-    __defProp$6(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps$6 = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames$6(from))
-      if (!__hasOwnProp$6.call(to, key) && key !== except)
-        __defProp$6(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc$6(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps$6(
-  // If the importer is in node compatibility mode or this is not an ESM
-  // file that has been converted to a CommonJS file using a Babel-
-  // compatible transform (i.e. "__esModule" has not been set), then set
-  // "default" to the CommonJS "module.exports" for node compatibility.
-  !mod || !mod.__esModule ? __defProp$6(target, "default", { value: mod, enumerable: true }) : target,
-  mod
-));
-var __toCommonJS$6 = (mod) => __copyProps$6(__defProp$6({}, "__esModule", { value: true }), mod);
-
-// pkg/dist-src/index.js
-var dist_src_exports$6 = {};
-__export$6(dist_src_exports$6, {
-  RequestError: () => RequestError
-});
-var distNode$6 = __toCommonJS$6(dist_src_exports$6);
-var import_deprecation = distNode$7;
-var import_once = __toESM(onceExports);
-var logOnceCode = (0, import_once.default)((deprecation) => console.warn(deprecation));
-var logOnceHeaders = (0, import_once.default)((deprecation) => console.warn(deprecation));
-var RequestError = class extends Error {
-  constructor(message, statusCode, options) {
-    super(message);
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, this.constructor);
-    }
-    this.name = "HttpError";
-    this.status = statusCode;
-    let headers;
-    if ("headers" in options && typeof options.headers !== "undefined") {
-      headers = options.headers;
-    }
-    if ("response" in options) {
-      this.response = options.response;
-      headers = options.response.headers;
-    }
-    const requestCopy = Object.assign({}, options.request);
-    if (options.request.headers.authorization) {
-      requestCopy.headers = Object.assign({}, options.request.headers, {
-        authorization: options.request.headers.authorization.replace(
-          / .*$/,
-          " [REDACTED]"
-        )
-      });
-    }
-    requestCopy.url = requestCopy.url.replace(/\bclient_secret=\w+/g, "client_secret=[REDACTED]").replace(/\baccess_token=\w+/g, "access_token=[REDACTED]");
-    this.request = requestCopy;
-    Object.defineProperty(this, "code", {
-      get() {
-        logOnceCode(
-          new import_deprecation.Deprecation(
-            "[@octokit/request-error] `error.code` is deprecated, use `error.status`."
-          )
-        );
-        return statusCode;
-      }
-    });
-    Object.defineProperty(this, "headers", {
-      get() {
-        logOnceHeaders(
-          new import_deprecation.Deprecation(
-            "[@octokit/request-error] `error.headers` is deprecated, use `error.response.headers`."
-          )
-        );
-        return headers || {};
-      }
-    });
-  }
-};
-
-var __defProp$5 = Object.defineProperty;
-var __getOwnPropDesc$5 = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames$5 = Object.getOwnPropertyNames;
-var __hasOwnProp$5 = Object.prototype.hasOwnProperty;
-var __export$5 = (target, all) => {
-  for (var name in all)
-    __defProp$5(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps$5 = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames$5(from))
-      if (!__hasOwnProp$5.call(to, key) && key !== except)
-        __defProp$5(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc$5(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS$5 = (mod) => __copyProps$5(__defProp$5({}, "__esModule", { value: true }), mod);
-
-// pkg/dist-src/index.js
-var dist_src_exports$5 = {};
-__export$5(dist_src_exports$5, {
-  request: () => request
-});
-var distNode$5 = __toCommonJS$5(dist_src_exports$5);
-var import_endpoint = distNode$8;
-var import_universal_user_agent$2 = distNode$9;
-
-// pkg/dist-src/version.js
-var VERSION$4 = "8.1.4";
-
-// pkg/dist-src/fetch-wrapper.js
-var import_is_plain_object = isPlainObject$1;
-var import_request_error = distNode$6;
-
-// pkg/dist-src/get-buffer-response.js
-function getBufferResponse(response) {
-  return response.arrayBuffer();
-}
-
-// pkg/dist-src/fetch-wrapper.js
-function fetchWrapper(requestOptions) {
-  var _a, _b, _c;
-  const log = requestOptions.request && requestOptions.request.log ? requestOptions.request.log : console;
-  const parseSuccessResponseBody = ((_a = requestOptions.request) == null ? void 0 : _a.parseSuccessResponseBody) !== false;
-  if ((0, import_is_plain_object.isPlainObject)(requestOptions.body) || Array.isArray(requestOptions.body)) {
-    requestOptions.body = JSON.stringify(requestOptions.body);
-  }
-  let headers = {};
-  let status;
-  let url;
-  let { fetch } = globalThis;
-  if ((_b = requestOptions.request) == null ? void 0 : _b.fetch) {
-    fetch = requestOptions.request.fetch;
-  }
-  if (!fetch) {
-    throw new Error(
-      "fetch is not set. Please pass a fetch implementation as new Octokit({ request: { fetch }}). Learn more at https://github.com/octokit/octokit.js/#fetch-missing"
-    );
-  }
-  return fetch(requestOptions.url, {
-    method: requestOptions.method,
-    body: requestOptions.body,
-    headers: requestOptions.headers,
-    signal: (_c = requestOptions.request) == null ? void 0 : _c.signal,
-    // duplex must be set if request.body is ReadableStream or Async Iterables.
-    // See https://fetch.spec.whatwg.org/#dom-requestinit-duplex.
-    ...requestOptions.body && { duplex: "half" }
-  }).then(async (response) => {
-    url = response.url;
-    status = response.status;
-    for (const keyAndValue of response.headers) {
-      headers[keyAndValue[0]] = keyAndValue[1];
-    }
-    if ("deprecation" in headers) {
-      const matches = headers.link && headers.link.match(/<([^>]+)>; rel="deprecation"/);
-      const deprecationLink = matches && matches.pop();
-      log.warn(
-        `[@octokit/request] "${requestOptions.method} ${requestOptions.url}" is deprecated. It is scheduled to be removed on ${headers.sunset}${deprecationLink ? `. See ${deprecationLink}` : ""}`
-      );
-    }
-    if (status === 204 || status === 205) {
-      return;
-    }
-    if (requestOptions.method === "HEAD") {
-      if (status < 400) {
-        return;
-      }
-      throw new import_request_error.RequestError(response.statusText, status, {
-        response: {
-          url,
-          status,
-          headers,
-          data: void 0
-        },
-        request: requestOptions
-      });
-    }
-    if (status === 304) {
-      throw new import_request_error.RequestError("Not modified", status, {
-        response: {
-          url,
-          status,
-          headers,
-          data: await getResponseData(response)
-        },
-        request: requestOptions
-      });
-    }
-    if (status >= 400) {
-      const data = await getResponseData(response);
-      const error = new import_request_error.RequestError(toErrorMessage(data), status, {
-        response: {
-          url,
-          status,
-          headers,
-          data
-        },
-        request: requestOptions
-      });
-      throw error;
-    }
-    return parseSuccessResponseBody ? await getResponseData(response) : response.body;
-  }).then((data) => {
-    return {
-      status,
-      url,
-      headers,
-      data
-    };
-  }).catch((error) => {
-    if (error instanceof import_request_error.RequestError)
-      throw error;
-    else if (error.name === "AbortError")
-      throw error;
-    let message = error.message;
-    if (error.name === "TypeError" && "cause" in error) {
-      if (error.cause instanceof Error) {
-        message = error.cause.message;
-      } else if (typeof error.cause === "string") {
-        message = error.cause;
-      }
-    }
-    throw new import_request_error.RequestError(message, 500, {
-      request: requestOptions
-    });
-  });
-}
-async function getResponseData(response) {
-  const contentType = response.headers.get("content-type");
-  if (/application\/json/.test(contentType)) {
-    return response.json();
-  }
-  if (!contentType || /^text\/|charset=utf-8$/.test(contentType)) {
-    return response.text();
-  }
-  return getBufferResponse(response);
-}
-function toErrorMessage(data) {
-  if (typeof data === "string")
-    return data;
-  if ("message" in data) {
-    if (Array.isArray(data.errors)) {
-      return `${data.message}: ${data.errors.map(JSON.stringify).join(", ")}`;
-    }
-    return data.message;
-  }
-  return `Unknown error: ${JSON.stringify(data)}`;
-}
-
-// pkg/dist-src/with-defaults.js
-function withDefaults$1(oldEndpoint, newDefaults) {
-  const endpoint2 = oldEndpoint.defaults(newDefaults);
-  const newApi = function(route, parameters) {
-    const endpointOptions = endpoint2.merge(route, parameters);
-    if (!endpointOptions.request || !endpointOptions.request.hook) {
-      return fetchWrapper(endpoint2.parse(endpointOptions));
-    }
-    const request2 = (route2, parameters2) => {
-      return fetchWrapper(
-        endpoint2.parse(endpoint2.merge(route2, parameters2))
-      );
-    };
-    Object.assign(request2, {
-      endpoint: endpoint2,
-      defaults: withDefaults$1.bind(null, endpoint2)
-    });
-    return endpointOptions.request.hook(request2, endpointOptions);
-  };
-  return Object.assign(newApi, {
-    endpoint: endpoint2,
-    defaults: withDefaults$1.bind(null, endpoint2)
-  });
-}
-
-// pkg/dist-src/index.js
-var request = withDefaults$1(import_endpoint.endpoint, {
-  headers: {
-    "user-agent": `octokit-request.js/${VERSION$4} ${(0, import_universal_user_agent$2.getUserAgent)()}`
-  }
-});
-
-var __defProp$4 = Object.defineProperty;
-var __getOwnPropDesc$4 = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames$4 = Object.getOwnPropertyNames;
-var __hasOwnProp$4 = Object.prototype.hasOwnProperty;
-var __export$4 = (target, all) => {
-  for (var name in all)
-    __defProp$4(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps$4 = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames$4(from))
-      if (!__hasOwnProp$4.call(to, key) && key !== except)
-        __defProp$4(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc$4(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS$4 = (mod) => __copyProps$4(__defProp$4({}, "__esModule", { value: true }), mod);
-
-// pkg/dist-src/index.js
-var dist_src_exports$4 = {};
-__export$4(dist_src_exports$4, {
-  GraphqlResponseError: () => GraphqlResponseError,
-  graphql: () => graphql2,
-  withCustomRequest: () => withCustomRequest
-});
-var distNode$4 = __toCommonJS$4(dist_src_exports$4);
-var import_request3 = distNode$5;
-var import_universal_user_agent$1 = distNode$9;
-
-// pkg/dist-src/version.js
-var VERSION$3 = "7.0.2";
-
-// pkg/dist-src/error.js
-function _buildMessageForResponseErrors(data) {
-  return `Request failed due to following response errors:
-` + data.errors.map((e) => ` - ${e.message}`).join("\n");
-}
-var GraphqlResponseError = class extends Error {
-  constructor(request2, headers, response) {
-    super(_buildMessageForResponseErrors(response));
-    this.request = request2;
-    this.headers = headers;
-    this.response = response;
-    this.name = "GraphqlResponseError";
-    this.errors = response.errors;
-    this.data = response.data;
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, this.constructor);
-    }
-  }
-};
-
-// pkg/dist-src/graphql.js
-var NON_VARIABLE_OPTIONS = [
-  "method",
-  "baseUrl",
-  "url",
-  "headers",
-  "request",
-  "query",
-  "mediaType"
-];
-var FORBIDDEN_VARIABLE_OPTIONS = ["query", "method", "url"];
-var GHES_V3_SUFFIX_REGEX = /\/api\/v3\/?$/;
-function graphql(request2, query, options) {
-  if (options) {
-    if (typeof query === "string" && "query" in options) {
-      return Promise.reject(
-        new Error(`[@octokit/graphql] "query" cannot be used as variable name`)
-      );
-    }
-    for (const key in options) {
-      if (!FORBIDDEN_VARIABLE_OPTIONS.includes(key))
-        continue;
-      return Promise.reject(
-        new Error(
-          `[@octokit/graphql] "${key}" cannot be used as variable name`
-        )
-      );
-    }
-  }
-  const parsedOptions = typeof query === "string" ? Object.assign({ query }, options) : query;
-  const requestOptions = Object.keys(
-    parsedOptions
-  ).reduce((result, key) => {
-    if (NON_VARIABLE_OPTIONS.includes(key)) {
-      result[key] = parsedOptions[key];
-      return result;
-    }
-    if (!result.variables) {
-      result.variables = {};
-    }
-    result.variables[key] = parsedOptions[key];
-    return result;
-  }, {});
-  const baseUrl = parsedOptions.baseUrl || request2.endpoint.DEFAULTS.baseUrl;
-  if (GHES_V3_SUFFIX_REGEX.test(baseUrl)) {
-    requestOptions.url = baseUrl.replace(GHES_V3_SUFFIX_REGEX, "/api/graphql");
-  }
-  return request2(requestOptions).then((response) => {
-    if (response.data.errors) {
-      const headers = {};
-      for (const key of Object.keys(response.headers)) {
-        headers[key] = response.headers[key];
-      }
-      throw new GraphqlResponseError(
-        requestOptions,
-        headers,
-        response.data
-      );
-    }
-    return response.data.data;
-  });
-}
-
-// pkg/dist-src/with-defaults.js
-function withDefaults(request2, newDefaults) {
-  const newRequest = request2.defaults(newDefaults);
-  const newApi = (query, options) => {
-    return graphql(newRequest, query, options);
-  };
-  return Object.assign(newApi, {
-    defaults: withDefaults.bind(null, newRequest),
-    endpoint: newRequest.endpoint
-  });
-}
-
-// pkg/dist-src/index.js
-var graphql2 = withDefaults(import_request3.request, {
-  headers: {
-    "user-agent": `octokit-graphql.js/${VERSION$3} ${(0, import_universal_user_agent$1.getUserAgent)()}`
-  },
-  method: "POST",
-  url: "/graphql"
-});
-function withCustomRequest(customRequest) {
-  return withDefaults(customRequest, {
-    method: "POST",
-    url: "/graphql"
-  });
-}
-
-var __defProp$3 = Object.defineProperty;
-var __getOwnPropDesc$3 = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames$3 = Object.getOwnPropertyNames;
-var __hasOwnProp$3 = Object.prototype.hasOwnProperty;
-var __export$3 = (target, all) => {
-  for (var name in all)
-    __defProp$3(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps$3 = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames$3(from))
-      if (!__hasOwnProp$3.call(to, key) && key !== except)
-        __defProp$3(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc$3(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS$3 = (mod) => __copyProps$3(__defProp$3({}, "__esModule", { value: true }), mod);
-
-// pkg/dist-src/index.js
-var dist_src_exports$3 = {};
-__export$3(dist_src_exports$3, {
-  createTokenAuth: () => createTokenAuth
-});
-var distNode$3 = __toCommonJS$3(dist_src_exports$3);
-
-// pkg/dist-src/auth.js
-var REGEX_IS_INSTALLATION_LEGACY = /^v1\./;
-var REGEX_IS_INSTALLATION = /^ghs_/;
-var REGEX_IS_USER_TO_SERVER = /^ghu_/;
-async function auth(token) {
-  const isApp = token.split(/\./).length === 3;
-  const isInstallation = REGEX_IS_INSTALLATION_LEGACY.test(token) || REGEX_IS_INSTALLATION.test(token);
-  const isUserToServer = REGEX_IS_USER_TO_SERVER.test(token);
-  const tokenType = isApp ? "app" : isInstallation ? "installation" : isUserToServer ? "user-to-server" : "oauth";
-  return {
-    type: "token",
-    token,
-    tokenType
-  };
-}
-
-// pkg/dist-src/with-authorization-prefix.js
-function withAuthorizationPrefix(token) {
-  if (token.split(/\./).length === 3) {
-    return `bearer ${token}`;
-  }
-  return `token ${token}`;
-}
-
-// pkg/dist-src/hook.js
-async function hook(token, request, route, parameters) {
-  const endpoint = request.endpoint.merge(
-    route,
-    parameters
-  );
-  endpoint.headers.authorization = withAuthorizationPrefix(token);
-  return request(endpoint);
-}
-
-// pkg/dist-src/index.js
-var createTokenAuth = function createTokenAuth2(token) {
-  if (!token) {
-    throw new Error("[@octokit/auth-token] No token passed to createTokenAuth");
-  }
-  if (typeof token !== "string") {
-    throw new Error(
-      "[@octokit/auth-token] Token passed to createTokenAuth is not a string"
-    );
-  }
-  token = token.replace(/^(token|bearer) +/i, "");
-  return Object.assign(auth.bind(null, token), {
-    hook: hook.bind(null, token)
-  });
-};
-
-var __defProp$2 = Object.defineProperty;
-var __getOwnPropDesc$2 = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames$2 = Object.getOwnPropertyNames;
-var __hasOwnProp$2 = Object.prototype.hasOwnProperty;
-var __export$2 = (target, all) => {
-  for (var name in all)
-    __defProp$2(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps$2 = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames$2(from))
-      if (!__hasOwnProp$2.call(to, key) && key !== except)
-        __defProp$2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc$2(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS$2 = (mod) => __copyProps$2(__defProp$2({}, "__esModule", { value: true }), mod);
-
-// pkg/dist-src/index.js
-var dist_src_exports$2 = {};
-__export$2(dist_src_exports$2, {
-  Octokit: () => Octokit
-});
-var distNode$2 = __toCommonJS$2(dist_src_exports$2);
-var import_universal_user_agent = distNode$9;
-var import_before_after_hook = beforeAfterHookExports;
-var import_request = distNode$5;
-var import_graphql = distNode$4;
-var import_auth_token = distNode$3;
-
-// pkg/dist-src/version.js
-var VERSION$2 = "5.0.1";
-
-// pkg/dist-src/index.js
-var Octokit = class {
-  static {
-    this.VERSION = VERSION$2;
-  }
-  static defaults(defaults) {
-    const OctokitWithDefaults = class extends this {
-      constructor(...args) {
-        const options = args[0] || {};
-        if (typeof defaults === "function") {
-          super(defaults(options));
-          return;
-        }
-        super(
-          Object.assign(
-            {},
-            defaults,
-            options,
-            options.userAgent && defaults.userAgent ? {
-              userAgent: `${options.userAgent} ${defaults.userAgent}`
-            } : null
-          )
-        );
-      }
-    };
-    return OctokitWithDefaults;
-  }
-  static {
-    this.plugins = [];
-  }
-  /**
-   * Attach a plugin (or many) to your Octokit instance.
-   *
-   * @example
-   * const API = Octokit.plugin(plugin1, plugin2, plugin3, ...)
-   */
-  static plugin(...newPlugins) {
-    const currentPlugins = this.plugins;
-    const NewOctokit = class extends this {
-      static {
-        this.plugins = currentPlugins.concat(
-          newPlugins.filter((plugin) => !currentPlugins.includes(plugin))
-        );
-      }
-    };
-    return NewOctokit;
-  }
-  constructor(options = {}) {
-    const hook = new import_before_after_hook.Collection();
-    const requestDefaults = {
-      baseUrl: import_request.request.endpoint.DEFAULTS.baseUrl,
-      headers: {},
-      request: Object.assign({}, options.request, {
-        // @ts-ignore internal usage only, no need to type
-        hook: hook.bind(null, "request")
-      }),
-      mediaType: {
-        previews: [],
-        format: ""
-      }
-    };
-    requestDefaults.headers["user-agent"] = [
-      options.userAgent,
-      `octokit-core.js/${VERSION$2} ${(0, import_universal_user_agent.getUserAgent)()}`
-    ].filter(Boolean).join(" ");
-    if (options.baseUrl) {
-      requestDefaults.baseUrl = options.baseUrl;
-    }
-    if (options.previews) {
-      requestDefaults.mediaType.previews = options.previews;
-    }
-    if (options.timeZone) {
-      requestDefaults.headers["time-zone"] = options.timeZone;
-    }
-    this.request = import_request.request.defaults(requestDefaults);
-    this.graphql = (0, import_graphql.withCustomRequest)(this.request).defaults(requestDefaults);
-    this.log = Object.assign(
-      {
-        debug: () => {
-        },
-        info: () => {
-        },
-        warn: console.warn.bind(console),
-        error: console.error.bind(console)
-      },
-      options.log
-    );
-    this.hook = hook;
-    if (!options.authStrategy) {
-      if (!options.auth) {
-        this.auth = async () => ({
-          type: "unauthenticated"
-        });
-      } else {
-        const auth = (0, import_auth_token.createTokenAuth)(options.auth);
-        hook.wrap("request", auth.hook);
-        this.auth = auth;
-      }
-    } else {
-      const { authStrategy, ...otherOptions } = options;
-      const auth = authStrategy(
-        Object.assign(
-          {
-            request: this.request,
-            log: this.log,
-            // we pass the current octokit instance as well as its constructor options
-            // to allow for authentication strategies that return a new octokit instance
-            // that shares the same internal state as the current one. The original
-            // requirement for this was the "event-octokit" authentication strategy
-            // of https://github.com/probot/octokit-auth-probot.
-            octokit: this,
-            octokitOptions: otherOptions
-          },
-          options.auth
-        )
-      );
-      hook.wrap("request", auth.hook);
-      this.auth = auth;
-    }
-    const classConstructor = this.constructor;
-    classConstructor.plugins.forEach((plugin) => {
-      Object.assign(this, plugin(this, options));
-    });
-  }
-};
-
-var __defProp$1 = Object.defineProperty;
-var __getOwnPropDesc$1 = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames$1 = Object.getOwnPropertyNames;
-var __hasOwnProp$1 = Object.prototype.hasOwnProperty;
-var __export$1 = (target, all) => {
-  for (var name in all)
-    __defProp$1(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps$1 = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames$1(from))
-      if (!__hasOwnProp$1.call(to, key) && key !== except)
-        __defProp$1(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc$1(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS$1 = (mod) => __copyProps$1(__defProp$1({}, "__esModule", { value: true }), mod);
-
-// pkg/dist-src/index.js
-var dist_src_exports$1 = {};
-__export$1(dist_src_exports$1, {
-  legacyRestEndpointMethods: () => legacyRestEndpointMethods,
-  restEndpointMethods: () => restEndpointMethods
-});
-var distNode$1 = __toCommonJS$1(dist_src_exports$1);
-
-// pkg/dist-src/version.js
-var VERSION$1 = "10.0.1";
-
-// pkg/dist-src/generated/endpoints.js
-var Endpoints = {
-  actions: {
-    addCustomLabelsToSelfHostedRunnerForOrg: [
-      "POST /orgs/{org}/actions/runners/{runner_id}/labels"
-    ],
-    addCustomLabelsToSelfHostedRunnerForRepo: [
-      "POST /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
-    ],
-    addSelectedRepoToOrgSecret: [
-      "PUT /orgs/{org}/actions/secrets/{secret_name}/repositories/{repository_id}"
-    ],
-    addSelectedRepoToOrgVariable: [
-      "PUT /orgs/{org}/actions/variables/{name}/repositories/{repository_id}"
-    ],
-    approveWorkflowRun: [
-      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/approve"
-    ],
-    cancelWorkflowRun: [
-      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/cancel"
-    ],
-    createEnvironmentVariable: [
-      "POST /repositories/{repository_id}/environments/{environment_name}/variables"
-    ],
-    createOrUpdateEnvironmentSecret: [
-      "PUT /repositories/{repository_id}/environments/{environment_name}/secrets/{secret_name}"
-    ],
-    createOrUpdateOrgSecret: ["PUT /orgs/{org}/actions/secrets/{secret_name}"],
-    createOrUpdateRepoSecret: [
-      "PUT /repos/{owner}/{repo}/actions/secrets/{secret_name}"
-    ],
-    createOrgVariable: ["POST /orgs/{org}/actions/variables"],
-    createRegistrationTokenForOrg: [
-      "POST /orgs/{org}/actions/runners/registration-token"
-    ],
-    createRegistrationTokenForRepo: [
-      "POST /repos/{owner}/{repo}/actions/runners/registration-token"
-    ],
-    createRemoveTokenForOrg: ["POST /orgs/{org}/actions/runners/remove-token"],
-    createRemoveTokenForRepo: [
-      "POST /repos/{owner}/{repo}/actions/runners/remove-token"
-    ],
-    createRepoVariable: ["POST /repos/{owner}/{repo}/actions/variables"],
-    createWorkflowDispatch: [
-      "POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches"
-    ],
-    deleteActionsCacheById: [
-      "DELETE /repos/{owner}/{repo}/actions/caches/{cache_id}"
-    ],
-    deleteActionsCacheByKey: [
-      "DELETE /repos/{owner}/{repo}/actions/caches{?key,ref}"
-    ],
-    deleteArtifact: [
-      "DELETE /repos/{owner}/{repo}/actions/artifacts/{artifact_id}"
-    ],
-    deleteEnvironmentSecret: [
-      "DELETE /repositories/{repository_id}/environments/{environment_name}/secrets/{secret_name}"
-    ],
-    deleteEnvironmentVariable: [
-      "DELETE /repositories/{repository_id}/environments/{environment_name}/variables/{name}"
-    ],
-    deleteOrgSecret: ["DELETE /orgs/{org}/actions/secrets/{secret_name}"],
-    deleteOrgVariable: ["DELETE /orgs/{org}/actions/variables/{name}"],
-    deleteRepoSecret: [
-      "DELETE /repos/{owner}/{repo}/actions/secrets/{secret_name}"
-    ],
-    deleteRepoVariable: [
-      "DELETE /repos/{owner}/{repo}/actions/variables/{name}"
-    ],
-    deleteSelfHostedRunnerFromOrg: [
-      "DELETE /orgs/{org}/actions/runners/{runner_id}"
-    ],
-    deleteSelfHostedRunnerFromRepo: [
-      "DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}"
-    ],
-    deleteWorkflowRun: ["DELETE /repos/{owner}/{repo}/actions/runs/{run_id}"],
-    deleteWorkflowRunLogs: [
-      "DELETE /repos/{owner}/{repo}/actions/runs/{run_id}/logs"
-    ],
-    disableSelectedRepositoryGithubActionsOrganization: [
-      "DELETE /orgs/{org}/actions/permissions/repositories/{repository_id}"
-    ],
-    disableWorkflow: [
-      "PUT /repos/{owner}/{repo}/actions/workflows/{workflow_id}/disable"
-    ],
-    downloadArtifact: [
-      "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}"
-    ],
-    downloadJobLogsForWorkflowRun: [
-      "GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs"
-    ],
-    downloadWorkflowRunAttemptLogs: [
-      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/logs"
-    ],
-    downloadWorkflowRunLogs: [
-      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/logs"
-    ],
-    enableSelectedRepositoryGithubActionsOrganization: [
-      "PUT /orgs/{org}/actions/permissions/repositories/{repository_id}"
-    ],
-    enableWorkflow: [
-      "PUT /repos/{owner}/{repo}/actions/workflows/{workflow_id}/enable"
-    ],
-    generateRunnerJitconfigForOrg: [
-      "POST /orgs/{org}/actions/runners/generate-jitconfig"
-    ],
-    generateRunnerJitconfigForRepo: [
-      "POST /repos/{owner}/{repo}/actions/runners/generate-jitconfig"
-    ],
-    getActionsCacheList: ["GET /repos/{owner}/{repo}/actions/caches"],
-    getActionsCacheUsage: ["GET /repos/{owner}/{repo}/actions/cache/usage"],
-    getActionsCacheUsageByRepoForOrg: [
-      "GET /orgs/{org}/actions/cache/usage-by-repository"
-    ],
-    getActionsCacheUsageForOrg: ["GET /orgs/{org}/actions/cache/usage"],
-    getAllowedActionsOrganization: [
-      "GET /orgs/{org}/actions/permissions/selected-actions"
-    ],
-    getAllowedActionsRepository: [
-      "GET /repos/{owner}/{repo}/actions/permissions/selected-actions"
-    ],
-    getArtifact: ["GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}"],
-    getEnvironmentPublicKey: [
-      "GET /repositories/{repository_id}/environments/{environment_name}/secrets/public-key"
-    ],
-    getEnvironmentSecret: [
-      "GET /repositories/{repository_id}/environments/{environment_name}/secrets/{secret_name}"
-    ],
-    getEnvironmentVariable: [
-      "GET /repositories/{repository_id}/environments/{environment_name}/variables/{name}"
-    ],
-    getGithubActionsDefaultWorkflowPermissionsOrganization: [
-      "GET /orgs/{org}/actions/permissions/workflow"
-    ],
-    getGithubActionsDefaultWorkflowPermissionsRepository: [
-      "GET /repos/{owner}/{repo}/actions/permissions/workflow"
-    ],
-    getGithubActionsPermissionsOrganization: [
-      "GET /orgs/{org}/actions/permissions"
-    ],
-    getGithubActionsPermissionsRepository: [
-      "GET /repos/{owner}/{repo}/actions/permissions"
-    ],
-    getJobForWorkflowRun: ["GET /repos/{owner}/{repo}/actions/jobs/{job_id}"],
-    getOrgPublicKey: ["GET /orgs/{org}/actions/secrets/public-key"],
-    getOrgSecret: ["GET /orgs/{org}/actions/secrets/{secret_name}"],
-    getOrgVariable: ["GET /orgs/{org}/actions/variables/{name}"],
-    getPendingDeploymentsForRun: [
-      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/pending_deployments"
-    ],
-    getRepoPermissions: [
-      "GET /repos/{owner}/{repo}/actions/permissions",
-      {},
-      { renamed: ["actions", "getGithubActionsPermissionsRepository"] }
-    ],
-    getRepoPublicKey: ["GET /repos/{owner}/{repo}/actions/secrets/public-key"],
-    getRepoSecret: ["GET /repos/{owner}/{repo}/actions/secrets/{secret_name}"],
-    getRepoVariable: ["GET /repos/{owner}/{repo}/actions/variables/{name}"],
-    getReviewsForRun: [
-      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/approvals"
-    ],
-    getSelfHostedRunnerForOrg: ["GET /orgs/{org}/actions/runners/{runner_id}"],
-    getSelfHostedRunnerForRepo: [
-      "GET /repos/{owner}/{repo}/actions/runners/{runner_id}"
-    ],
-    getWorkflow: ["GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}"],
-    getWorkflowAccessToRepository: [
-      "GET /repos/{owner}/{repo}/actions/permissions/access"
-    ],
-    getWorkflowRun: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}"],
-    getWorkflowRunAttempt: [
-      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}"
-    ],
-    getWorkflowRunUsage: [
-      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/timing"
-    ],
-    getWorkflowUsage: [
-      "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/timing"
-    ],
-    listArtifactsForRepo: ["GET /repos/{owner}/{repo}/actions/artifacts"],
-    listEnvironmentSecrets: [
-      "GET /repositories/{repository_id}/environments/{environment_name}/secrets"
-    ],
-    listEnvironmentVariables: [
-      "GET /repositories/{repository_id}/environments/{environment_name}/variables"
-    ],
-    listJobsForWorkflowRun: [
-      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs"
-    ],
-    listJobsForWorkflowRunAttempt: [
-      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/jobs"
-    ],
-    listLabelsForSelfHostedRunnerForOrg: [
-      "GET /orgs/{org}/actions/runners/{runner_id}/labels"
-    ],
-    listLabelsForSelfHostedRunnerForRepo: [
-      "GET /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
-    ],
-    listOrgSecrets: ["GET /orgs/{org}/actions/secrets"],
-    listOrgVariables: ["GET /orgs/{org}/actions/variables"],
-    listRepoOrganizationSecrets: [
-      "GET /repos/{owner}/{repo}/actions/organization-secrets"
-    ],
-    listRepoOrganizationVariables: [
-      "GET /repos/{owner}/{repo}/actions/organization-variables"
-    ],
-    listRepoSecrets: ["GET /repos/{owner}/{repo}/actions/secrets"],
-    listRepoVariables: ["GET /repos/{owner}/{repo}/actions/variables"],
-    listRepoWorkflows: ["GET /repos/{owner}/{repo}/actions/workflows"],
-    listRunnerApplicationsForOrg: ["GET /orgs/{org}/actions/runners/downloads"],
-    listRunnerApplicationsForRepo: [
-      "GET /repos/{owner}/{repo}/actions/runners/downloads"
-    ],
-    listSelectedReposForOrgSecret: [
-      "GET /orgs/{org}/actions/secrets/{secret_name}/repositories"
-    ],
-    listSelectedReposForOrgVariable: [
-      "GET /orgs/{org}/actions/variables/{name}/repositories"
-    ],
-    listSelectedRepositoriesEnabledGithubActionsOrganization: [
-      "GET /orgs/{org}/actions/permissions/repositories"
-    ],
-    listSelfHostedRunnersForOrg: ["GET /orgs/{org}/actions/runners"],
-    listSelfHostedRunnersForRepo: ["GET /repos/{owner}/{repo}/actions/runners"],
-    listWorkflowRunArtifacts: [
-      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts"
-    ],
-    listWorkflowRuns: [
-      "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs"
-    ],
-    listWorkflowRunsForRepo: ["GET /repos/{owner}/{repo}/actions/runs"],
-    reRunJobForWorkflowRun: [
-      "POST /repos/{owner}/{repo}/actions/jobs/{job_id}/rerun"
-    ],
-    reRunWorkflow: ["POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun"],
-    reRunWorkflowFailedJobs: [
-      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun-failed-jobs"
-    ],
-    removeAllCustomLabelsFromSelfHostedRunnerForOrg: [
-      "DELETE /orgs/{org}/actions/runners/{runner_id}/labels"
-    ],
-    removeAllCustomLabelsFromSelfHostedRunnerForRepo: [
-      "DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
-    ],
-    removeCustomLabelFromSelfHostedRunnerForOrg: [
-      "DELETE /orgs/{org}/actions/runners/{runner_id}/labels/{name}"
-    ],
-    removeCustomLabelFromSelfHostedRunnerForRepo: [
-      "DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}/labels/{name}"
-    ],
-    removeSelectedRepoFromOrgSecret: [
-      "DELETE /orgs/{org}/actions/secrets/{secret_name}/repositories/{repository_id}"
-    ],
-    removeSelectedRepoFromOrgVariable: [
-      "DELETE /orgs/{org}/actions/variables/{name}/repositories/{repository_id}"
-    ],
-    reviewCustomGatesForRun: [
-      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/deployment_protection_rule"
-    ],
-    reviewPendingDeploymentsForRun: [
-      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/pending_deployments"
-    ],
-    setAllowedActionsOrganization: [
-      "PUT /orgs/{org}/actions/permissions/selected-actions"
-    ],
-    setAllowedActionsRepository: [
-      "PUT /repos/{owner}/{repo}/actions/permissions/selected-actions"
-    ],
-    setCustomLabelsForSelfHostedRunnerForOrg: [
-      "PUT /orgs/{org}/actions/runners/{runner_id}/labels"
-    ],
-    setCustomLabelsForSelfHostedRunnerForRepo: [
-      "PUT /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
-    ],
-    setGithubActionsDefaultWorkflowPermissionsOrganization: [
-      "PUT /orgs/{org}/actions/permissions/workflow"
-    ],
-    setGithubActionsDefaultWorkflowPermissionsRepository: [
-      "PUT /repos/{owner}/{repo}/actions/permissions/workflow"
-    ],
-    setGithubActionsPermissionsOrganization: [
-      "PUT /orgs/{org}/actions/permissions"
-    ],
-    setGithubActionsPermissionsRepository: [
-      "PUT /repos/{owner}/{repo}/actions/permissions"
-    ],
-    setSelectedReposForOrgSecret: [
-      "PUT /orgs/{org}/actions/secrets/{secret_name}/repositories"
-    ],
-    setSelectedReposForOrgVariable: [
-      "PUT /orgs/{org}/actions/variables/{name}/repositories"
-    ],
-    setSelectedRepositoriesEnabledGithubActionsOrganization: [
-      "PUT /orgs/{org}/actions/permissions/repositories"
-    ],
-    setWorkflowAccessToRepository: [
-      "PUT /repos/{owner}/{repo}/actions/permissions/access"
-    ],
-    updateEnvironmentVariable: [
-      "PATCH /repositories/{repository_id}/environments/{environment_name}/variables/{name}"
-    ],
-    updateOrgVariable: ["PATCH /orgs/{org}/actions/variables/{name}"],
-    updateRepoVariable: [
-      "PATCH /repos/{owner}/{repo}/actions/variables/{name}"
-    ]
-  },
-  activity: {
-    checkRepoIsStarredByAuthenticatedUser: ["GET /user/starred/{owner}/{repo}"],
-    deleteRepoSubscription: ["DELETE /repos/{owner}/{repo}/subscription"],
-    deleteThreadSubscription: [
-      "DELETE /notifications/threads/{thread_id}/subscription"
-    ],
-    getFeeds: ["GET /feeds"],
-    getRepoSubscription: ["GET /repos/{owner}/{repo}/subscription"],
-    getThread: ["GET /notifications/threads/{thread_id}"],
-    getThreadSubscriptionForAuthenticatedUser: [
-      "GET /notifications/threads/{thread_id}/subscription"
-    ],
-    listEventsForAuthenticatedUser: ["GET /users/{username}/events"],
-    listNotificationsForAuthenticatedUser: ["GET /notifications"],
-    listOrgEventsForAuthenticatedUser: [
-      "GET /users/{username}/events/orgs/{org}"
-    ],
-    listPublicEvents: ["GET /events"],
-    listPublicEventsForRepoNetwork: ["GET /networks/{owner}/{repo}/events"],
-    listPublicEventsForUser: ["GET /users/{username}/events/public"],
-    listPublicOrgEvents: ["GET /orgs/{org}/events"],
-    listReceivedEventsForUser: ["GET /users/{username}/received_events"],
-    listReceivedPublicEventsForUser: [
-      "GET /users/{username}/received_events/public"
-    ],
-    listRepoEvents: ["GET /repos/{owner}/{repo}/events"],
-    listRepoNotificationsForAuthenticatedUser: [
-      "GET /repos/{owner}/{repo}/notifications"
-    ],
-    listReposStarredByAuthenticatedUser: ["GET /user/starred"],
-    listReposStarredByUser: ["GET /users/{username}/starred"],
-    listReposWatchedByUser: ["GET /users/{username}/subscriptions"],
-    listStargazersForRepo: ["GET /repos/{owner}/{repo}/stargazers"],
-    listWatchedReposForAuthenticatedUser: ["GET /user/subscriptions"],
-    listWatchersForRepo: ["GET /repos/{owner}/{repo}/subscribers"],
-    markNotificationsAsRead: ["PUT /notifications"],
-    markRepoNotificationsAsRead: ["PUT /repos/{owner}/{repo}/notifications"],
-    markThreadAsRead: ["PATCH /notifications/threads/{thread_id}"],
-    setRepoSubscription: ["PUT /repos/{owner}/{repo}/subscription"],
-    setThreadSubscription: [
-      "PUT /notifications/threads/{thread_id}/subscription"
-    ],
-    starRepoForAuthenticatedUser: ["PUT /user/starred/{owner}/{repo}"],
-    unstarRepoForAuthenticatedUser: ["DELETE /user/starred/{owner}/{repo}"]
-  },
-  apps: {
-    addRepoToInstallation: [
-      "PUT /user/installations/{installation_id}/repositories/{repository_id}",
-      {},
-      { renamed: ["apps", "addRepoToInstallationForAuthenticatedUser"] }
-    ],
-    addRepoToInstallationForAuthenticatedUser: [
-      "PUT /user/installations/{installation_id}/repositories/{repository_id}"
-    ],
-    checkToken: ["POST /applications/{client_id}/token"],
-    createFromManifest: ["POST /app-manifests/{code}/conversions"],
-    createInstallationAccessToken: [
-      "POST /app/installations/{installation_id}/access_tokens"
-    ],
-    deleteAuthorization: ["DELETE /applications/{client_id}/grant"],
-    deleteInstallation: ["DELETE /app/installations/{installation_id}"],
-    deleteToken: ["DELETE /applications/{client_id}/token"],
-    getAuthenticated: ["GET /app"],
-    getBySlug: ["GET /apps/{app_slug}"],
-    getInstallation: ["GET /app/installations/{installation_id}"],
-    getOrgInstallation: ["GET /orgs/{org}/installation"],
-    getRepoInstallation: ["GET /repos/{owner}/{repo}/installation"],
-    getSubscriptionPlanForAccount: [
-      "GET /marketplace_listing/accounts/{account_id}"
-    ],
-    getSubscriptionPlanForAccountStubbed: [
-      "GET /marketplace_listing/stubbed/accounts/{account_id}"
-    ],
-    getUserInstallation: ["GET /users/{username}/installation"],
-    getWebhookConfigForApp: ["GET /app/hook/config"],
-    getWebhookDelivery: ["GET /app/hook/deliveries/{delivery_id}"],
-    listAccountsForPlan: ["GET /marketplace_listing/plans/{plan_id}/accounts"],
-    listAccountsForPlanStubbed: [
-      "GET /marketplace_listing/stubbed/plans/{plan_id}/accounts"
-    ],
-    listInstallationReposForAuthenticatedUser: [
-      "GET /user/installations/{installation_id}/repositories"
-    ],
-    listInstallationRequestsForAuthenticatedApp: [
-      "GET /app/installation-requests"
-    ],
-    listInstallations: ["GET /app/installations"],
-    listInstallationsForAuthenticatedUser: ["GET /user/installations"],
-    listPlans: ["GET /marketplace_listing/plans"],
-    listPlansStubbed: ["GET /marketplace_listing/stubbed/plans"],
-    listReposAccessibleToInstallation: ["GET /installation/repositories"],
-    listSubscriptionsForAuthenticatedUser: ["GET /user/marketplace_purchases"],
-    listSubscriptionsForAuthenticatedUserStubbed: [
-      "GET /user/marketplace_purchases/stubbed"
-    ],
-    listWebhookDeliveries: ["GET /app/hook/deliveries"],
-    redeliverWebhookDelivery: [
-      "POST /app/hook/deliveries/{delivery_id}/attempts"
-    ],
-    removeRepoFromInstallation: [
-      "DELETE /user/installations/{installation_id}/repositories/{repository_id}",
-      {},
-      { renamed: ["apps", "removeRepoFromInstallationForAuthenticatedUser"] }
-    ],
-    removeRepoFromInstallationForAuthenticatedUser: [
-      "DELETE /user/installations/{installation_id}/repositories/{repository_id}"
-    ],
-    resetToken: ["PATCH /applications/{client_id}/token"],
-    revokeInstallationAccessToken: ["DELETE /installation/token"],
-    scopeToken: ["POST /applications/{client_id}/token/scoped"],
-    suspendInstallation: ["PUT /app/installations/{installation_id}/suspended"],
-    unsuspendInstallation: [
-      "DELETE /app/installations/{installation_id}/suspended"
-    ],
-    updateWebhookConfigForApp: ["PATCH /app/hook/config"]
-  },
-  billing: {
-    getGithubActionsBillingOrg: ["GET /orgs/{org}/settings/billing/actions"],
-    getGithubActionsBillingUser: [
-      "GET /users/{username}/settings/billing/actions"
-    ],
-    getGithubPackagesBillingOrg: ["GET /orgs/{org}/settings/billing/packages"],
-    getGithubPackagesBillingUser: [
-      "GET /users/{username}/settings/billing/packages"
-    ],
-    getSharedStorageBillingOrg: [
-      "GET /orgs/{org}/settings/billing/shared-storage"
-    ],
-    getSharedStorageBillingUser: [
-      "GET /users/{username}/settings/billing/shared-storage"
-    ]
-  },
-  checks: {
-    create: ["POST /repos/{owner}/{repo}/check-runs"],
-    createSuite: ["POST /repos/{owner}/{repo}/check-suites"],
-    get: ["GET /repos/{owner}/{repo}/check-runs/{check_run_id}"],
-    getSuite: ["GET /repos/{owner}/{repo}/check-suites/{check_suite_id}"],
-    listAnnotations: [
-      "GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations"
-    ],
-    listForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-runs"],
-    listForSuite: [
-      "GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs"
-    ],
-    listSuitesForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-suites"],
-    rerequestRun: [
-      "POST /repos/{owner}/{repo}/check-runs/{check_run_id}/rerequest"
-    ],
-    rerequestSuite: [
-      "POST /repos/{owner}/{repo}/check-suites/{check_suite_id}/rerequest"
-    ],
-    setSuitesPreferences: [
-      "PATCH /repos/{owner}/{repo}/check-suites/preferences"
-    ],
-    update: ["PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}"]
-  },
-  codeScanning: {
-    deleteAnalysis: [
-      "DELETE /repos/{owner}/{repo}/code-scanning/analyses/{analysis_id}{?confirm_delete}"
-    ],
-    getAlert: [
-      "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}",
-      {},
-      { renamedParameters: { alert_id: "alert_number" } }
-    ],
-    getAnalysis: [
-      "GET /repos/{owner}/{repo}/code-scanning/analyses/{analysis_id}"
-    ],
-    getCodeqlDatabase: [
-      "GET /repos/{owner}/{repo}/code-scanning/codeql/databases/{language}"
-    ],
-    getDefaultSetup: ["GET /repos/{owner}/{repo}/code-scanning/default-setup"],
-    getSarif: ["GET /repos/{owner}/{repo}/code-scanning/sarifs/{sarif_id}"],
-    listAlertInstances: [
-      "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances"
-    ],
-    listAlertsForOrg: ["GET /orgs/{org}/code-scanning/alerts"],
-    listAlertsForRepo: ["GET /repos/{owner}/{repo}/code-scanning/alerts"],
-    listAlertsInstances: [
-      "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances",
-      {},
-      { renamed: ["codeScanning", "listAlertInstances"] }
-    ],
-    listCodeqlDatabases: [
-      "GET /repos/{owner}/{repo}/code-scanning/codeql/databases"
-    ],
-    listRecentAnalyses: ["GET /repos/{owner}/{repo}/code-scanning/analyses"],
-    updateAlert: [
-      "PATCH /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}"
-    ],
-    updateDefaultSetup: [
-      "PATCH /repos/{owner}/{repo}/code-scanning/default-setup"
-    ],
-    uploadSarif: ["POST /repos/{owner}/{repo}/code-scanning/sarifs"]
-  },
-  codesOfConduct: {
-    getAllCodesOfConduct: ["GET /codes_of_conduct"],
-    getConductCode: ["GET /codes_of_conduct/{key}"]
-  },
-  codespaces: {
-    addRepositoryForSecretForAuthenticatedUser: [
-      "PUT /user/codespaces/secrets/{secret_name}/repositories/{repository_id}"
-    ],
-    addSelectedRepoToOrgSecret: [
-      "PUT /orgs/{org}/codespaces/secrets/{secret_name}/repositories/{repository_id}"
-    ],
-    codespaceMachinesForAuthenticatedUser: [
-      "GET /user/codespaces/{codespace_name}/machines"
-    ],
-    createForAuthenticatedUser: ["POST /user/codespaces"],
-    createOrUpdateOrgSecret: [
-      "PUT /orgs/{org}/codespaces/secrets/{secret_name}"
-    ],
-    createOrUpdateRepoSecret: [
-      "PUT /repos/{owner}/{repo}/codespaces/secrets/{secret_name}"
-    ],
-    createOrUpdateSecretForAuthenticatedUser: [
-      "PUT /user/codespaces/secrets/{secret_name}"
-    ],
-    createWithPrForAuthenticatedUser: [
-      "POST /repos/{owner}/{repo}/pulls/{pull_number}/codespaces"
-    ],
-    createWithRepoForAuthenticatedUser: [
-      "POST /repos/{owner}/{repo}/codespaces"
-    ],
-    deleteForAuthenticatedUser: ["DELETE /user/codespaces/{codespace_name}"],
-    deleteFromOrganization: [
-      "DELETE /orgs/{org}/members/{username}/codespaces/{codespace_name}"
-    ],
-    deleteOrgSecret: ["DELETE /orgs/{org}/codespaces/secrets/{secret_name}"],
-    deleteRepoSecret: [
-      "DELETE /repos/{owner}/{repo}/codespaces/secrets/{secret_name}"
-    ],
-    deleteSecretForAuthenticatedUser: [
-      "DELETE /user/codespaces/secrets/{secret_name}"
-    ],
-    exportForAuthenticatedUser: [
-      "POST /user/codespaces/{codespace_name}/exports"
-    ],
-    getCodespacesForUserInOrg: [
-      "GET /orgs/{org}/members/{username}/codespaces"
-    ],
-    getExportDetailsForAuthenticatedUser: [
-      "GET /user/codespaces/{codespace_name}/exports/{export_id}"
-    ],
-    getForAuthenticatedUser: ["GET /user/codespaces/{codespace_name}"],
-    getOrgPublicKey: ["GET /orgs/{org}/codespaces/secrets/public-key"],
-    getOrgSecret: ["GET /orgs/{org}/codespaces/secrets/{secret_name}"],
-    getPublicKeyForAuthenticatedUser: [
-      "GET /user/codespaces/secrets/public-key"
-    ],
-    getRepoPublicKey: [
-      "GET /repos/{owner}/{repo}/codespaces/secrets/public-key"
-    ],
-    getRepoSecret: [
-      "GET /repos/{owner}/{repo}/codespaces/secrets/{secret_name}"
-    ],
-    getSecretForAuthenticatedUser: [
-      "GET /user/codespaces/secrets/{secret_name}"
-    ],
-    listDevcontainersInRepositoryForAuthenticatedUser: [
-      "GET /repos/{owner}/{repo}/codespaces/devcontainers"
-    ],
-    listForAuthenticatedUser: ["GET /user/codespaces"],
-    listInOrganization: [
-      "GET /orgs/{org}/codespaces",
-      {},
-      { renamedParameters: { org_id: "org" } }
-    ],
-    listInRepositoryForAuthenticatedUser: [
-      "GET /repos/{owner}/{repo}/codespaces"
-    ],
-    listOrgSecrets: ["GET /orgs/{org}/codespaces/secrets"],
-    listRepoSecrets: ["GET /repos/{owner}/{repo}/codespaces/secrets"],
-    listRepositoriesForSecretForAuthenticatedUser: [
-      "GET /user/codespaces/secrets/{secret_name}/repositories"
-    ],
-    listSecretsForAuthenticatedUser: ["GET /user/codespaces/secrets"],
-    listSelectedReposForOrgSecret: [
-      "GET /orgs/{org}/codespaces/secrets/{secret_name}/repositories"
-    ],
-    preFlightWithRepoForAuthenticatedUser: [
-      "GET /repos/{owner}/{repo}/codespaces/new"
-    ],
-    publishForAuthenticatedUser: [
-      "POST /user/codespaces/{codespace_name}/publish"
-    ],
-    removeRepositoryForSecretForAuthenticatedUser: [
-      "DELETE /user/codespaces/secrets/{secret_name}/repositories/{repository_id}"
-    ],
-    removeSelectedRepoFromOrgSecret: [
-      "DELETE /orgs/{org}/codespaces/secrets/{secret_name}/repositories/{repository_id}"
-    ],
-    repoMachinesForAuthenticatedUser: [
-      "GET /repos/{owner}/{repo}/codespaces/machines"
-    ],
-    setRepositoriesForSecretForAuthenticatedUser: [
-      "PUT /user/codespaces/secrets/{secret_name}/repositories"
-    ],
-    setSelectedReposForOrgSecret: [
-      "PUT /orgs/{org}/codespaces/secrets/{secret_name}/repositories"
-    ],
-    startForAuthenticatedUser: ["POST /user/codespaces/{codespace_name}/start"],
-    stopForAuthenticatedUser: ["POST /user/codespaces/{codespace_name}/stop"],
-    stopInOrganization: [
-      "POST /orgs/{org}/members/{username}/codespaces/{codespace_name}/stop"
-    ],
-    updateForAuthenticatedUser: ["PATCH /user/codespaces/{codespace_name}"]
-  },
-  copilot: {
-    addCopilotForBusinessSeatsForTeams: [
-      "POST /orgs/{org}/copilot/billing/selected_teams"
-    ],
-    addCopilotForBusinessSeatsForUsers: [
-      "POST /orgs/{org}/copilot/billing/selected_users"
-    ],
-    cancelCopilotSeatAssignmentForTeams: [
-      "DELETE /orgs/{org}/copilot/billing/selected_teams"
-    ],
-    cancelCopilotSeatAssignmentForUsers: [
-      "DELETE /orgs/{org}/copilot/billing/selected_users"
-    ],
-    getCopilotOrganizationDetails: ["GET /orgs/{org}/copilot/billing"],
-    getCopilotSeatAssignmentDetailsForUser: [
-      "GET /orgs/{org}/members/{username}/copilot"
-    ],
-    listCopilotSeats: ["GET /orgs/{org}/copilot/billing/seats"]
-  },
-  dependabot: {
-    addSelectedRepoToOrgSecret: [
-      "PUT /orgs/{org}/dependabot/secrets/{secret_name}/repositories/{repository_id}"
-    ],
-    createOrUpdateOrgSecret: [
-      "PUT /orgs/{org}/dependabot/secrets/{secret_name}"
-    ],
-    createOrUpdateRepoSecret: [
-      "PUT /repos/{owner}/{repo}/dependabot/secrets/{secret_name}"
-    ],
-    deleteOrgSecret: ["DELETE /orgs/{org}/dependabot/secrets/{secret_name}"],
-    deleteRepoSecret: [
-      "DELETE /repos/{owner}/{repo}/dependabot/secrets/{secret_name}"
-    ],
-    getAlert: ["GET /repos/{owner}/{repo}/dependabot/alerts/{alert_number}"],
-    getOrgPublicKey: ["GET /orgs/{org}/dependabot/secrets/public-key"],
-    getOrgSecret: ["GET /orgs/{org}/dependabot/secrets/{secret_name}"],
-    getRepoPublicKey: [
-      "GET /repos/{owner}/{repo}/dependabot/secrets/public-key"
-    ],
-    getRepoSecret: [
-      "GET /repos/{owner}/{repo}/dependabot/secrets/{secret_name}"
-    ],
-    listAlertsForEnterprise: [
-      "GET /enterprises/{enterprise}/dependabot/alerts"
-    ],
-    listAlertsForOrg: ["GET /orgs/{org}/dependabot/alerts"],
-    listAlertsForRepo: ["GET /repos/{owner}/{repo}/dependabot/alerts"],
-    listOrgSecrets: ["GET /orgs/{org}/dependabot/secrets"],
-    listRepoSecrets: ["GET /repos/{owner}/{repo}/dependabot/secrets"],
-    listSelectedReposForOrgSecret: [
-      "GET /orgs/{org}/dependabot/secrets/{secret_name}/repositories"
-    ],
-    removeSelectedRepoFromOrgSecret: [
-      "DELETE /orgs/{org}/dependabot/secrets/{secret_name}/repositories/{repository_id}"
-    ],
-    setSelectedReposForOrgSecret: [
-      "PUT /orgs/{org}/dependabot/secrets/{secret_name}/repositories"
-    ],
-    updateAlert: [
-      "PATCH /repos/{owner}/{repo}/dependabot/alerts/{alert_number}"
-    ]
-  },
-  dependencyGraph: {
-    createRepositorySnapshot: [
-      "POST /repos/{owner}/{repo}/dependency-graph/snapshots"
-    ],
-    diffRange: [
-      "GET /repos/{owner}/{repo}/dependency-graph/compare/{basehead}"
-    ],
-    exportSbom: ["GET /repos/{owner}/{repo}/dependency-graph/sbom"]
-  },
-  emojis: { get: ["GET /emojis"] },
-  gists: {
-    checkIsStarred: ["GET /gists/{gist_id}/star"],
-    create: ["POST /gists"],
-    createComment: ["POST /gists/{gist_id}/comments"],
-    delete: ["DELETE /gists/{gist_id}"],
-    deleteComment: ["DELETE /gists/{gist_id}/comments/{comment_id}"],
-    fork: ["POST /gists/{gist_id}/forks"],
-    get: ["GET /gists/{gist_id}"],
-    getComment: ["GET /gists/{gist_id}/comments/{comment_id}"],
-    getRevision: ["GET /gists/{gist_id}/{sha}"],
-    list: ["GET /gists"],
-    listComments: ["GET /gists/{gist_id}/comments"],
-    listCommits: ["GET /gists/{gist_id}/commits"],
-    listForUser: ["GET /users/{username}/gists"],
-    listForks: ["GET /gists/{gist_id}/forks"],
-    listPublic: ["GET /gists/public"],
-    listStarred: ["GET /gists/starred"],
-    star: ["PUT /gists/{gist_id}/star"],
-    unstar: ["DELETE /gists/{gist_id}/star"],
-    update: ["PATCH /gists/{gist_id}"],
-    updateComment: ["PATCH /gists/{gist_id}/comments/{comment_id}"]
-  },
-  git: {
-    createBlob: ["POST /repos/{owner}/{repo}/git/blobs"],
-    createCommit: ["POST /repos/{owner}/{repo}/git/commits"],
-    createRef: ["POST /repos/{owner}/{repo}/git/refs"],
-    createTag: ["POST /repos/{owner}/{repo}/git/tags"],
-    createTree: ["POST /repos/{owner}/{repo}/git/trees"],
-    deleteRef: ["DELETE /repos/{owner}/{repo}/git/refs/{ref}"],
-    getBlob: ["GET /repos/{owner}/{repo}/git/blobs/{file_sha}"],
-    getCommit: ["GET /repos/{owner}/{repo}/git/commits/{commit_sha}"],
-    getRef: ["GET /repos/{owner}/{repo}/git/ref/{ref}"],
-    getTag: ["GET /repos/{owner}/{repo}/git/tags/{tag_sha}"],
-    getTree: ["GET /repos/{owner}/{repo}/git/trees/{tree_sha}"],
-    listMatchingRefs: ["GET /repos/{owner}/{repo}/git/matching-refs/{ref}"],
-    updateRef: ["PATCH /repos/{owner}/{repo}/git/refs/{ref}"]
-  },
-  gitignore: {
-    getAllTemplates: ["GET /gitignore/templates"],
-    getTemplate: ["GET /gitignore/templates/{name}"]
-  },
-  interactions: {
-    getRestrictionsForAuthenticatedUser: ["GET /user/interaction-limits"],
-    getRestrictionsForOrg: ["GET /orgs/{org}/interaction-limits"],
-    getRestrictionsForRepo: ["GET /repos/{owner}/{repo}/interaction-limits"],
-    getRestrictionsForYourPublicRepos: [
-      "GET /user/interaction-limits",
-      {},
-      { renamed: ["interactions", "getRestrictionsForAuthenticatedUser"] }
-    ],
-    removeRestrictionsForAuthenticatedUser: ["DELETE /user/interaction-limits"],
-    removeRestrictionsForOrg: ["DELETE /orgs/{org}/interaction-limits"],
-    removeRestrictionsForRepo: [
-      "DELETE /repos/{owner}/{repo}/interaction-limits"
-    ],
-    removeRestrictionsForYourPublicRepos: [
-      "DELETE /user/interaction-limits",
-      {},
-      { renamed: ["interactions", "removeRestrictionsForAuthenticatedUser"] }
-    ],
-    setRestrictionsForAuthenticatedUser: ["PUT /user/interaction-limits"],
-    setRestrictionsForOrg: ["PUT /orgs/{org}/interaction-limits"],
-    setRestrictionsForRepo: ["PUT /repos/{owner}/{repo}/interaction-limits"],
-    setRestrictionsForYourPublicRepos: [
-      "PUT /user/interaction-limits",
-      {},
-      { renamed: ["interactions", "setRestrictionsForAuthenticatedUser"] }
-    ]
-  },
-  issues: {
-    addAssignees: [
-      "POST /repos/{owner}/{repo}/issues/{issue_number}/assignees"
-    ],
-    addLabels: ["POST /repos/{owner}/{repo}/issues/{issue_number}/labels"],
-    checkUserCanBeAssigned: ["GET /repos/{owner}/{repo}/assignees/{assignee}"],
-    checkUserCanBeAssignedToIssue: [
-      "GET /repos/{owner}/{repo}/issues/{issue_number}/assignees/{assignee}"
-    ],
-    create: ["POST /repos/{owner}/{repo}/issues"],
-    createComment: [
-      "POST /repos/{owner}/{repo}/issues/{issue_number}/comments"
-    ],
-    createLabel: ["POST /repos/{owner}/{repo}/labels"],
-    createMilestone: ["POST /repos/{owner}/{repo}/milestones"],
-    deleteComment: [
-      "DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}"
-    ],
-    deleteLabel: ["DELETE /repos/{owner}/{repo}/labels/{name}"],
-    deleteMilestone: [
-      "DELETE /repos/{owner}/{repo}/milestones/{milestone_number}"
-    ],
-    get: ["GET /repos/{owner}/{repo}/issues/{issue_number}"],
-    getComment: ["GET /repos/{owner}/{repo}/issues/comments/{comment_id}"],
-    getEvent: ["GET /repos/{owner}/{repo}/issues/events/{event_id}"],
-    getLabel: ["GET /repos/{owner}/{repo}/labels/{name}"],
-    getMilestone: ["GET /repos/{owner}/{repo}/milestones/{milestone_number}"],
-    list: ["GET /issues"],
-    listAssignees: ["GET /repos/{owner}/{repo}/assignees"],
-    listComments: ["GET /repos/{owner}/{repo}/issues/{issue_number}/comments"],
-    listCommentsForRepo: ["GET /repos/{owner}/{repo}/issues/comments"],
-    listEvents: ["GET /repos/{owner}/{repo}/issues/{issue_number}/events"],
-    listEventsForRepo: ["GET /repos/{owner}/{repo}/issues/events"],
-    listEventsForTimeline: [
-      "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline"
-    ],
-    listForAuthenticatedUser: ["GET /user/issues"],
-    listForOrg: ["GET /orgs/{org}/issues"],
-    listForRepo: ["GET /repos/{owner}/{repo}/issues"],
-    listLabelsForMilestone: [
-      "GET /repos/{owner}/{repo}/milestones/{milestone_number}/labels"
-    ],
-    listLabelsForRepo: ["GET /repos/{owner}/{repo}/labels"],
-    listLabelsOnIssue: [
-      "GET /repos/{owner}/{repo}/issues/{issue_number}/labels"
-    ],
-    listMilestones: ["GET /repos/{owner}/{repo}/milestones"],
-    lock: ["PUT /repos/{owner}/{repo}/issues/{issue_number}/lock"],
-    removeAllLabels: [
-      "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels"
-    ],
-    removeAssignees: [
-      "DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees"
-    ],
-    removeLabel: [
-      "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}"
-    ],
-    setLabels: ["PUT /repos/{owner}/{repo}/issues/{issue_number}/labels"],
-    unlock: ["DELETE /repos/{owner}/{repo}/issues/{issue_number}/lock"],
-    update: ["PATCH /repos/{owner}/{repo}/issues/{issue_number}"],
-    updateComment: ["PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}"],
-    updateLabel: ["PATCH /repos/{owner}/{repo}/labels/{name}"],
-    updateMilestone: [
-      "PATCH /repos/{owner}/{repo}/milestones/{milestone_number}"
-    ]
-  },
-  licenses: {
-    get: ["GET /licenses/{license}"],
-    getAllCommonlyUsed: ["GET /licenses"],
-    getForRepo: ["GET /repos/{owner}/{repo}/license"]
-  },
-  markdown: {
-    render: ["POST /markdown"],
-    renderRaw: [
-      "POST /markdown/raw",
-      { headers: { "content-type": "text/plain; charset=utf-8" } }
-    ]
-  },
-  meta: {
-    get: ["GET /meta"],
-    getAllVersions: ["GET /versions"],
-    getOctocat: ["GET /octocat"],
-    getZen: ["GET /zen"],
-    root: ["GET /"]
-  },
-  migrations: {
-    cancelImport: ["DELETE /repos/{owner}/{repo}/import"],
-    deleteArchiveForAuthenticatedUser: [
-      "DELETE /user/migrations/{migration_id}/archive"
-    ],
-    deleteArchiveForOrg: [
-      "DELETE /orgs/{org}/migrations/{migration_id}/archive"
-    ],
-    downloadArchiveForOrg: [
-      "GET /orgs/{org}/migrations/{migration_id}/archive"
-    ],
-    getArchiveForAuthenticatedUser: [
-      "GET /user/migrations/{migration_id}/archive"
-    ],
-    getCommitAuthors: ["GET /repos/{owner}/{repo}/import/authors"],
-    getImportStatus: ["GET /repos/{owner}/{repo}/import"],
-    getLargeFiles: ["GET /repos/{owner}/{repo}/import/large_files"],
-    getStatusForAuthenticatedUser: ["GET /user/migrations/{migration_id}"],
-    getStatusForOrg: ["GET /orgs/{org}/migrations/{migration_id}"],
-    listForAuthenticatedUser: ["GET /user/migrations"],
-    listForOrg: ["GET /orgs/{org}/migrations"],
-    listReposForAuthenticatedUser: [
-      "GET /user/migrations/{migration_id}/repositories"
-    ],
-    listReposForOrg: ["GET /orgs/{org}/migrations/{migration_id}/repositories"],
-    listReposForUser: [
-      "GET /user/migrations/{migration_id}/repositories",
-      {},
-      { renamed: ["migrations", "listReposForAuthenticatedUser"] }
-    ],
-    mapCommitAuthor: ["PATCH /repos/{owner}/{repo}/import/authors/{author_id}"],
-    setLfsPreference: ["PATCH /repos/{owner}/{repo}/import/lfs"],
-    startForAuthenticatedUser: ["POST /user/migrations"],
-    startForOrg: ["POST /orgs/{org}/migrations"],
-    startImport: ["PUT /repos/{owner}/{repo}/import"],
-    unlockRepoForAuthenticatedUser: [
-      "DELETE /user/migrations/{migration_id}/repos/{repo_name}/lock"
-    ],
-    unlockRepoForOrg: [
-      "DELETE /orgs/{org}/migrations/{migration_id}/repos/{repo_name}/lock"
-    ],
-    updateImport: ["PATCH /repos/{owner}/{repo}/import"]
-  },
-  orgs: {
-    addSecurityManagerTeam: [
-      "PUT /orgs/{org}/security-managers/teams/{team_slug}"
-    ],
-    blockUser: ["PUT /orgs/{org}/blocks/{username}"],
-    cancelInvitation: ["DELETE /orgs/{org}/invitations/{invitation_id}"],
-    checkBlockedUser: ["GET /orgs/{org}/blocks/{username}"],
-    checkMembershipForUser: ["GET /orgs/{org}/members/{username}"],
-    checkPublicMembershipForUser: ["GET /orgs/{org}/public_members/{username}"],
-    convertMemberToOutsideCollaborator: [
-      "PUT /orgs/{org}/outside_collaborators/{username}"
-    ],
-    createInvitation: ["POST /orgs/{org}/invitations"],
-    createWebhook: ["POST /orgs/{org}/hooks"],
-    delete: ["DELETE /orgs/{org}"],
-    deleteWebhook: ["DELETE /orgs/{org}/hooks/{hook_id}"],
-    enableOrDisableSecurityProductOnAllOrgRepos: [
-      "POST /orgs/{org}/{security_product}/{enablement}"
-    ],
-    get: ["GET /orgs/{org}"],
-    getMembershipForAuthenticatedUser: ["GET /user/memberships/orgs/{org}"],
-    getMembershipForUser: ["GET /orgs/{org}/memberships/{username}"],
-    getWebhook: ["GET /orgs/{org}/hooks/{hook_id}"],
-    getWebhookConfigForOrg: ["GET /orgs/{org}/hooks/{hook_id}/config"],
-    getWebhookDelivery: [
-      "GET /orgs/{org}/hooks/{hook_id}/deliveries/{delivery_id}"
-    ],
-    list: ["GET /organizations"],
-    listAppInstallations: ["GET /orgs/{org}/installations"],
-    listBlockedUsers: ["GET /orgs/{org}/blocks"],
-    listFailedInvitations: ["GET /orgs/{org}/failed_invitations"],
-    listForAuthenticatedUser: ["GET /user/orgs"],
-    listForUser: ["GET /users/{username}/orgs"],
-    listInvitationTeams: ["GET /orgs/{org}/invitations/{invitation_id}/teams"],
-    listMembers: ["GET /orgs/{org}/members"],
-    listMembershipsForAuthenticatedUser: ["GET /user/memberships/orgs"],
-    listOutsideCollaborators: ["GET /orgs/{org}/outside_collaborators"],
-    listPatGrantRepositories: [
-      "GET /orgs/{org}/personal-access-tokens/{pat_id}/repositories"
-    ],
-    listPatGrantRequestRepositories: [
-      "GET /orgs/{org}/personal-access-token-requests/{pat_request_id}/repositories"
-    ],
-    listPatGrantRequests: ["GET /orgs/{org}/personal-access-token-requests"],
-    listPatGrants: ["GET /orgs/{org}/personal-access-tokens"],
-    listPendingInvitations: ["GET /orgs/{org}/invitations"],
-    listPublicMembers: ["GET /orgs/{org}/public_members"],
-    listSecurityManagerTeams: ["GET /orgs/{org}/security-managers"],
-    listWebhookDeliveries: ["GET /orgs/{org}/hooks/{hook_id}/deliveries"],
-    listWebhooks: ["GET /orgs/{org}/hooks"],
-    pingWebhook: ["POST /orgs/{org}/hooks/{hook_id}/pings"],
-    redeliverWebhookDelivery: [
-      "POST /orgs/{org}/hooks/{hook_id}/deliveries/{delivery_id}/attempts"
-    ],
-    removeMember: ["DELETE /orgs/{org}/members/{username}"],
-    removeMembershipForUser: ["DELETE /orgs/{org}/memberships/{username}"],
-    removeOutsideCollaborator: [
-      "DELETE /orgs/{org}/outside_collaborators/{username}"
-    ],
-    removePublicMembershipForAuthenticatedUser: [
-      "DELETE /orgs/{org}/public_members/{username}"
-    ],
-    removeSecurityManagerTeam: [
-      "DELETE /orgs/{org}/security-managers/teams/{team_slug}"
-    ],
-    reviewPatGrantRequest: [
-      "POST /orgs/{org}/personal-access-token-requests/{pat_request_id}"
-    ],
-    reviewPatGrantRequestsInBulk: [
-      "POST /orgs/{org}/personal-access-token-requests"
-    ],
-    setMembershipForUser: ["PUT /orgs/{org}/memberships/{username}"],
-    setPublicMembershipForAuthenticatedUser: [
-      "PUT /orgs/{org}/public_members/{username}"
-    ],
-    unblockUser: ["DELETE /orgs/{org}/blocks/{username}"],
-    update: ["PATCH /orgs/{org}"],
-    updateMembershipForAuthenticatedUser: [
-      "PATCH /user/memberships/orgs/{org}"
-    ],
-    updatePatAccess: ["POST /orgs/{org}/personal-access-tokens/{pat_id}"],
-    updatePatAccesses: ["POST /orgs/{org}/personal-access-tokens"],
-    updateWebhook: ["PATCH /orgs/{org}/hooks/{hook_id}"],
-    updateWebhookConfigForOrg: ["PATCH /orgs/{org}/hooks/{hook_id}/config"]
-  },
-  packages: {
-    deletePackageForAuthenticatedUser: [
-      "DELETE /user/packages/{package_type}/{package_name}"
-    ],
-    deletePackageForOrg: [
-      "DELETE /orgs/{org}/packages/{package_type}/{package_name}"
-    ],
-    deletePackageForUser: [
-      "DELETE /users/{username}/packages/{package_type}/{package_name}"
-    ],
-    deletePackageVersionForAuthenticatedUser: [
-      "DELETE /user/packages/{package_type}/{package_name}/versions/{package_version_id}"
-    ],
-    deletePackageVersionForOrg: [
-      "DELETE /orgs/{org}/packages/{package_type}/{package_name}/versions/{package_version_id}"
-    ],
-    deletePackageVersionForUser: [
-      "DELETE /users/{username}/packages/{package_type}/{package_name}/versions/{package_version_id}"
-    ],
-    getAllPackageVersionsForAPackageOwnedByAnOrg: [
-      "GET /orgs/{org}/packages/{package_type}/{package_name}/versions",
-      {},
-      { renamed: ["packages", "getAllPackageVersionsForPackageOwnedByOrg"] }
-    ],
-    getAllPackageVersionsForAPackageOwnedByTheAuthenticatedUser: [
-      "GET /user/packages/{package_type}/{package_name}/versions",
-      {},
-      {
-        renamed: [
-          "packages",
-          "getAllPackageVersionsForPackageOwnedByAuthenticatedUser"
-        ]
-      }
-    ],
-    getAllPackageVersionsForPackageOwnedByAuthenticatedUser: [
-      "GET /user/packages/{package_type}/{package_name}/versions"
-    ],
-    getAllPackageVersionsForPackageOwnedByOrg: [
-      "GET /orgs/{org}/packages/{package_type}/{package_name}/versions"
-    ],
-    getAllPackageVersionsForPackageOwnedByUser: [
-      "GET /users/{username}/packages/{package_type}/{package_name}/versions"
-    ],
-    getPackageForAuthenticatedUser: [
-      "GET /user/packages/{package_type}/{package_name}"
-    ],
-    getPackageForOrganization: [
-      "GET /orgs/{org}/packages/{package_type}/{package_name}"
-    ],
-    getPackageForUser: [
-      "GET /users/{username}/packages/{package_type}/{package_name}"
-    ],
-    getPackageVersionForAuthenticatedUser: [
-      "GET /user/packages/{package_type}/{package_name}/versions/{package_version_id}"
-    ],
-    getPackageVersionForOrganization: [
-      "GET /orgs/{org}/packages/{package_type}/{package_name}/versions/{package_version_id}"
-    ],
-    getPackageVersionForUser: [
-      "GET /users/{username}/packages/{package_type}/{package_name}/versions/{package_version_id}"
-    ],
-    listDockerMigrationConflictingPackagesForAuthenticatedUser: [
-      "GET /user/docker/conflicts"
-    ],
-    listDockerMigrationConflictingPackagesForOrganization: [
-      "GET /orgs/{org}/docker/conflicts"
-    ],
-    listDockerMigrationConflictingPackagesForUser: [
-      "GET /users/{username}/docker/conflicts"
-    ],
-    listPackagesForAuthenticatedUser: ["GET /user/packages"],
-    listPackagesForOrganization: ["GET /orgs/{org}/packages"],
-    listPackagesForUser: ["GET /users/{username}/packages"],
-    restorePackageForAuthenticatedUser: [
-      "POST /user/packages/{package_type}/{package_name}/restore{?token}"
-    ],
-    restorePackageForOrg: [
-      "POST /orgs/{org}/packages/{package_type}/{package_name}/restore{?token}"
-    ],
-    restorePackageForUser: [
-      "POST /users/{username}/packages/{package_type}/{package_name}/restore{?token}"
-    ],
-    restorePackageVersionForAuthenticatedUser: [
-      "POST /user/packages/{package_type}/{package_name}/versions/{package_version_id}/restore"
-    ],
-    restorePackageVersionForOrg: [
-      "POST /orgs/{org}/packages/{package_type}/{package_name}/versions/{package_version_id}/restore"
-    ],
-    restorePackageVersionForUser: [
-      "POST /users/{username}/packages/{package_type}/{package_name}/versions/{package_version_id}/restore"
-    ]
-  },
-  projects: {
-    addCollaborator: ["PUT /projects/{project_id}/collaborators/{username}"],
-    createCard: ["POST /projects/columns/{column_id}/cards"],
-    createColumn: ["POST /projects/{project_id}/columns"],
-    createForAuthenticatedUser: ["POST /user/projects"],
-    createForOrg: ["POST /orgs/{org}/projects"],
-    createForRepo: ["POST /repos/{owner}/{repo}/projects"],
-    delete: ["DELETE /projects/{project_id}"],
-    deleteCard: ["DELETE /projects/columns/cards/{card_id}"],
-    deleteColumn: ["DELETE /projects/columns/{column_id}"],
-    get: ["GET /projects/{project_id}"],
-    getCard: ["GET /projects/columns/cards/{card_id}"],
-    getColumn: ["GET /projects/columns/{column_id}"],
-    getPermissionForUser: [
-      "GET /projects/{project_id}/collaborators/{username}/permission"
-    ],
-    listCards: ["GET /projects/columns/{column_id}/cards"],
-    listCollaborators: ["GET /projects/{project_id}/collaborators"],
-    listColumns: ["GET /projects/{project_id}/columns"],
-    listForOrg: ["GET /orgs/{org}/projects"],
-    listForRepo: ["GET /repos/{owner}/{repo}/projects"],
-    listForUser: ["GET /users/{username}/projects"],
-    moveCard: ["POST /projects/columns/cards/{card_id}/moves"],
-    moveColumn: ["POST /projects/columns/{column_id}/moves"],
-    removeCollaborator: [
-      "DELETE /projects/{project_id}/collaborators/{username}"
-    ],
-    update: ["PATCH /projects/{project_id}"],
-    updateCard: ["PATCH /projects/columns/cards/{card_id}"],
-    updateColumn: ["PATCH /projects/columns/{column_id}"]
-  },
-  pulls: {
-    checkIfMerged: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/merge"],
-    create: ["POST /repos/{owner}/{repo}/pulls"],
-    createReplyForReviewComment: [
-      "POST /repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies"
-    ],
-    createReview: ["POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews"],
-    createReviewComment: [
-      "POST /repos/{owner}/{repo}/pulls/{pull_number}/comments"
-    ],
-    deletePendingReview: [
-      "DELETE /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}"
-    ],
-    deleteReviewComment: [
-      "DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}"
-    ],
-    dismissReview: [
-      "PUT /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/dismissals"
-    ],
-    get: ["GET /repos/{owner}/{repo}/pulls/{pull_number}"],
-    getReview: [
-      "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}"
-    ],
-    getReviewComment: ["GET /repos/{owner}/{repo}/pulls/comments/{comment_id}"],
-    list: ["GET /repos/{owner}/{repo}/pulls"],
-    listCommentsForReview: [
-      "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments"
-    ],
-    listCommits: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/commits"],
-    listFiles: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/files"],
-    listRequestedReviewers: [
-      "GET /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"
-    ],
-    listReviewComments: [
-      "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments"
-    ],
-    listReviewCommentsForRepo: ["GET /repos/{owner}/{repo}/pulls/comments"],
-    listReviews: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews"],
-    merge: ["PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge"],
-    removeRequestedReviewers: [
-      "DELETE /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"
-    ],
-    requestReviewers: [
-      "POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"
-    ],
-    submitReview: [
-      "POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/events"
-    ],
-    update: ["PATCH /repos/{owner}/{repo}/pulls/{pull_number}"],
-    updateBranch: [
-      "PUT /repos/{owner}/{repo}/pulls/{pull_number}/update-branch"
-    ],
-    updateReview: [
-      "PUT /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}"
-    ],
-    updateReviewComment: [
-      "PATCH /repos/{owner}/{repo}/pulls/comments/{comment_id}"
-    ]
-  },
-  rateLimit: { get: ["GET /rate_limit"] },
-  reactions: {
-    createForCommitComment: [
-      "POST /repos/{owner}/{repo}/comments/{comment_id}/reactions"
-    ],
-    createForIssue: [
-      "POST /repos/{owner}/{repo}/issues/{issue_number}/reactions"
-    ],
-    createForIssueComment: [
-      "POST /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions"
-    ],
-    createForPullRequestReviewComment: [
-      "POST /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions"
-    ],
-    createForRelease: [
-      "POST /repos/{owner}/{repo}/releases/{release_id}/reactions"
-    ],
-    createForTeamDiscussionCommentInOrg: [
-      "POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions"
-    ],
-    createForTeamDiscussionInOrg: [
-      "POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions"
-    ],
-    deleteForCommitComment: [
-      "DELETE /repos/{owner}/{repo}/comments/{comment_id}/reactions/{reaction_id}"
-    ],
-    deleteForIssue: [
-      "DELETE /repos/{owner}/{repo}/issues/{issue_number}/reactions/{reaction_id}"
-    ],
-    deleteForIssueComment: [
-      "DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions/{reaction_id}"
-    ],
-    deleteForPullRequestComment: [
-      "DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions/{reaction_id}"
-    ],
-    deleteForRelease: [
-      "DELETE /repos/{owner}/{repo}/releases/{release_id}/reactions/{reaction_id}"
-    ],
-    deleteForTeamDiscussion: [
-      "DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions/{reaction_id}"
-    ],
-    deleteForTeamDiscussionComment: [
-      "DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions/{reaction_id}"
-    ],
-    listForCommitComment: [
-      "GET /repos/{owner}/{repo}/comments/{comment_id}/reactions"
-    ],
-    listForIssue: ["GET /repos/{owner}/{repo}/issues/{issue_number}/reactions"],
-    listForIssueComment: [
-      "GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions"
-    ],
-    listForPullRequestReviewComment: [
-      "GET /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions"
-    ],
-    listForRelease: [
-      "GET /repos/{owner}/{repo}/releases/{release_id}/reactions"
-    ],
-    listForTeamDiscussionCommentInOrg: [
-      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions"
-    ],
-    listForTeamDiscussionInOrg: [
-      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions"
-    ]
-  },
-  repos: {
-    acceptInvitation: [
-      "PATCH /user/repository_invitations/{invitation_id}",
-      {},
-      { renamed: ["repos", "acceptInvitationForAuthenticatedUser"] }
-    ],
-    acceptInvitationForAuthenticatedUser: [
-      "PATCH /user/repository_invitations/{invitation_id}"
-    ],
-    addAppAccessRestrictions: [
-      "POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps",
-      {},
-      { mapToData: "apps" }
-    ],
-    addCollaborator: ["PUT /repos/{owner}/{repo}/collaborators/{username}"],
-    addStatusCheckContexts: [
-      "POST /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts",
-      {},
-      { mapToData: "contexts" }
-    ],
-    addTeamAccessRestrictions: [
-      "POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams",
-      {},
-      { mapToData: "teams" }
-    ],
-    addUserAccessRestrictions: [
-      "POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users",
-      {},
-      { mapToData: "users" }
-    ],
-    checkAutomatedSecurityFixes: [
-      "GET /repos/{owner}/{repo}/automated-security-fixes"
-    ],
-    checkCollaborator: ["GET /repos/{owner}/{repo}/collaborators/{username}"],
-    checkVulnerabilityAlerts: [
-      "GET /repos/{owner}/{repo}/vulnerability-alerts"
-    ],
-    codeownersErrors: ["GET /repos/{owner}/{repo}/codeowners/errors"],
-    compareCommits: ["GET /repos/{owner}/{repo}/compare/{base}...{head}"],
-    compareCommitsWithBasehead: [
-      "GET /repos/{owner}/{repo}/compare/{basehead}"
-    ],
-    createAutolink: ["POST /repos/{owner}/{repo}/autolinks"],
-    createCommitComment: [
-      "POST /repos/{owner}/{repo}/commits/{commit_sha}/comments"
-    ],
-    createCommitSignatureProtection: [
-      "POST /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures"
-    ],
-    createCommitStatus: ["POST /repos/{owner}/{repo}/statuses/{sha}"],
-    createDeployKey: ["POST /repos/{owner}/{repo}/keys"],
-    createDeployment: ["POST /repos/{owner}/{repo}/deployments"],
-    createDeploymentBranchPolicy: [
-      "POST /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies"
-    ],
-    createDeploymentProtectionRule: [
-      "POST /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules"
-    ],
-    createDeploymentStatus: [
-      "POST /repos/{owner}/{repo}/deployments/{deployment_id}/statuses"
-    ],
-    createDispatchEvent: ["POST /repos/{owner}/{repo}/dispatches"],
-    createForAuthenticatedUser: ["POST /user/repos"],
-    createFork: ["POST /repos/{owner}/{repo}/forks"],
-    createInOrg: ["POST /orgs/{org}/repos"],
-    createOrUpdateEnvironment: [
-      "PUT /repos/{owner}/{repo}/environments/{environment_name}"
-    ],
-    createOrUpdateFileContents: ["PUT /repos/{owner}/{repo}/contents/{path}"],
-    createOrgRuleset: ["POST /orgs/{org}/rulesets"],
-    createPagesDeployment: ["POST /repos/{owner}/{repo}/pages/deployment"],
-    createPagesSite: ["POST /repos/{owner}/{repo}/pages"],
-    createRelease: ["POST /repos/{owner}/{repo}/releases"],
-    createRepoRuleset: ["POST /repos/{owner}/{repo}/rulesets"],
-    createTagProtection: ["POST /repos/{owner}/{repo}/tags/protection"],
-    createUsingTemplate: [
-      "POST /repos/{template_owner}/{template_repo}/generate"
-    ],
-    createWebhook: ["POST /repos/{owner}/{repo}/hooks"],
-    declineInvitation: [
-      "DELETE /user/repository_invitations/{invitation_id}",
-      {},
-      { renamed: ["repos", "declineInvitationForAuthenticatedUser"] }
-    ],
-    declineInvitationForAuthenticatedUser: [
-      "DELETE /user/repository_invitations/{invitation_id}"
-    ],
-    delete: ["DELETE /repos/{owner}/{repo}"],
-    deleteAccessRestrictions: [
-      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions"
-    ],
-    deleteAdminBranchProtection: [
-      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"
-    ],
-    deleteAnEnvironment: [
-      "DELETE /repos/{owner}/{repo}/environments/{environment_name}"
-    ],
-    deleteAutolink: ["DELETE /repos/{owner}/{repo}/autolinks/{autolink_id}"],
-    deleteBranchProtection: [
-      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection"
-    ],
-    deleteCommitComment: ["DELETE /repos/{owner}/{repo}/comments/{comment_id}"],
-    deleteCommitSignatureProtection: [
-      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures"
-    ],
-    deleteDeployKey: ["DELETE /repos/{owner}/{repo}/keys/{key_id}"],
-    deleteDeployment: [
-      "DELETE /repos/{owner}/{repo}/deployments/{deployment_id}"
-    ],
-    deleteDeploymentBranchPolicy: [
-      "DELETE /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies/{branch_policy_id}"
-    ],
-    deleteFile: ["DELETE /repos/{owner}/{repo}/contents/{path}"],
-    deleteInvitation: [
-      "DELETE /repos/{owner}/{repo}/invitations/{invitation_id}"
-    ],
-    deleteOrgRuleset: ["DELETE /orgs/{org}/rulesets/{ruleset_id}"],
-    deletePagesSite: ["DELETE /repos/{owner}/{repo}/pages"],
-    deletePullRequestReviewProtection: [
-      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"
-    ],
-    deleteRelease: ["DELETE /repos/{owner}/{repo}/releases/{release_id}"],
-    deleteReleaseAsset: [
-      "DELETE /repos/{owner}/{repo}/releases/assets/{asset_id}"
-    ],
-    deleteRepoRuleset: ["DELETE /repos/{owner}/{repo}/rulesets/{ruleset_id}"],
-    deleteTagProtection: [
-      "DELETE /repos/{owner}/{repo}/tags/protection/{tag_protection_id}"
-    ],
-    deleteWebhook: ["DELETE /repos/{owner}/{repo}/hooks/{hook_id}"],
-    disableAutomatedSecurityFixes: [
-      "DELETE /repos/{owner}/{repo}/automated-security-fixes"
-    ],
-    disableDeploymentProtectionRule: [
-      "DELETE /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/{protection_rule_id}"
-    ],
-    disablePrivateVulnerabilityReporting: [
-      "DELETE /repos/{owner}/{repo}/private-vulnerability-reporting"
-    ],
-    disableVulnerabilityAlerts: [
-      "DELETE /repos/{owner}/{repo}/vulnerability-alerts"
-    ],
-    downloadArchive: [
-      "GET /repos/{owner}/{repo}/zipball/{ref}",
-      {},
-      { renamed: ["repos", "downloadZipballArchive"] }
-    ],
-    downloadTarballArchive: ["GET /repos/{owner}/{repo}/tarball/{ref}"],
-    downloadZipballArchive: ["GET /repos/{owner}/{repo}/zipball/{ref}"],
-    enableAutomatedSecurityFixes: [
-      "PUT /repos/{owner}/{repo}/automated-security-fixes"
-    ],
-    enablePrivateVulnerabilityReporting: [
-      "PUT /repos/{owner}/{repo}/private-vulnerability-reporting"
-    ],
-    enableVulnerabilityAlerts: [
-      "PUT /repos/{owner}/{repo}/vulnerability-alerts"
-    ],
-    generateReleaseNotes: [
-      "POST /repos/{owner}/{repo}/releases/generate-notes"
-    ],
-    get: ["GET /repos/{owner}/{repo}"],
-    getAccessRestrictions: [
-      "GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions"
-    ],
-    getAdminBranchProtection: [
-      "GET /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"
-    ],
-    getAllDeploymentProtectionRules: [
-      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules"
-    ],
-    getAllEnvironments: ["GET /repos/{owner}/{repo}/environments"],
-    getAllStatusCheckContexts: [
-      "GET /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts"
-    ],
-    getAllTopics: ["GET /repos/{owner}/{repo}/topics"],
-    getAppsWithAccessToProtectedBranch: [
-      "GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps"
-    ],
-    getAutolink: ["GET /repos/{owner}/{repo}/autolinks/{autolink_id}"],
-    getBranch: ["GET /repos/{owner}/{repo}/branches/{branch}"],
-    getBranchProtection: [
-      "GET /repos/{owner}/{repo}/branches/{branch}/protection"
-    ],
-    getBranchRules: ["GET /repos/{owner}/{repo}/rules/branches/{branch}"],
-    getClones: ["GET /repos/{owner}/{repo}/traffic/clones"],
-    getCodeFrequencyStats: ["GET /repos/{owner}/{repo}/stats/code_frequency"],
-    getCollaboratorPermissionLevel: [
-      "GET /repos/{owner}/{repo}/collaborators/{username}/permission"
-    ],
-    getCombinedStatusForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/status"],
-    getCommit: ["GET /repos/{owner}/{repo}/commits/{ref}"],
-    getCommitActivityStats: ["GET /repos/{owner}/{repo}/stats/commit_activity"],
-    getCommitComment: ["GET /repos/{owner}/{repo}/comments/{comment_id}"],
-    getCommitSignatureProtection: [
-      "GET /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures"
-    ],
-    getCommunityProfileMetrics: ["GET /repos/{owner}/{repo}/community/profile"],
-    getContent: ["GET /repos/{owner}/{repo}/contents/{path}"],
-    getContributorsStats: ["GET /repos/{owner}/{repo}/stats/contributors"],
-    getCustomDeploymentProtectionRule: [
-      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/{protection_rule_id}"
-    ],
-    getDeployKey: ["GET /repos/{owner}/{repo}/keys/{key_id}"],
-    getDeployment: ["GET /repos/{owner}/{repo}/deployments/{deployment_id}"],
-    getDeploymentBranchPolicy: [
-      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies/{branch_policy_id}"
-    ],
-    getDeploymentStatus: [
-      "GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses/{status_id}"
-    ],
-    getEnvironment: [
-      "GET /repos/{owner}/{repo}/environments/{environment_name}"
-    ],
-    getLatestPagesBuild: ["GET /repos/{owner}/{repo}/pages/builds/latest"],
-    getLatestRelease: ["GET /repos/{owner}/{repo}/releases/latest"],
-    getOrgRuleset: ["GET /orgs/{org}/rulesets/{ruleset_id}"],
-    getOrgRulesets: ["GET /orgs/{org}/rulesets"],
-    getPages: ["GET /repos/{owner}/{repo}/pages"],
-    getPagesBuild: ["GET /repos/{owner}/{repo}/pages/builds/{build_id}"],
-    getPagesHealthCheck: ["GET /repos/{owner}/{repo}/pages/health"],
-    getParticipationStats: ["GET /repos/{owner}/{repo}/stats/participation"],
-    getPullRequestReviewProtection: [
-      "GET /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"
-    ],
-    getPunchCardStats: ["GET /repos/{owner}/{repo}/stats/punch_card"],
-    getReadme: ["GET /repos/{owner}/{repo}/readme"],
-    getReadmeInDirectory: ["GET /repos/{owner}/{repo}/readme/{dir}"],
-    getRelease: ["GET /repos/{owner}/{repo}/releases/{release_id}"],
-    getReleaseAsset: ["GET /repos/{owner}/{repo}/releases/assets/{asset_id}"],
-    getReleaseByTag: ["GET /repos/{owner}/{repo}/releases/tags/{tag}"],
-    getRepoRuleset: ["GET /repos/{owner}/{repo}/rulesets/{ruleset_id}"],
-    getRepoRulesets: ["GET /repos/{owner}/{repo}/rulesets"],
-    getStatusChecksProtection: [
-      "GET /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"
-    ],
-    getTeamsWithAccessToProtectedBranch: [
-      "GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams"
-    ],
-    getTopPaths: ["GET /repos/{owner}/{repo}/traffic/popular/paths"],
-    getTopReferrers: ["GET /repos/{owner}/{repo}/traffic/popular/referrers"],
-    getUsersWithAccessToProtectedBranch: [
-      "GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users"
-    ],
-    getViews: ["GET /repos/{owner}/{repo}/traffic/views"],
-    getWebhook: ["GET /repos/{owner}/{repo}/hooks/{hook_id}"],
-    getWebhookConfigForRepo: [
-      "GET /repos/{owner}/{repo}/hooks/{hook_id}/config"
-    ],
-    getWebhookDelivery: [
-      "GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries/{delivery_id}"
-    ],
-    listActivities: ["GET /repos/{owner}/{repo}/activity"],
-    listAutolinks: ["GET /repos/{owner}/{repo}/autolinks"],
-    listBranches: ["GET /repos/{owner}/{repo}/branches"],
-    listBranchesForHeadCommit: [
-      "GET /repos/{owner}/{repo}/commits/{commit_sha}/branches-where-head"
-    ],
-    listCollaborators: ["GET /repos/{owner}/{repo}/collaborators"],
-    listCommentsForCommit: [
-      "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments"
-    ],
-    listCommitCommentsForRepo: ["GET /repos/{owner}/{repo}/comments"],
-    listCommitStatusesForRef: [
-      "GET /repos/{owner}/{repo}/commits/{ref}/statuses"
-    ],
-    listCommits: ["GET /repos/{owner}/{repo}/commits"],
-    listContributors: ["GET /repos/{owner}/{repo}/contributors"],
-    listCustomDeploymentRuleIntegrations: [
-      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/apps"
-    ],
-    listDeployKeys: ["GET /repos/{owner}/{repo}/keys"],
-    listDeploymentBranchPolicies: [
-      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies"
-    ],
-    listDeploymentStatuses: [
-      "GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses"
-    ],
-    listDeployments: ["GET /repos/{owner}/{repo}/deployments"],
-    listForAuthenticatedUser: ["GET /user/repos"],
-    listForOrg: ["GET /orgs/{org}/repos"],
-    listForUser: ["GET /users/{username}/repos"],
-    listForks: ["GET /repos/{owner}/{repo}/forks"],
-    listInvitations: ["GET /repos/{owner}/{repo}/invitations"],
-    listInvitationsForAuthenticatedUser: ["GET /user/repository_invitations"],
-    listLanguages: ["GET /repos/{owner}/{repo}/languages"],
-    listPagesBuilds: ["GET /repos/{owner}/{repo}/pages/builds"],
-    listPublic: ["GET /repositories"],
-    listPullRequestsAssociatedWithCommit: [
-      "GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls"
-    ],
-    listReleaseAssets: [
-      "GET /repos/{owner}/{repo}/releases/{release_id}/assets"
-    ],
-    listReleases: ["GET /repos/{owner}/{repo}/releases"],
-    listTagProtection: ["GET /repos/{owner}/{repo}/tags/protection"],
-    listTags: ["GET /repos/{owner}/{repo}/tags"],
-    listTeams: ["GET /repos/{owner}/{repo}/teams"],
-    listWebhookDeliveries: [
-      "GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries"
-    ],
-    listWebhooks: ["GET /repos/{owner}/{repo}/hooks"],
-    merge: ["POST /repos/{owner}/{repo}/merges"],
-    mergeUpstream: ["POST /repos/{owner}/{repo}/merge-upstream"],
-    pingWebhook: ["POST /repos/{owner}/{repo}/hooks/{hook_id}/pings"],
-    redeliverWebhookDelivery: [
-      "POST /repos/{owner}/{repo}/hooks/{hook_id}/deliveries/{delivery_id}/attempts"
-    ],
-    removeAppAccessRestrictions: [
-      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps",
-      {},
-      { mapToData: "apps" }
-    ],
-    removeCollaborator: [
-      "DELETE /repos/{owner}/{repo}/collaborators/{username}"
-    ],
-    removeStatusCheckContexts: [
-      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts",
-      {},
-      { mapToData: "contexts" }
-    ],
-    removeStatusCheckProtection: [
-      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"
-    ],
-    removeTeamAccessRestrictions: [
-      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams",
-      {},
-      { mapToData: "teams" }
-    ],
-    removeUserAccessRestrictions: [
-      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users",
-      {},
-      { mapToData: "users" }
-    ],
-    renameBranch: ["POST /repos/{owner}/{repo}/branches/{branch}/rename"],
-    replaceAllTopics: ["PUT /repos/{owner}/{repo}/topics"],
-    requestPagesBuild: ["POST /repos/{owner}/{repo}/pages/builds"],
-    setAdminBranchProtection: [
-      "POST /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"
-    ],
-    setAppAccessRestrictions: [
-      "PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps",
-      {},
-      { mapToData: "apps" }
-    ],
-    setStatusCheckContexts: [
-      "PUT /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts",
-      {},
-      { mapToData: "contexts" }
-    ],
-    setTeamAccessRestrictions: [
-      "PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams",
-      {},
-      { mapToData: "teams" }
-    ],
-    setUserAccessRestrictions: [
-      "PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users",
-      {},
-      { mapToData: "users" }
-    ],
-    testPushWebhook: ["POST /repos/{owner}/{repo}/hooks/{hook_id}/tests"],
-    transfer: ["POST /repos/{owner}/{repo}/transfer"],
-    update: ["PATCH /repos/{owner}/{repo}"],
-    updateBranchProtection: [
-      "PUT /repos/{owner}/{repo}/branches/{branch}/protection"
-    ],
-    updateCommitComment: ["PATCH /repos/{owner}/{repo}/comments/{comment_id}"],
-    updateDeploymentBranchPolicy: [
-      "PUT /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies/{branch_policy_id}"
-    ],
-    updateInformationAboutPagesSite: ["PUT /repos/{owner}/{repo}/pages"],
-    updateInvitation: [
-      "PATCH /repos/{owner}/{repo}/invitations/{invitation_id}"
-    ],
-    updateOrgRuleset: ["PUT /orgs/{org}/rulesets/{ruleset_id}"],
-    updatePullRequestReviewProtection: [
-      "PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"
-    ],
-    updateRelease: ["PATCH /repos/{owner}/{repo}/releases/{release_id}"],
-    updateReleaseAsset: [
-      "PATCH /repos/{owner}/{repo}/releases/assets/{asset_id}"
-    ],
-    updateRepoRuleset: ["PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}"],
-    updateStatusCheckPotection: [
-      "PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks",
-      {},
-      { renamed: ["repos", "updateStatusCheckProtection"] }
-    ],
-    updateStatusCheckProtection: [
-      "PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"
-    ],
-    updateWebhook: ["PATCH /repos/{owner}/{repo}/hooks/{hook_id}"],
-    updateWebhookConfigForRepo: [
-      "PATCH /repos/{owner}/{repo}/hooks/{hook_id}/config"
-    ],
-    uploadReleaseAsset: [
-      "POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name,label}",
-      { baseUrl: "https://uploads.github.com" }
-    ]
-  },
-  search: {
-    code: ["GET /search/code"],
-    commits: ["GET /search/commits"],
-    issuesAndPullRequests: ["GET /search/issues"],
-    labels: ["GET /search/labels"],
-    repos: ["GET /search/repositories"],
-    topics: ["GET /search/topics"],
-    users: ["GET /search/users"]
-  },
-  secretScanning: {
-    getAlert: [
-      "GET /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}"
-    ],
-    listAlertsForEnterprise: [
-      "GET /enterprises/{enterprise}/secret-scanning/alerts"
-    ],
-    listAlertsForOrg: ["GET /orgs/{org}/secret-scanning/alerts"],
-    listAlertsForRepo: ["GET /repos/{owner}/{repo}/secret-scanning/alerts"],
-    listLocationsForAlert: [
-      "GET /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}/locations"
-    ],
-    updateAlert: [
-      "PATCH /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}"
-    ]
-  },
-  securityAdvisories: {
-    createPrivateVulnerabilityReport: [
-      "POST /repos/{owner}/{repo}/security-advisories/reports"
-    ],
-    createRepositoryAdvisory: [
-      "POST /repos/{owner}/{repo}/security-advisories"
-    ],
-    createRepositoryAdvisoryCveRequest: [
-      "POST /repos/{owner}/{repo}/security-advisories/{ghsa_id}/cve"
-    ],
-    getGlobalAdvisory: ["GET /advisories/{ghsa_id}"],
-    getRepositoryAdvisory: [
-      "GET /repos/{owner}/{repo}/security-advisories/{ghsa_id}"
-    ],
-    listGlobalAdvisories: ["GET /advisories"],
-    listOrgRepositoryAdvisories: ["GET /orgs/{org}/security-advisories"],
-    listRepositoryAdvisories: ["GET /repos/{owner}/{repo}/security-advisories"],
-    updateRepositoryAdvisory: [
-      "PATCH /repos/{owner}/{repo}/security-advisories/{ghsa_id}"
-    ]
-  },
-  teams: {
-    addOrUpdateMembershipForUserInOrg: [
-      "PUT /orgs/{org}/teams/{team_slug}/memberships/{username}"
-    ],
-    addOrUpdateProjectPermissionsInOrg: [
-      "PUT /orgs/{org}/teams/{team_slug}/projects/{project_id}"
-    ],
-    addOrUpdateRepoPermissionsInOrg: [
-      "PUT /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"
-    ],
-    checkPermissionsForProjectInOrg: [
-      "GET /orgs/{org}/teams/{team_slug}/projects/{project_id}"
-    ],
-    checkPermissionsForRepoInOrg: [
-      "GET /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"
-    ],
-    create: ["POST /orgs/{org}/teams"],
-    createDiscussionCommentInOrg: [
-      "POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments"
-    ],
-    createDiscussionInOrg: ["POST /orgs/{org}/teams/{team_slug}/discussions"],
-    deleteDiscussionCommentInOrg: [
-      "DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}"
-    ],
-    deleteDiscussionInOrg: [
-      "DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}"
-    ],
-    deleteInOrg: ["DELETE /orgs/{org}/teams/{team_slug}"],
-    getByName: ["GET /orgs/{org}/teams/{team_slug}"],
-    getDiscussionCommentInOrg: [
-      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}"
-    ],
-    getDiscussionInOrg: [
-      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}"
-    ],
-    getMembershipForUserInOrg: [
-      "GET /orgs/{org}/teams/{team_slug}/memberships/{username}"
-    ],
-    list: ["GET /orgs/{org}/teams"],
-    listChildInOrg: ["GET /orgs/{org}/teams/{team_slug}/teams"],
-    listDiscussionCommentsInOrg: [
-      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments"
-    ],
-    listDiscussionsInOrg: ["GET /orgs/{org}/teams/{team_slug}/discussions"],
-    listForAuthenticatedUser: ["GET /user/teams"],
-    listMembersInOrg: ["GET /orgs/{org}/teams/{team_slug}/members"],
-    listPendingInvitationsInOrg: [
-      "GET /orgs/{org}/teams/{team_slug}/invitations"
-    ],
-    listProjectsInOrg: ["GET /orgs/{org}/teams/{team_slug}/projects"],
-    listReposInOrg: ["GET /orgs/{org}/teams/{team_slug}/repos"],
-    removeMembershipForUserInOrg: [
-      "DELETE /orgs/{org}/teams/{team_slug}/memberships/{username}"
-    ],
-    removeProjectInOrg: [
-      "DELETE /orgs/{org}/teams/{team_slug}/projects/{project_id}"
-    ],
-    removeRepoInOrg: [
-      "DELETE /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"
-    ],
-    updateDiscussionCommentInOrg: [
-      "PATCH /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}"
-    ],
-    updateDiscussionInOrg: [
-      "PATCH /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}"
-    ],
-    updateInOrg: ["PATCH /orgs/{org}/teams/{team_slug}"]
-  },
-  users: {
-    addEmailForAuthenticated: [
-      "POST /user/emails",
-      {},
-      { renamed: ["users", "addEmailForAuthenticatedUser"] }
-    ],
-    addEmailForAuthenticatedUser: ["POST /user/emails"],
-    addSocialAccountForAuthenticatedUser: ["POST /user/social_accounts"],
-    block: ["PUT /user/blocks/{username}"],
-    checkBlocked: ["GET /user/blocks/{username}"],
-    checkFollowingForUser: ["GET /users/{username}/following/{target_user}"],
-    checkPersonIsFollowedByAuthenticated: ["GET /user/following/{username}"],
-    createGpgKeyForAuthenticated: [
-      "POST /user/gpg_keys",
-      {},
-      { renamed: ["users", "createGpgKeyForAuthenticatedUser"] }
-    ],
-    createGpgKeyForAuthenticatedUser: ["POST /user/gpg_keys"],
-    createPublicSshKeyForAuthenticated: [
-      "POST /user/keys",
-      {},
-      { renamed: ["users", "createPublicSshKeyForAuthenticatedUser"] }
-    ],
-    createPublicSshKeyForAuthenticatedUser: ["POST /user/keys"],
-    createSshSigningKeyForAuthenticatedUser: ["POST /user/ssh_signing_keys"],
-    deleteEmailForAuthenticated: [
-      "DELETE /user/emails",
-      {},
-      { renamed: ["users", "deleteEmailForAuthenticatedUser"] }
-    ],
-    deleteEmailForAuthenticatedUser: ["DELETE /user/emails"],
-    deleteGpgKeyForAuthenticated: [
-      "DELETE /user/gpg_keys/{gpg_key_id}",
-      {},
-      { renamed: ["users", "deleteGpgKeyForAuthenticatedUser"] }
-    ],
-    deleteGpgKeyForAuthenticatedUser: ["DELETE /user/gpg_keys/{gpg_key_id}"],
-    deletePublicSshKeyForAuthenticated: [
-      "DELETE /user/keys/{key_id}",
-      {},
-      { renamed: ["users", "deletePublicSshKeyForAuthenticatedUser"] }
-    ],
-    deletePublicSshKeyForAuthenticatedUser: ["DELETE /user/keys/{key_id}"],
-    deleteSocialAccountForAuthenticatedUser: ["DELETE /user/social_accounts"],
-    deleteSshSigningKeyForAuthenticatedUser: [
-      "DELETE /user/ssh_signing_keys/{ssh_signing_key_id}"
-    ],
-    follow: ["PUT /user/following/{username}"],
-    getAuthenticated: ["GET /user"],
-    getByUsername: ["GET /users/{username}"],
-    getContextForUser: ["GET /users/{username}/hovercard"],
-    getGpgKeyForAuthenticated: [
-      "GET /user/gpg_keys/{gpg_key_id}",
-      {},
-      { renamed: ["users", "getGpgKeyForAuthenticatedUser"] }
-    ],
-    getGpgKeyForAuthenticatedUser: ["GET /user/gpg_keys/{gpg_key_id}"],
-    getPublicSshKeyForAuthenticated: [
-      "GET /user/keys/{key_id}",
-      {},
-      { renamed: ["users", "getPublicSshKeyForAuthenticatedUser"] }
-    ],
-    getPublicSshKeyForAuthenticatedUser: ["GET /user/keys/{key_id}"],
-    getSshSigningKeyForAuthenticatedUser: [
-      "GET /user/ssh_signing_keys/{ssh_signing_key_id}"
-    ],
-    list: ["GET /users"],
-    listBlockedByAuthenticated: [
-      "GET /user/blocks",
-      {},
-      { renamed: ["users", "listBlockedByAuthenticatedUser"] }
-    ],
-    listBlockedByAuthenticatedUser: ["GET /user/blocks"],
-    listEmailsForAuthenticated: [
-      "GET /user/emails",
-      {},
-      { renamed: ["users", "listEmailsForAuthenticatedUser"] }
-    ],
-    listEmailsForAuthenticatedUser: ["GET /user/emails"],
-    listFollowedByAuthenticated: [
-      "GET /user/following",
-      {},
-      { renamed: ["users", "listFollowedByAuthenticatedUser"] }
-    ],
-    listFollowedByAuthenticatedUser: ["GET /user/following"],
-    listFollowersForAuthenticatedUser: ["GET /user/followers"],
-    listFollowersForUser: ["GET /users/{username}/followers"],
-    listFollowingForUser: ["GET /users/{username}/following"],
-    listGpgKeysForAuthenticated: [
-      "GET /user/gpg_keys",
-      {},
-      { renamed: ["users", "listGpgKeysForAuthenticatedUser"] }
-    ],
-    listGpgKeysForAuthenticatedUser: ["GET /user/gpg_keys"],
-    listGpgKeysForUser: ["GET /users/{username}/gpg_keys"],
-    listPublicEmailsForAuthenticated: [
-      "GET /user/public_emails",
-      {},
-      { renamed: ["users", "listPublicEmailsForAuthenticatedUser"] }
-    ],
-    listPublicEmailsForAuthenticatedUser: ["GET /user/public_emails"],
-    listPublicKeysForUser: ["GET /users/{username}/keys"],
-    listPublicSshKeysForAuthenticated: [
-      "GET /user/keys",
-      {},
-      { renamed: ["users", "listPublicSshKeysForAuthenticatedUser"] }
-    ],
-    listPublicSshKeysForAuthenticatedUser: ["GET /user/keys"],
-    listSocialAccountsForAuthenticatedUser: ["GET /user/social_accounts"],
-    listSocialAccountsForUser: ["GET /users/{username}/social_accounts"],
-    listSshSigningKeysForAuthenticatedUser: ["GET /user/ssh_signing_keys"],
-    listSshSigningKeysForUser: ["GET /users/{username}/ssh_signing_keys"],
-    setPrimaryEmailVisibilityForAuthenticated: [
-      "PATCH /user/email/visibility",
-      {},
-      { renamed: ["users", "setPrimaryEmailVisibilityForAuthenticatedUser"] }
-    ],
-    setPrimaryEmailVisibilityForAuthenticatedUser: [
-      "PATCH /user/email/visibility"
-    ],
-    unblock: ["DELETE /user/blocks/{username}"],
-    unfollow: ["DELETE /user/following/{username}"],
-    updateAuthenticated: ["PATCH /user"]
-  }
-};
-var endpoints_default = Endpoints;
-
-// pkg/dist-src/endpoints-to-methods.js
-var endpointMethodsMap = /* @__PURE__ */ new Map();
-for (const [scope, endpoints] of Object.entries(endpoints_default)) {
-  for (const [methodName, endpoint] of Object.entries(endpoints)) {
-    const [route, defaults, decorations] = endpoint;
-    const [method, url] = route.split(/ /);
-    const endpointDefaults = Object.assign(
-      {
-        method,
-        url
-      },
-      defaults
-    );
-    if (!endpointMethodsMap.has(scope)) {
-      endpointMethodsMap.set(scope, /* @__PURE__ */ new Map());
-    }
-    endpointMethodsMap.get(scope).set(methodName, {
-      scope,
-      methodName,
-      endpointDefaults,
-      decorations
-    });
-  }
-}
-var handler = {
-  has({ scope }, methodName) {
-    return endpointMethodsMap.get(scope).has(methodName);
-  },
-  getOwnPropertyDescriptor(target, methodName) {
-    return {
-      value: this.get(target, methodName),
-      // ensures method is in the cache
-      configurable: true,
-      writable: true,
-      enumerable: true
-    };
-  },
-  defineProperty(target, methodName, descriptor) {
-    Object.defineProperty(target.cache, methodName, descriptor);
-    return true;
-  },
-  deleteProperty(target, methodName) {
-    delete target.cache[methodName];
-    return true;
-  },
-  ownKeys({ scope }) {
-    return [...endpointMethodsMap.get(scope).keys()];
-  },
-  set(target, methodName, value) {
-    return target.cache[methodName] = value;
-  },
-  get({ octokit, scope, cache }, methodName) {
-    if (cache[methodName]) {
-      return cache[methodName];
-    }
-    const method = endpointMethodsMap.get(scope).get(methodName);
-    if (!method) {
-      return void 0;
-    }
-    const { endpointDefaults, decorations } = method;
-    if (decorations) {
-      cache[methodName] = decorate(
-        octokit,
-        scope,
-        methodName,
-        endpointDefaults,
-        decorations
-      );
-    } else {
-      cache[methodName] = octokit.request.defaults(endpointDefaults);
-    }
-    return cache[methodName];
-  }
-};
-function endpointsToMethods(octokit) {
-  const newMethods = {};
-  for (const scope of endpointMethodsMap.keys()) {
-    newMethods[scope] = new Proxy({ octokit, scope, cache: {} }, handler);
-  }
-  return newMethods;
-}
-function decorate(octokit, scope, methodName, defaults, decorations) {
-  const requestWithDefaults = octokit.request.defaults(defaults);
-  function withDecorations(...args) {
-    let options = requestWithDefaults.endpoint.merge(...args);
-    if (decorations.mapToData) {
-      options = Object.assign({}, options, {
-        data: options[decorations.mapToData],
-        [decorations.mapToData]: void 0
-      });
-      return requestWithDefaults(options);
-    }
-    if (decorations.renamed) {
-      const [newScope, newMethodName] = decorations.renamed;
-      octokit.log.warn(
-        `octokit.${scope}.${methodName}() has been renamed to octokit.${newScope}.${newMethodName}()`
-      );
-    }
-    if (decorations.deprecated) {
-      octokit.log.warn(decorations.deprecated);
-    }
-    if (decorations.renamedParameters) {
-      const options2 = requestWithDefaults.endpoint.merge(...args);
-      for (const [name, alias] of Object.entries(
-        decorations.renamedParameters
-      )) {
-        if (name in options2) {
-          octokit.log.warn(
-            `"${name}" parameter is deprecated for "octokit.${scope}.${methodName}()". Use "${alias}" instead`
-          );
-          if (!(alias in options2)) {
-            options2[alias] = options2[name];
-          }
-          delete options2[name];
-        }
-      }
-      return requestWithDefaults(options2);
-    }
-    return requestWithDefaults(...args);
-  }
-  return Object.assign(withDecorations, requestWithDefaults);
-}
-
-// pkg/dist-src/index.js
-function restEndpointMethods(octokit) {
-  const api = endpointsToMethods(octokit);
-  return {
-    rest: api
-  };
-}
-restEndpointMethods.VERSION = VERSION$1;
-function legacyRestEndpointMethods(octokit) {
-  const api = endpointsToMethods(octokit);
-  return {
-    ...api,
-    rest: api
-  };
-}
-legacyRestEndpointMethods.VERSION = VERSION$1;
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
-// pkg/dist-src/index.js
-var dist_src_exports = {};
-__export(dist_src_exports, {
-  composePaginateRest: () => composePaginateRest,
-  isPaginatingEndpoint: () => isPaginatingEndpoint,
-  paginateRest: () => paginateRest,
-  paginatingEndpoints: () => paginatingEndpoints
-});
-var distNode = __toCommonJS(dist_src_exports);
-
-// pkg/dist-src/version.js
-var VERSION = "9.0.0";
-
-// pkg/dist-src/normalize-paginated-list-response.js
-function normalizePaginatedListResponse(response) {
-  if (!response.data) {
-    return {
-      ...response,
-      data: []
-    };
-  }
-  const responseNeedsNormalization = "total_count" in response.data && !("url" in response.data);
-  if (!responseNeedsNormalization)
-    return response;
-  const incompleteResults = response.data.incomplete_results;
-  const repositorySelection = response.data.repository_selection;
-  const totalCount = response.data.total_count;
-  delete response.data.incomplete_results;
-  delete response.data.repository_selection;
-  delete response.data.total_count;
-  const namespaceKey = Object.keys(response.data)[0];
-  const data = response.data[namespaceKey];
-  response.data = data;
-  if (typeof incompleteResults !== "undefined") {
-    response.data.incomplete_results = incompleteResults;
-  }
-  if (typeof repositorySelection !== "undefined") {
-    response.data.repository_selection = repositorySelection;
-  }
-  response.data.total_count = totalCount;
-  return response;
-}
-
-// pkg/dist-src/iterator.js
-function iterator(octokit, route, parameters) {
-  const options = typeof route === "function" ? route.endpoint(parameters) : octokit.request.endpoint(route, parameters);
-  const requestMethod = typeof route === "function" ? route : octokit.request;
-  const method = options.method;
-  const headers = options.headers;
-  let url = options.url;
-  return {
-    [Symbol.asyncIterator]: () => ({
-      async next() {
-        if (!url)
-          return { done: true };
-        try {
-          const response = await requestMethod({ method, url, headers });
-          const normalizedResponse = normalizePaginatedListResponse(response);
-          url = ((normalizedResponse.headers.link || "").match(
-            /<([^>]+)>;\s*rel="next"/
-          ) || [])[1];
-          return { value: normalizedResponse };
-        } catch (error) {
-          if (error.status !== 409)
-            throw error;
-          url = "";
-          return {
-            value: {
-              status: 200,
-              headers: {},
-              data: []
-            }
-          };
-        }
-      }
-    })
-  };
-}
-
-// pkg/dist-src/paginate.js
-function paginate(octokit, route, parameters, mapFn) {
-  if (typeof parameters === "function") {
-    mapFn = parameters;
-    parameters = void 0;
-  }
-  return gather(
-    octokit,
-    [],
-    iterator(octokit, route, parameters)[Symbol.asyncIterator](),
-    mapFn
-  );
-}
-function gather(octokit, results, iterator2, mapFn) {
-  return iterator2.next().then((result) => {
-    if (result.done) {
-      return results;
-    }
-    let earlyExit = false;
-    function done() {
-      earlyExit = true;
-    }
-    results = results.concat(
-      mapFn ? mapFn(result.value, done) : result.value.data
-    );
-    if (earlyExit) {
-      return results;
-    }
-    return gather(octokit, results, iterator2, mapFn);
-  });
-}
-
-// pkg/dist-src/compose-paginate.js
-var composePaginateRest = Object.assign(paginate, {
-  iterator
-});
-
-// pkg/dist-src/generated/paginating-endpoints.js
-var paginatingEndpoints = [
-  "GET /advisories",
-  "GET /app/hook/deliveries",
-  "GET /app/installation-requests",
-  "GET /app/installations",
-  "GET /assignments/{assignment_id}/accepted_assignments",
-  "GET /classrooms",
-  "GET /classrooms/{classroom_id}/assignments",
-  "GET /enterprises/{enterprise}/dependabot/alerts",
-  "GET /enterprises/{enterprise}/secret-scanning/alerts",
-  "GET /events",
-  "GET /gists",
-  "GET /gists/public",
-  "GET /gists/starred",
-  "GET /gists/{gist_id}/comments",
-  "GET /gists/{gist_id}/commits",
-  "GET /gists/{gist_id}/forks",
-  "GET /installation/repositories",
-  "GET /issues",
-  "GET /licenses",
-  "GET /marketplace_listing/plans",
-  "GET /marketplace_listing/plans/{plan_id}/accounts",
-  "GET /marketplace_listing/stubbed/plans",
-  "GET /marketplace_listing/stubbed/plans/{plan_id}/accounts",
-  "GET /networks/{owner}/{repo}/events",
-  "GET /notifications",
-  "GET /organizations",
-  "GET /orgs/{org}/actions/cache/usage-by-repository",
-  "GET /orgs/{org}/actions/permissions/repositories",
-  "GET /orgs/{org}/actions/runners",
-  "GET /orgs/{org}/actions/secrets",
-  "GET /orgs/{org}/actions/secrets/{secret_name}/repositories",
-  "GET /orgs/{org}/actions/variables",
-  "GET /orgs/{org}/actions/variables/{name}/repositories",
-  "GET /orgs/{org}/blocks",
-  "GET /orgs/{org}/code-scanning/alerts",
-  "GET /orgs/{org}/codespaces",
-  "GET /orgs/{org}/codespaces/secrets",
-  "GET /orgs/{org}/codespaces/secrets/{secret_name}/repositories",
-  "GET /orgs/{org}/copilot/billing/seats",
-  "GET /orgs/{org}/dependabot/alerts",
-  "GET /orgs/{org}/dependabot/secrets",
-  "GET /orgs/{org}/dependabot/secrets/{secret_name}/repositories",
-  "GET /orgs/{org}/events",
-  "GET /orgs/{org}/failed_invitations",
-  "GET /orgs/{org}/hooks",
-  "GET /orgs/{org}/hooks/{hook_id}/deliveries",
-  "GET /orgs/{org}/installations",
-  "GET /orgs/{org}/invitations",
-  "GET /orgs/{org}/invitations/{invitation_id}/teams",
-  "GET /orgs/{org}/issues",
-  "GET /orgs/{org}/members",
-  "GET /orgs/{org}/members/{username}/codespaces",
-  "GET /orgs/{org}/migrations",
-  "GET /orgs/{org}/migrations/{migration_id}/repositories",
-  "GET /orgs/{org}/outside_collaborators",
-  "GET /orgs/{org}/packages",
-  "GET /orgs/{org}/packages/{package_type}/{package_name}/versions",
-  "GET /orgs/{org}/personal-access-token-requests",
-  "GET /orgs/{org}/personal-access-token-requests/{pat_request_id}/repositories",
-  "GET /orgs/{org}/personal-access-tokens",
-  "GET /orgs/{org}/personal-access-tokens/{pat_id}/repositories",
-  "GET /orgs/{org}/projects",
-  "GET /orgs/{org}/public_members",
-  "GET /orgs/{org}/repos",
-  "GET /orgs/{org}/rulesets",
-  "GET /orgs/{org}/secret-scanning/alerts",
-  "GET /orgs/{org}/security-advisories",
-  "GET /orgs/{org}/teams",
-  "GET /orgs/{org}/teams/{team_slug}/discussions",
-  "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments",
-  "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions",
-  "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions",
-  "GET /orgs/{org}/teams/{team_slug}/invitations",
-  "GET /orgs/{org}/teams/{team_slug}/members",
-  "GET /orgs/{org}/teams/{team_slug}/projects",
-  "GET /orgs/{org}/teams/{team_slug}/repos",
-  "GET /orgs/{org}/teams/{team_slug}/teams",
-  "GET /projects/columns/{column_id}/cards",
-  "GET /projects/{project_id}/collaborators",
-  "GET /projects/{project_id}/columns",
-  "GET /repos/{owner}/{repo}/actions/artifacts",
-  "GET /repos/{owner}/{repo}/actions/caches",
-  "GET /repos/{owner}/{repo}/actions/organization-secrets",
-  "GET /repos/{owner}/{repo}/actions/organization-variables",
-  "GET /repos/{owner}/{repo}/actions/runners",
-  "GET /repos/{owner}/{repo}/actions/runs",
-  "GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts",
-  "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/jobs",
-  "GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs",
-  "GET /repos/{owner}/{repo}/actions/secrets",
-  "GET /repos/{owner}/{repo}/actions/variables",
-  "GET /repos/{owner}/{repo}/actions/workflows",
-  "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs",
-  "GET /repos/{owner}/{repo}/activity",
-  "GET /repos/{owner}/{repo}/assignees",
-  "GET /repos/{owner}/{repo}/branches",
-  "GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations",
-  "GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs",
-  "GET /repos/{owner}/{repo}/code-scanning/alerts",
-  "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances",
-  "GET /repos/{owner}/{repo}/code-scanning/analyses",
-  "GET /repos/{owner}/{repo}/codespaces",
-  "GET /repos/{owner}/{repo}/codespaces/devcontainers",
-  "GET /repos/{owner}/{repo}/codespaces/secrets",
-  "GET /repos/{owner}/{repo}/collaborators",
-  "GET /repos/{owner}/{repo}/comments",
-  "GET /repos/{owner}/{repo}/comments/{comment_id}/reactions",
-  "GET /repos/{owner}/{repo}/commits",
-  "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments",
-  "GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls",
-  "GET /repos/{owner}/{repo}/commits/{ref}/check-runs",
-  "GET /repos/{owner}/{repo}/commits/{ref}/check-suites",
-  "GET /repos/{owner}/{repo}/commits/{ref}/status",
-  "GET /repos/{owner}/{repo}/commits/{ref}/statuses",
-  "GET /repos/{owner}/{repo}/contributors",
-  "GET /repos/{owner}/{repo}/dependabot/alerts",
-  "GET /repos/{owner}/{repo}/dependabot/secrets",
-  "GET /repos/{owner}/{repo}/deployments",
-  "GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses",
-  "GET /repos/{owner}/{repo}/environments",
-  "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies",
-  "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/apps",
-  "GET /repos/{owner}/{repo}/events",
-  "GET /repos/{owner}/{repo}/forks",
-  "GET /repos/{owner}/{repo}/hooks",
-  "GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries",
-  "GET /repos/{owner}/{repo}/invitations",
-  "GET /repos/{owner}/{repo}/issues",
-  "GET /repos/{owner}/{repo}/issues/comments",
-  "GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions",
-  "GET /repos/{owner}/{repo}/issues/events",
-  "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
-  "GET /repos/{owner}/{repo}/issues/{issue_number}/events",
-  "GET /repos/{owner}/{repo}/issues/{issue_number}/labels",
-  "GET /repos/{owner}/{repo}/issues/{issue_number}/reactions",
-  "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline",
-  "GET /repos/{owner}/{repo}/keys",
-  "GET /repos/{owner}/{repo}/labels",
-  "GET /repos/{owner}/{repo}/milestones",
-  "GET /repos/{owner}/{repo}/milestones/{milestone_number}/labels",
-  "GET /repos/{owner}/{repo}/notifications",
-  "GET /repos/{owner}/{repo}/pages/builds",
-  "GET /repos/{owner}/{repo}/projects",
-  "GET /repos/{owner}/{repo}/pulls",
-  "GET /repos/{owner}/{repo}/pulls/comments",
-  "GET /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions",
-  "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments",
-  "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits",
-  "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
-  "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews",
-  "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments",
-  "GET /repos/{owner}/{repo}/releases",
-  "GET /repos/{owner}/{repo}/releases/{release_id}/assets",
-  "GET /repos/{owner}/{repo}/releases/{release_id}/reactions",
-  "GET /repos/{owner}/{repo}/rules/branches/{branch}",
-  "GET /repos/{owner}/{repo}/rulesets",
-  "GET /repos/{owner}/{repo}/secret-scanning/alerts",
-  "GET /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}/locations",
-  "GET /repos/{owner}/{repo}/security-advisories",
-  "GET /repos/{owner}/{repo}/stargazers",
-  "GET /repos/{owner}/{repo}/subscribers",
-  "GET /repos/{owner}/{repo}/tags",
-  "GET /repos/{owner}/{repo}/teams",
-  "GET /repos/{owner}/{repo}/topics",
-  "GET /repositories",
-  "GET /repositories/{repository_id}/environments/{environment_name}/secrets",
-  "GET /repositories/{repository_id}/environments/{environment_name}/variables",
-  "GET /search/code",
-  "GET /search/commits",
-  "GET /search/issues",
-  "GET /search/labels",
-  "GET /search/repositories",
-  "GET /search/topics",
-  "GET /search/users",
-  "GET /teams/{team_id}/discussions",
-  "GET /teams/{team_id}/discussions/{discussion_number}/comments",
-  "GET /teams/{team_id}/discussions/{discussion_number}/comments/{comment_number}/reactions",
-  "GET /teams/{team_id}/discussions/{discussion_number}/reactions",
-  "GET /teams/{team_id}/invitations",
-  "GET /teams/{team_id}/members",
-  "GET /teams/{team_id}/projects",
-  "GET /teams/{team_id}/repos",
-  "GET /teams/{team_id}/teams",
-  "GET /user/blocks",
-  "GET /user/codespaces",
-  "GET /user/codespaces/secrets",
-  "GET /user/emails",
-  "GET /user/followers",
-  "GET /user/following",
-  "GET /user/gpg_keys",
-  "GET /user/installations",
-  "GET /user/installations/{installation_id}/repositories",
-  "GET /user/issues",
-  "GET /user/keys",
-  "GET /user/marketplace_purchases",
-  "GET /user/marketplace_purchases/stubbed",
-  "GET /user/memberships/orgs",
-  "GET /user/migrations",
-  "GET /user/migrations/{migration_id}/repositories",
-  "GET /user/orgs",
-  "GET /user/packages",
-  "GET /user/packages/{package_type}/{package_name}/versions",
-  "GET /user/public_emails",
-  "GET /user/repos",
-  "GET /user/repository_invitations",
-  "GET /user/social_accounts",
-  "GET /user/ssh_signing_keys",
-  "GET /user/starred",
-  "GET /user/subscriptions",
-  "GET /user/teams",
-  "GET /users",
-  "GET /users/{username}/events",
-  "GET /users/{username}/events/orgs/{org}",
-  "GET /users/{username}/events/public",
-  "GET /users/{username}/followers",
-  "GET /users/{username}/following",
-  "GET /users/{username}/gists",
-  "GET /users/{username}/gpg_keys",
-  "GET /users/{username}/keys",
-  "GET /users/{username}/orgs",
-  "GET /users/{username}/packages",
-  "GET /users/{username}/projects",
-  "GET /users/{username}/received_events",
-  "GET /users/{username}/received_events/public",
-  "GET /users/{username}/repos",
-  "GET /users/{username}/social_accounts",
-  "GET /users/{username}/ssh_signing_keys",
-  "GET /users/{username}/starred",
-  "GET /users/{username}/subscriptions"
-];
-
-// pkg/dist-src/paginating-endpoints.js
-function isPaginatingEndpoint(arg) {
-  if (typeof arg === "string") {
-    return paginatingEndpoints.includes(arg);
-  } else {
-    return false;
-  }
-}
-
-// pkg/dist-src/index.js
-function paginateRest(octokit) {
-  return {
-    paginate: Object.assign(paginate.bind(null, octokit), {
-      iterator: iterator.bind(null, octokit)
-    })
-  };
-}
-paginateRest.VERSION = VERSION;
-
-(function (exports) {
-	var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+var hasRequiredUtils$1;
+
+function requireUtils$1 () {
+	if (hasRequiredUtils$1) return utils;
+	hasRequiredUtils$1 = 1;
+	var __createBinding = (utils && utils.__createBinding) || (Object.create ? (function(o, m, k, k2) {
 	    if (k2 === undefined) k2 = k;
 	    var desc = Object.getOwnPropertyDescriptor(m, k);
 	    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -29746,94 +26369,4065 @@ paginateRest.VERSION = VERSION;
 	    if (k2 === undefined) k2 = k;
 	    o[k2] = m[k];
 	}));
-	var __setModuleDefault = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
+	var __setModuleDefault = (utils && utils.__setModuleDefault) || (Object.create ? (function(o, v) {
 	    Object.defineProperty(o, "default", { enumerable: true, value: v });
 	}) : function(o, v) {
 	    o["default"] = v;
 	});
-	var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+	var __importStar = (utils && utils.__importStar) || function (mod) {
 	    if (mod && mod.__esModule) return mod;
 	    var result = {};
 	    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
 	    __setModuleDefault(result, mod);
 	    return result;
 	};
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.getOctokitOptions = exports.GitHub = exports.defaults = exports.context = void 0;
-	const Context = __importStar(context$1);
-	const Utils = __importStar(utils);
-	// octokit + plugins
-	const core_1 = distNode$2;
-	const plugin_rest_endpoint_methods_1 = distNode$1;
-	const plugin_paginate_rest_1 = distNode;
-	exports.context = new Context.Context();
-	const baseUrl = Utils.getApiBaseUrl();
-	exports.defaults = {
-	    baseUrl,
-	    request: {
-	        agent: Utils.getProxyAgent(baseUrl),
-	        fetch: Utils.getProxyFetch(baseUrl)
-	    }
+	var __awaiter = (utils && utils.__awaiter) || function (thisArg, _arguments, P, generator) {
+	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+	    return new (P || (P = Promise))(function (resolve, reject) {
+	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+	        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+	        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+	        step((generator = generator.apply(thisArg, _arguments || [])).next());
+	    });
 	};
-	exports.GitHub = core_1.Octokit.plugin(plugin_rest_endpoint_methods_1.restEndpointMethods, plugin_paginate_rest_1.paginateRest).defaults(exports.defaults);
+	Object.defineProperty(utils, "__esModule", { value: true });
+	utils.getApiBaseUrl = utils.getProxyFetch = utils.getProxyAgentDispatcher = utils.getProxyAgent = utils.getAuthString = void 0;
+	const httpClient = __importStar(requireLib$1());
+	const undici_1 = requireUndici();
+	function getAuthString(token, options) {
+	    if (!token && !options.auth) {
+	        throw new Error('Parameter token or opts.auth is required');
+	    }
+	    else if (token && options.auth) {
+	        throw new Error('Parameters token and opts.auth may not both be specified');
+	    }
+	    return typeof options.auth === 'string' ? options.auth : `token ${token}`;
+	}
+	utils.getAuthString = getAuthString;
+	function getProxyAgent(destinationUrl) {
+	    const hc = new httpClient.HttpClient();
+	    return hc.getAgent(destinationUrl);
+	}
+	utils.getProxyAgent = getProxyAgent;
+	function getProxyAgentDispatcher(destinationUrl) {
+	    const hc = new httpClient.HttpClient();
+	    return hc.getAgentDispatcher(destinationUrl);
+	}
+	utils.getProxyAgentDispatcher = getProxyAgentDispatcher;
+	function getProxyFetch(destinationUrl) {
+	    const httpDispatcher = getProxyAgentDispatcher(destinationUrl);
+	    const proxyFetch = (url, opts) => __awaiter(this, void 0, void 0, function* () {
+	        return (0, undici_1.fetch)(url, Object.assign(Object.assign({}, opts), { dispatcher: httpDispatcher }));
+	    });
+	    return proxyFetch;
+	}
+	utils.getProxyFetch = getProxyFetch;
+	function getApiBaseUrl() {
+	    return process.env['GITHUB_API_URL'] || 'https://api.github.com';
+	}
+	utils.getApiBaseUrl = getApiBaseUrl;
+	
+	return utils;
+}
+
+var distNode$9 = {};
+
+var hasRequiredDistNode$9;
+
+function requireDistNode$9 () {
+	if (hasRequiredDistNode$9) return distNode$9;
+	hasRequiredDistNode$9 = 1;
+
+	Object.defineProperty(distNode$9, '__esModule', { value: true });
+
+	function getUserAgent() {
+	  if (typeof navigator === "object" && "userAgent" in navigator) {
+	    return navigator.userAgent;
+	  }
+
+	  if (typeof process === "object" && "version" in process) {
+	    return `Node.js/${process.version.substr(1)} (${process.platform}; ${process.arch})`;
+	  }
+
+	  return "<environment undetectable>";
+	}
+
+	distNode$9.getUserAgent = getUserAgent;
+	
+	return distNode$9;
+}
+
+var beforeAfterHook = {exports: {}};
+
+var register_1;
+var hasRequiredRegister;
+
+function requireRegister () {
+	if (hasRequiredRegister) return register_1;
+	hasRequiredRegister = 1;
+	register_1 = register;
+
+	function register(state, name, method, options) {
+	  if (typeof method !== "function") {
+	    throw new Error("method for before hook must be a function");
+	  }
+
+	  if (!options) {
+	    options = {};
+	  }
+
+	  if (Array.isArray(name)) {
+	    return name.reverse().reduce(function (callback, name) {
+	      return register.bind(null, state, name, callback, options);
+	    }, method)();
+	  }
+
+	  return Promise.resolve().then(function () {
+	    if (!state.registry[name]) {
+	      return method(options);
+	    }
+
+	    return state.registry[name].reduce(function (method, registered) {
+	      return registered.hook.bind(null, method, options);
+	    }, method)();
+	  });
+	}
+	return register_1;
+}
+
+var add;
+var hasRequiredAdd;
+
+function requireAdd () {
+	if (hasRequiredAdd) return add;
+	hasRequiredAdd = 1;
+	add = addHook;
+
+	function addHook(state, kind, name, hook) {
+	  var orig = hook;
+	  if (!state.registry[name]) {
+	    state.registry[name] = [];
+	  }
+
+	  if (kind === "before") {
+	    hook = function (method, options) {
+	      return Promise.resolve()
+	        .then(orig.bind(null, options))
+	        .then(method.bind(null, options));
+	    };
+	  }
+
+	  if (kind === "after") {
+	    hook = function (method, options) {
+	      var result;
+	      return Promise.resolve()
+	        .then(method.bind(null, options))
+	        .then(function (result_) {
+	          result = result_;
+	          return orig(result, options);
+	        })
+	        .then(function () {
+	          return result;
+	        });
+	    };
+	  }
+
+	  if (kind === "error") {
+	    hook = function (method, options) {
+	      return Promise.resolve()
+	        .then(method.bind(null, options))
+	        .catch(function (error) {
+	          return orig(error, options);
+	        });
+	    };
+	  }
+
+	  state.registry[name].push({
+	    hook: hook,
+	    orig: orig,
+	  });
+	}
+	return add;
+}
+
+var remove;
+var hasRequiredRemove;
+
+function requireRemove () {
+	if (hasRequiredRemove) return remove;
+	hasRequiredRemove = 1;
+	remove = removeHook;
+
+	function removeHook(state, name, method) {
+	  if (!state.registry[name]) {
+	    return;
+	  }
+
+	  var index = state.registry[name]
+	    .map(function (registered) {
+	      return registered.orig;
+	    })
+	    .indexOf(method);
+
+	  if (index === -1) {
+	    return;
+	  }
+
+	  state.registry[name].splice(index, 1);
+	}
+	return remove;
+}
+
+var hasRequiredBeforeAfterHook;
+
+function requireBeforeAfterHook () {
+	if (hasRequiredBeforeAfterHook) return beforeAfterHook.exports;
+	hasRequiredBeforeAfterHook = 1;
+	var register = requireRegister();
+	var addHook = requireAdd();
+	var removeHook = requireRemove();
+
+	// bind with array of arguments: https://stackoverflow.com/a/21792913
+	var bind = Function.bind;
+	var bindable = bind.bind(bind);
+
+	function bindApi(hook, state, name) {
+	  var removeHookRef = bindable(removeHook, null).apply(
+	    null,
+	    name ? [state, name] : [state]
+	  );
+	  hook.api = { remove: removeHookRef };
+	  hook.remove = removeHookRef;
+	  ["before", "error", "after", "wrap"].forEach(function (kind) {
+	    var args = name ? [state, kind, name] : [state, kind];
+	    hook[kind] = hook.api[kind] = bindable(addHook, null).apply(null, args);
+	  });
+	}
+
+	function HookSingular() {
+	  var singularHookName = "h";
+	  var singularHookState = {
+	    registry: {},
+	  };
+	  var singularHook = register.bind(null, singularHookState, singularHookName);
+	  bindApi(singularHook, singularHookState, singularHookName);
+	  return singularHook;
+	}
+
+	function HookCollection() {
+	  var state = {
+	    registry: {},
+	  };
+
+	  var hook = register.bind(null, state);
+	  bindApi(hook, state);
+
+	  return hook;
+	}
+
+	var collectionHookDeprecationMessageDisplayed = false;
+	function Hook() {
+	  if (!collectionHookDeprecationMessageDisplayed) {
+	    console.warn(
+	      '[before-after-hook]: "Hook()" repurposing warning, use "Hook.Collection()". Read more: https://git.io/upgrade-before-after-hook-to-1.4'
+	    );
+	    collectionHookDeprecationMessageDisplayed = true;
+	  }
+	  return HookCollection();
+	}
+
+	Hook.Singular = HookSingular.bind();
+	Hook.Collection = HookCollection.bind();
+
+	beforeAfterHook.exports = Hook;
+	// expose constructors as a named property for TypeScript
+	beforeAfterHook.exports.Hook = Hook;
+	beforeAfterHook.exports.Singular = Hook.Singular;
+	beforeAfterHook.exports.Collection = Hook.Collection;
+	return beforeAfterHook.exports;
+}
+
+var isPlainObject = {};
+
+var hasRequiredIsPlainObject;
+
+function requireIsPlainObject () {
+	if (hasRequiredIsPlainObject) return isPlainObject;
+	hasRequiredIsPlainObject = 1;
+
+	Object.defineProperty(isPlainObject, '__esModule', { value: true });
+
+	/*!
+	 * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
+	 *
+	 * Copyright (c) 2014-2017, Jon Schlinkert.
+	 * Released under the MIT License.
+	 */
+
+	function isObject(o) {
+	  return Object.prototype.toString.call(o) === '[object Object]';
+	}
+
+	function isPlainObject$1(o) {
+	  var ctor,prot;
+
+	  if (isObject(o) === false) return false;
+
+	  // If has modified constructor
+	  ctor = o.constructor;
+	  if (ctor === undefined) return true;
+
+	  // If has modified prototype
+	  prot = ctor.prototype;
+	  if (isObject(prot) === false) return false;
+
+	  // If constructor does not have an Object-specific method
+	  if (prot.hasOwnProperty('isPrototypeOf') === false) {
+	    return false;
+	  }
+
+	  // Most likely a plain Object
+	  return true;
+	}
+
+	isPlainObject.isPlainObject = isPlainObject$1;
+	return isPlainObject;
+}
+
+var distNode$8;
+var hasRequiredDistNode$8;
+
+function requireDistNode$8 () {
+	if (hasRequiredDistNode$8) return distNode$8;
+	hasRequiredDistNode$8 = 1;
+	var __defProp = Object.defineProperty;
+	var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+	var __getOwnPropNames = Object.getOwnPropertyNames;
+	var __hasOwnProp = Object.prototype.hasOwnProperty;
+	var __export = (target, all) => {
+	  for (var name in all)
+	    __defProp(target, name, { get: all[name], enumerable: true });
+	};
+	var __copyProps = (to, from, except, desc) => {
+	  if (from && typeof from === "object" || typeof from === "function") {
+	    for (let key of __getOwnPropNames(from))
+	      if (!__hasOwnProp.call(to, key) && key !== except)
+	        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+	  }
+	  return to;
+	};
+	var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+	// pkg/dist-src/index.js
+	var dist_src_exports = {};
+	__export(dist_src_exports, {
+	  endpoint: () => endpoint
+	});
+	distNode$8 = __toCommonJS(dist_src_exports);
+
+	// pkg/dist-src/defaults.js
+	var import_universal_user_agent = /*@__PURE__*/ requireDistNode$9();
+
+	// pkg/dist-src/version.js
+	var VERSION = "9.0.1";
+
+	// pkg/dist-src/defaults.js
+	var userAgent = `octokit-endpoint.js/${VERSION} ${(0, import_universal_user_agent.getUserAgent)()}`;
+	var DEFAULTS = {
+	  method: "GET",
+	  baseUrl: "https://api.github.com",
+	  headers: {
+	    accept: "application/vnd.github.v3+json",
+	    "user-agent": userAgent
+	  },
+	  mediaType: {
+	    format: ""
+	  }
+	};
+
+	// pkg/dist-src/util/lowercase-keys.js
+	function lowercaseKeys(object) {
+	  if (!object) {
+	    return {};
+	  }
+	  return Object.keys(object).reduce((newObj, key) => {
+	    newObj[key.toLowerCase()] = object[key];
+	    return newObj;
+	  }, {});
+	}
+
+	// pkg/dist-src/util/merge-deep.js
+	var import_is_plain_object = requireIsPlainObject();
+	function mergeDeep(defaults, options) {
+	  const result = Object.assign({}, defaults);
+	  Object.keys(options).forEach((key) => {
+	    if ((0, import_is_plain_object.isPlainObject)(options[key])) {
+	      if (!(key in defaults))
+	        Object.assign(result, { [key]: options[key] });
+	      else
+	        result[key] = mergeDeep(defaults[key], options[key]);
+	    } else {
+	      Object.assign(result, { [key]: options[key] });
+	    }
+	  });
+	  return result;
+	}
+
+	// pkg/dist-src/util/remove-undefined-properties.js
+	function removeUndefinedProperties(obj) {
+	  for (const key in obj) {
+	    if (obj[key] === void 0) {
+	      delete obj[key];
+	    }
+	  }
+	  return obj;
+	}
+
+	// pkg/dist-src/merge.js
+	function merge(defaults, route, options) {
+	  if (typeof route === "string") {
+	    let [method, url] = route.split(" ");
+	    options = Object.assign(url ? { method, url } : { url: method }, options);
+	  } else {
+	    options = Object.assign({}, route);
+	  }
+	  options.headers = lowercaseKeys(options.headers);
+	  removeUndefinedProperties(options);
+	  removeUndefinedProperties(options.headers);
+	  const mergedOptions = mergeDeep(defaults || {}, options);
+	  if (options.url === "/graphql") {
+	    if (defaults && defaults.mediaType.previews?.length) {
+	      mergedOptions.mediaType.previews = defaults.mediaType.previews.filter(
+	        (preview) => !mergedOptions.mediaType.previews.includes(preview)
+	      ).concat(mergedOptions.mediaType.previews);
+	    }
+	    mergedOptions.mediaType.previews = (mergedOptions.mediaType.previews || []).map((preview) => preview.replace(/-preview/, ""));
+	  }
+	  return mergedOptions;
+	}
+
+	// pkg/dist-src/util/add-query-parameters.js
+	function addQueryParameters(url, parameters) {
+	  const separator = /\?/.test(url) ? "&" : "?";
+	  const names = Object.keys(parameters);
+	  if (names.length === 0) {
+	    return url;
+	  }
+	  return url + separator + names.map((name) => {
+	    if (name === "q") {
+	      return "q=" + parameters.q.split("+").map(encodeURIComponent).join("+");
+	    }
+	    return `${name}=${encodeURIComponent(parameters[name])}`;
+	  }).join("&");
+	}
+
+	// pkg/dist-src/util/extract-url-variable-names.js
+	var urlVariableRegex = /\{[^}]+\}/g;
+	function removeNonChars(variableName) {
+	  return variableName.replace(/^\W+|\W+$/g, "").split(/,/);
+	}
+	function extractUrlVariableNames(url) {
+	  const matches = url.match(urlVariableRegex);
+	  if (!matches) {
+	    return [];
+	  }
+	  return matches.map(removeNonChars).reduce((a, b) => a.concat(b), []);
+	}
+
+	// pkg/dist-src/util/omit.js
+	function omit(object, keysToOmit) {
+	  return Object.keys(object).filter((option) => !keysToOmit.includes(option)).reduce((obj, key) => {
+	    obj[key] = object[key];
+	    return obj;
+	  }, {});
+	}
+
+	// pkg/dist-src/util/url-template.js
+	function encodeReserved(str) {
+	  return str.split(/(%[0-9A-Fa-f]{2})/g).map(function(part) {
+	    if (!/%[0-9A-Fa-f]/.test(part)) {
+	      part = encodeURI(part).replace(/%5B/g, "[").replace(/%5D/g, "]");
+	    }
+	    return part;
+	  }).join("");
+	}
+	function encodeUnreserved(str) {
+	  return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+	    return "%" + c.charCodeAt(0).toString(16).toUpperCase();
+	  });
+	}
+	function encodeValue(operator, value, key) {
+	  value = operator === "+" || operator === "#" ? encodeReserved(value) : encodeUnreserved(value);
+	  if (key) {
+	    return encodeUnreserved(key) + "=" + value;
+	  } else {
+	    return value;
+	  }
+	}
+	function isDefined(value) {
+	  return value !== void 0 && value !== null;
+	}
+	function isKeyOperator(operator) {
+	  return operator === ";" || operator === "&" || operator === "?";
+	}
+	function getValues(context, operator, key, modifier) {
+	  var value = context[key], result = [];
+	  if (isDefined(value) && value !== "") {
+	    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+	      value = value.toString();
+	      if (modifier && modifier !== "*") {
+	        value = value.substring(0, parseInt(modifier, 10));
+	      }
+	      result.push(
+	        encodeValue(operator, value, isKeyOperator(operator) ? key : "")
+	      );
+	    } else {
+	      if (modifier === "*") {
+	        if (Array.isArray(value)) {
+	          value.filter(isDefined).forEach(function(value2) {
+	            result.push(
+	              encodeValue(operator, value2, isKeyOperator(operator) ? key : "")
+	            );
+	          });
+	        } else {
+	          Object.keys(value).forEach(function(k) {
+	            if (isDefined(value[k])) {
+	              result.push(encodeValue(operator, value[k], k));
+	            }
+	          });
+	        }
+	      } else {
+	        const tmp = [];
+	        if (Array.isArray(value)) {
+	          value.filter(isDefined).forEach(function(value2) {
+	            tmp.push(encodeValue(operator, value2));
+	          });
+	        } else {
+	          Object.keys(value).forEach(function(k) {
+	            if (isDefined(value[k])) {
+	              tmp.push(encodeUnreserved(k));
+	              tmp.push(encodeValue(operator, value[k].toString()));
+	            }
+	          });
+	        }
+	        if (isKeyOperator(operator)) {
+	          result.push(encodeUnreserved(key) + "=" + tmp.join(","));
+	        } else if (tmp.length !== 0) {
+	          result.push(tmp.join(","));
+	        }
+	      }
+	    }
+	  } else {
+	    if (operator === ";") {
+	      if (isDefined(value)) {
+	        result.push(encodeUnreserved(key));
+	      }
+	    } else if (value === "" && (operator === "&" || operator === "?")) {
+	      result.push(encodeUnreserved(key) + "=");
+	    } else if (value === "") {
+	      result.push("");
+	    }
+	  }
+	  return result;
+	}
+	function parseUrl(template) {
+	  return {
+	    expand: expand.bind(null, template)
+	  };
+	}
+	function expand(template, context) {
+	  var operators = ["+", "#", ".", "/", ";", "?", "&"];
+	  return template.replace(
+	    /\{([^\{\}]+)\}|([^\{\}]+)/g,
+	    function(_, expression, literal) {
+	      if (expression) {
+	        let operator = "";
+	        const values = [];
+	        if (operators.indexOf(expression.charAt(0)) !== -1) {
+	          operator = expression.charAt(0);
+	          expression = expression.substr(1);
+	        }
+	        expression.split(/,/g).forEach(function(variable) {
+	          var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
+	          values.push(getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
+	        });
+	        if (operator && operator !== "+") {
+	          var separator = ",";
+	          if (operator === "?") {
+	            separator = "&";
+	          } else if (operator !== "#") {
+	            separator = operator;
+	          }
+	          return (values.length !== 0 ? operator : "") + values.join(separator);
+	        } else {
+	          return values.join(",");
+	        }
+	      } else {
+	        return encodeReserved(literal);
+	      }
+	    }
+	  );
+	}
+
+	// pkg/dist-src/parse.js
+	function parse(options) {
+	  let method = options.method.toUpperCase();
+	  let url = (options.url || "/").replace(/:([a-z]\w+)/g, "{$1}");
+	  let headers = Object.assign({}, options.headers);
+	  let body;
+	  let parameters = omit(options, [
+	    "method",
+	    "baseUrl",
+	    "url",
+	    "headers",
+	    "request",
+	    "mediaType"
+	  ]);
+	  const urlVariableNames = extractUrlVariableNames(url);
+	  url = parseUrl(url).expand(parameters);
+	  if (!/^http/.test(url)) {
+	    url = options.baseUrl + url;
+	  }
+	  const omittedParameters = Object.keys(options).filter((option) => urlVariableNames.includes(option)).concat("baseUrl");
+	  const remainingParameters = omit(parameters, omittedParameters);
+	  const isBinaryRequest = /application\/octet-stream/i.test(headers.accept);
+	  if (!isBinaryRequest) {
+	    if (options.mediaType.format) {
+	      headers.accept = headers.accept.split(/,/).map(
+	        (format) => format.replace(
+	          /application\/vnd(\.\w+)(\.v3)?(\.\w+)?(\+json)?$/,
+	          `application/vnd$1$2.${options.mediaType.format}`
+	        )
+	      ).join(",");
+	    }
+	    if (url.endsWith("/graphql")) {
+	      if (options.mediaType.previews?.length) {
+	        const previewsFromAcceptHeader = headers.accept.match(/[\w-]+(?=-preview)/g) || [];
+	        headers.accept = previewsFromAcceptHeader.concat(options.mediaType.previews).map((preview) => {
+	          const format = options.mediaType.format ? `.${options.mediaType.format}` : "+json";
+	          return `application/vnd.github.${preview}-preview${format}`;
+	        }).join(",");
+	      }
+	    }
+	  }
+	  if (["GET", "HEAD"].includes(method)) {
+	    url = addQueryParameters(url, remainingParameters);
+	  } else {
+	    if ("data" in remainingParameters) {
+	      body = remainingParameters.data;
+	    } else {
+	      if (Object.keys(remainingParameters).length) {
+	        body = remainingParameters;
+	      }
+	    }
+	  }
+	  if (!headers["content-type"] && typeof body !== "undefined") {
+	    headers["content-type"] = "application/json; charset=utf-8";
+	  }
+	  if (["PATCH", "PUT"].includes(method) && typeof body === "undefined") {
+	    body = "";
+	  }
+	  return Object.assign(
+	    { method, url, headers },
+	    typeof body !== "undefined" ? { body } : null,
+	    options.request ? { request: options.request } : null
+	  );
+	}
+
+	// pkg/dist-src/endpoint-with-defaults.js
+	function endpointWithDefaults(defaults, route, options) {
+	  return parse(merge(defaults, route, options));
+	}
+
+	// pkg/dist-src/with-defaults.js
+	function withDefaults(oldDefaults, newDefaults) {
+	  const DEFAULTS2 = merge(oldDefaults, newDefaults);
+	  const endpoint2 = endpointWithDefaults.bind(null, DEFAULTS2);
+	  return Object.assign(endpoint2, {
+	    DEFAULTS: DEFAULTS2,
+	    defaults: withDefaults.bind(null, DEFAULTS2),
+	    merge: merge.bind(null, DEFAULTS2),
+	    parse
+	  });
+	}
+
+	// pkg/dist-src/index.js
+	var endpoint = withDefaults(null, DEFAULTS);
+	return distNode$8;
+}
+
+var distNode$7 = {};
+
+var hasRequiredDistNode$7;
+
+function requireDistNode$7 () {
+	if (hasRequiredDistNode$7) return distNode$7;
+	hasRequiredDistNode$7 = 1;
+
+	Object.defineProperty(distNode$7, '__esModule', { value: true });
+
+	class Deprecation extends Error {
+	  constructor(message) {
+	    super(message); // Maintains proper stack trace (only available on V8)
+
+	    /* istanbul ignore next */
+
+	    if (Error.captureStackTrace) {
+	      Error.captureStackTrace(this, this.constructor);
+	    }
+
+	    this.name = 'Deprecation';
+	  }
+
+	}
+
+	distNode$7.Deprecation = Deprecation;
+	return distNode$7;
+}
+
+var once = {exports: {}};
+
+var wrappy_1;
+var hasRequiredWrappy;
+
+function requireWrappy () {
+	if (hasRequiredWrappy) return wrappy_1;
+	hasRequiredWrappy = 1;
+	// Returns a wrapper function that returns a wrapped callback
+	// The wrapper function should do some stuff, and return a
+	// presumably different callback function.
+	// This makes sure that own properties are retained, so that
+	// decorations and such are not lost along the way.
+	wrappy_1 = wrappy;
+	function wrappy (fn, cb) {
+	  if (fn && cb) return wrappy(fn)(cb)
+
+	  if (typeof fn !== 'function')
+	    throw new TypeError('need wrapper function')
+
+	  Object.keys(fn).forEach(function (k) {
+	    wrapper[k] = fn[k];
+	  });
+
+	  return wrapper
+
+	  function wrapper() {
+	    var args = new Array(arguments.length);
+	    for (var i = 0; i < args.length; i++) {
+	      args[i] = arguments[i];
+	    }
+	    var ret = fn.apply(this, args);
+	    var cb = args[args.length-1];
+	    if (typeof ret === 'function' && ret !== cb) {
+	      Object.keys(cb).forEach(function (k) {
+	        ret[k] = cb[k];
+	      });
+	    }
+	    return ret
+	  }
+	}
+	return wrappy_1;
+}
+
+var hasRequiredOnce;
+
+function requireOnce () {
+	if (hasRequiredOnce) return once.exports;
+	hasRequiredOnce = 1;
+	var wrappy = requireWrappy();
+	once.exports = wrappy(once$1);
+	once.exports.strict = wrappy(onceStrict);
+
+	once$1.proto = once$1(function () {
+	  Object.defineProperty(Function.prototype, 'once', {
+	    value: function () {
+	      return once$1(this)
+	    },
+	    configurable: true
+	  });
+
+	  Object.defineProperty(Function.prototype, 'onceStrict', {
+	    value: function () {
+	      return onceStrict(this)
+	    },
+	    configurable: true
+	  });
+	});
+
+	function once$1 (fn) {
+	  var f = function () {
+	    if (f.called) return f.value
+	    f.called = true;
+	    return f.value = fn.apply(this, arguments)
+	  };
+	  f.called = false;
+	  return f
+	}
+
+	function onceStrict (fn) {
+	  var f = function () {
+	    if (f.called)
+	      throw new Error(f.onceError)
+	    f.called = true;
+	    return f.value = fn.apply(this, arguments)
+	  };
+	  var name = fn.name || 'Function wrapped with `once`';
+	  f.onceError = name + " shouldn't be called more than once";
+	  f.called = false;
+	  return f
+	}
+	return once.exports;
+}
+
+var distNode$6;
+var hasRequiredDistNode$6;
+
+function requireDistNode$6 () {
+	if (hasRequiredDistNode$6) return distNode$6;
+	hasRequiredDistNode$6 = 1;
+	var __create = Object.create;
+	var __defProp = Object.defineProperty;
+	var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+	var __getOwnPropNames = Object.getOwnPropertyNames;
+	var __getProtoOf = Object.getPrototypeOf;
+	var __hasOwnProp = Object.prototype.hasOwnProperty;
+	var __export = (target, all) => {
+	  for (var name in all)
+	    __defProp(target, name, { get: all[name], enumerable: true });
+	};
+	var __copyProps = (to, from, except, desc) => {
+	  if (from && typeof from === "object" || typeof from === "function") {
+	    for (let key of __getOwnPropNames(from))
+	      if (!__hasOwnProp.call(to, key) && key !== except)
+	        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+	  }
+	  return to;
+	};
+	var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+	  // If the importer is in node compatibility mode or this is not an ESM
+	  // file that has been converted to a CommonJS file using a Babel-
+	  // compatible transform (i.e. "__esModule" has not been set), then set
+	  // "default" to the CommonJS "module.exports" for node compatibility.
+	  !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+	  mod
+	));
+	var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+	// pkg/dist-src/index.js
+	var dist_src_exports = {};
+	__export(dist_src_exports, {
+	  RequestError: () => RequestError
+	});
+	distNode$6 = __toCommonJS(dist_src_exports);
+	var import_deprecation = /*@__PURE__*/ requireDistNode$7();
+	var import_once = __toESM(requireOnce());
+	var logOnceCode = (0, import_once.default)((deprecation) => console.warn(deprecation));
+	var logOnceHeaders = (0, import_once.default)((deprecation) => console.warn(deprecation));
+	var RequestError = class extends Error {
+	  constructor(message, statusCode, options) {
+	    super(message);
+	    if (Error.captureStackTrace) {
+	      Error.captureStackTrace(this, this.constructor);
+	    }
+	    this.name = "HttpError";
+	    this.status = statusCode;
+	    let headers;
+	    if ("headers" in options && typeof options.headers !== "undefined") {
+	      headers = options.headers;
+	    }
+	    if ("response" in options) {
+	      this.response = options.response;
+	      headers = options.response.headers;
+	    }
+	    const requestCopy = Object.assign({}, options.request);
+	    if (options.request.headers.authorization) {
+	      requestCopy.headers = Object.assign({}, options.request.headers, {
+	        authorization: options.request.headers.authorization.replace(
+	          / .*$/,
+	          " [REDACTED]"
+	        )
+	      });
+	    }
+	    requestCopy.url = requestCopy.url.replace(/\bclient_secret=\w+/g, "client_secret=[REDACTED]").replace(/\baccess_token=\w+/g, "access_token=[REDACTED]");
+	    this.request = requestCopy;
+	    Object.defineProperty(this, "code", {
+	      get() {
+	        logOnceCode(
+	          new import_deprecation.Deprecation(
+	            "[@octokit/request-error] `error.code` is deprecated, use `error.status`."
+	          )
+	        );
+	        return statusCode;
+	      }
+	    });
+	    Object.defineProperty(this, "headers", {
+	      get() {
+	        logOnceHeaders(
+	          new import_deprecation.Deprecation(
+	            "[@octokit/request-error] `error.headers` is deprecated, use `error.response.headers`."
+	          )
+	        );
+	        return headers || {};
+	      }
+	    });
+	  }
+	};
+	return distNode$6;
+}
+
+var distNode$5;
+var hasRequiredDistNode$5;
+
+function requireDistNode$5 () {
+	if (hasRequiredDistNode$5) return distNode$5;
+	hasRequiredDistNode$5 = 1;
+	var __defProp = Object.defineProperty;
+	var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+	var __getOwnPropNames = Object.getOwnPropertyNames;
+	var __hasOwnProp = Object.prototype.hasOwnProperty;
+	var __export = (target, all) => {
+	  for (var name in all)
+	    __defProp(target, name, { get: all[name], enumerable: true });
+	};
+	var __copyProps = (to, from, except, desc) => {
+	  if (from && typeof from === "object" || typeof from === "function") {
+	    for (let key of __getOwnPropNames(from))
+	      if (!__hasOwnProp.call(to, key) && key !== except)
+	        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+	  }
+	  return to;
+	};
+	var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+	// pkg/dist-src/index.js
+	var dist_src_exports = {};
+	__export(dist_src_exports, {
+	  request: () => request
+	});
+	distNode$5 = __toCommonJS(dist_src_exports);
+	var import_endpoint = /*@__PURE__*/ requireDistNode$8();
+	var import_universal_user_agent = /*@__PURE__*/ requireDistNode$9();
+
+	// pkg/dist-src/version.js
+	var VERSION = "8.1.4";
+
+	// pkg/dist-src/fetch-wrapper.js
+	var import_is_plain_object = requireIsPlainObject();
+	var import_request_error = /*@__PURE__*/ requireDistNode$6();
+
+	// pkg/dist-src/get-buffer-response.js
+	function getBufferResponse(response) {
+	  return response.arrayBuffer();
+	}
+
+	// pkg/dist-src/fetch-wrapper.js
+	function fetchWrapper(requestOptions) {
+	  var _a, _b, _c;
+	  const log = requestOptions.request && requestOptions.request.log ? requestOptions.request.log : console;
+	  const parseSuccessResponseBody = ((_a = requestOptions.request) == null ? void 0 : _a.parseSuccessResponseBody) !== false;
+	  if ((0, import_is_plain_object.isPlainObject)(requestOptions.body) || Array.isArray(requestOptions.body)) {
+	    requestOptions.body = JSON.stringify(requestOptions.body);
+	  }
+	  let headers = {};
+	  let status;
+	  let url;
+	  let { fetch } = globalThis;
+	  if ((_b = requestOptions.request) == null ? void 0 : _b.fetch) {
+	    fetch = requestOptions.request.fetch;
+	  }
+	  if (!fetch) {
+	    throw new Error(
+	      "fetch is not set. Please pass a fetch implementation as new Octokit({ request: { fetch }}). Learn more at https://github.com/octokit/octokit.js/#fetch-missing"
+	    );
+	  }
+	  return fetch(requestOptions.url, {
+	    method: requestOptions.method,
+	    body: requestOptions.body,
+	    headers: requestOptions.headers,
+	    signal: (_c = requestOptions.request) == null ? void 0 : _c.signal,
+	    // duplex must be set if request.body is ReadableStream or Async Iterables.
+	    // See https://fetch.spec.whatwg.org/#dom-requestinit-duplex.
+	    ...requestOptions.body && { duplex: "half" }
+	  }).then(async (response) => {
+	    url = response.url;
+	    status = response.status;
+	    for (const keyAndValue of response.headers) {
+	      headers[keyAndValue[0]] = keyAndValue[1];
+	    }
+	    if ("deprecation" in headers) {
+	      const matches = headers.link && headers.link.match(/<([^>]+)>; rel="deprecation"/);
+	      const deprecationLink = matches && matches.pop();
+	      log.warn(
+	        `[@octokit/request] "${requestOptions.method} ${requestOptions.url}" is deprecated. It is scheduled to be removed on ${headers.sunset}${deprecationLink ? `. See ${deprecationLink}` : ""}`
+	      );
+	    }
+	    if (status === 204 || status === 205) {
+	      return;
+	    }
+	    if (requestOptions.method === "HEAD") {
+	      if (status < 400) {
+	        return;
+	      }
+	      throw new import_request_error.RequestError(response.statusText, status, {
+	        response: {
+	          url,
+	          status,
+	          headers,
+	          data: void 0
+	        },
+	        request: requestOptions
+	      });
+	    }
+	    if (status === 304) {
+	      throw new import_request_error.RequestError("Not modified", status, {
+	        response: {
+	          url,
+	          status,
+	          headers,
+	          data: await getResponseData(response)
+	        },
+	        request: requestOptions
+	      });
+	    }
+	    if (status >= 400) {
+	      const data = await getResponseData(response);
+	      const error = new import_request_error.RequestError(toErrorMessage(data), status, {
+	        response: {
+	          url,
+	          status,
+	          headers,
+	          data
+	        },
+	        request: requestOptions
+	      });
+	      throw error;
+	    }
+	    return parseSuccessResponseBody ? await getResponseData(response) : response.body;
+	  }).then((data) => {
+	    return {
+	      status,
+	      url,
+	      headers,
+	      data
+	    };
+	  }).catch((error) => {
+	    if (error instanceof import_request_error.RequestError)
+	      throw error;
+	    else if (error.name === "AbortError")
+	      throw error;
+	    let message = error.message;
+	    if (error.name === "TypeError" && "cause" in error) {
+	      if (error.cause instanceof Error) {
+	        message = error.cause.message;
+	      } else if (typeof error.cause === "string") {
+	        message = error.cause;
+	      }
+	    }
+	    throw new import_request_error.RequestError(message, 500, {
+	      request: requestOptions
+	    });
+	  });
+	}
+	async function getResponseData(response) {
+	  const contentType = response.headers.get("content-type");
+	  if (/application\/json/.test(contentType)) {
+	    return response.json();
+	  }
+	  if (!contentType || /^text\/|charset=utf-8$/.test(contentType)) {
+	    return response.text();
+	  }
+	  return getBufferResponse(response);
+	}
+	function toErrorMessage(data) {
+	  if (typeof data === "string")
+	    return data;
+	  if ("message" in data) {
+	    if (Array.isArray(data.errors)) {
+	      return `${data.message}: ${data.errors.map(JSON.stringify).join(", ")}`;
+	    }
+	    return data.message;
+	  }
+	  return `Unknown error: ${JSON.stringify(data)}`;
+	}
+
+	// pkg/dist-src/with-defaults.js
+	function withDefaults(oldEndpoint, newDefaults) {
+	  const endpoint2 = oldEndpoint.defaults(newDefaults);
+	  const newApi = function(route, parameters) {
+	    const endpointOptions = endpoint2.merge(route, parameters);
+	    if (!endpointOptions.request || !endpointOptions.request.hook) {
+	      return fetchWrapper(endpoint2.parse(endpointOptions));
+	    }
+	    const request2 = (route2, parameters2) => {
+	      return fetchWrapper(
+	        endpoint2.parse(endpoint2.merge(route2, parameters2))
+	      );
+	    };
+	    Object.assign(request2, {
+	      endpoint: endpoint2,
+	      defaults: withDefaults.bind(null, endpoint2)
+	    });
+	    return endpointOptions.request.hook(request2, endpointOptions);
+	  };
+	  return Object.assign(newApi, {
+	    endpoint: endpoint2,
+	    defaults: withDefaults.bind(null, endpoint2)
+	  });
+	}
+
+	// pkg/dist-src/index.js
+	var request = withDefaults(import_endpoint.endpoint, {
+	  headers: {
+	    "user-agent": `octokit-request.js/${VERSION} ${(0, import_universal_user_agent.getUserAgent)()}`
+	  }
+	});
+	return distNode$5;
+}
+
+var distNode$4;
+var hasRequiredDistNode$4;
+
+function requireDistNode$4 () {
+	if (hasRequiredDistNode$4) return distNode$4;
+	hasRequiredDistNode$4 = 1;
+	var __defProp = Object.defineProperty;
+	var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+	var __getOwnPropNames = Object.getOwnPropertyNames;
+	var __hasOwnProp = Object.prototype.hasOwnProperty;
+	var __export = (target, all) => {
+	  for (var name in all)
+	    __defProp(target, name, { get: all[name], enumerable: true });
+	};
+	var __copyProps = (to, from, except, desc) => {
+	  if (from && typeof from === "object" || typeof from === "function") {
+	    for (let key of __getOwnPropNames(from))
+	      if (!__hasOwnProp.call(to, key) && key !== except)
+	        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+	  }
+	  return to;
+	};
+	var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+	// pkg/dist-src/index.js
+	var dist_src_exports = {};
+	__export(dist_src_exports, {
+	  GraphqlResponseError: () => GraphqlResponseError,
+	  graphql: () => graphql2,
+	  withCustomRequest: () => withCustomRequest
+	});
+	distNode$4 = __toCommonJS(dist_src_exports);
+	var import_request3 = /*@__PURE__*/ requireDistNode$5();
+	var import_universal_user_agent = /*@__PURE__*/ requireDistNode$9();
+
+	// pkg/dist-src/version.js
+	var VERSION = "7.0.2";
+
+	// pkg/dist-src/error.js
+	function _buildMessageForResponseErrors(data) {
+	  return `Request failed due to following response errors:
+` + data.errors.map((e) => ` - ${e.message}`).join("\n");
+	}
+	var GraphqlResponseError = class extends Error {
+	  constructor(request2, headers, response) {
+	    super(_buildMessageForResponseErrors(response));
+	    this.request = request2;
+	    this.headers = headers;
+	    this.response = response;
+	    this.name = "GraphqlResponseError";
+	    this.errors = response.errors;
+	    this.data = response.data;
+	    if (Error.captureStackTrace) {
+	      Error.captureStackTrace(this, this.constructor);
+	    }
+	  }
+	};
+
+	// pkg/dist-src/graphql.js
+	var NON_VARIABLE_OPTIONS = [
+	  "method",
+	  "baseUrl",
+	  "url",
+	  "headers",
+	  "request",
+	  "query",
+	  "mediaType"
+	];
+	var FORBIDDEN_VARIABLE_OPTIONS = ["query", "method", "url"];
+	var GHES_V3_SUFFIX_REGEX = /\/api\/v3\/?$/;
+	function graphql(request2, query, options) {
+	  if (options) {
+	    if (typeof query === "string" && "query" in options) {
+	      return Promise.reject(
+	        new Error(`[@octokit/graphql] "query" cannot be used as variable name`)
+	      );
+	    }
+	    for (const key in options) {
+	      if (!FORBIDDEN_VARIABLE_OPTIONS.includes(key))
+	        continue;
+	      return Promise.reject(
+	        new Error(
+	          `[@octokit/graphql] "${key}" cannot be used as variable name`
+	        )
+	      );
+	    }
+	  }
+	  const parsedOptions = typeof query === "string" ? Object.assign({ query }, options) : query;
+	  const requestOptions = Object.keys(
+	    parsedOptions
+	  ).reduce((result, key) => {
+	    if (NON_VARIABLE_OPTIONS.includes(key)) {
+	      result[key] = parsedOptions[key];
+	      return result;
+	    }
+	    if (!result.variables) {
+	      result.variables = {};
+	    }
+	    result.variables[key] = parsedOptions[key];
+	    return result;
+	  }, {});
+	  const baseUrl = parsedOptions.baseUrl || request2.endpoint.DEFAULTS.baseUrl;
+	  if (GHES_V3_SUFFIX_REGEX.test(baseUrl)) {
+	    requestOptions.url = baseUrl.replace(GHES_V3_SUFFIX_REGEX, "/api/graphql");
+	  }
+	  return request2(requestOptions).then((response) => {
+	    if (response.data.errors) {
+	      const headers = {};
+	      for (const key of Object.keys(response.headers)) {
+	        headers[key] = response.headers[key];
+	      }
+	      throw new GraphqlResponseError(
+	        requestOptions,
+	        headers,
+	        response.data
+	      );
+	    }
+	    return response.data.data;
+	  });
+	}
+
+	// pkg/dist-src/with-defaults.js
+	function withDefaults(request2, newDefaults) {
+	  const newRequest = request2.defaults(newDefaults);
+	  const newApi = (query, options) => {
+	    return graphql(newRequest, query, options);
+	  };
+	  return Object.assign(newApi, {
+	    defaults: withDefaults.bind(null, newRequest),
+	    endpoint: newRequest.endpoint
+	  });
+	}
+
+	// pkg/dist-src/index.js
+	var graphql2 = withDefaults(import_request3.request, {
+	  headers: {
+	    "user-agent": `octokit-graphql.js/${VERSION} ${(0, import_universal_user_agent.getUserAgent)()}`
+	  },
+	  method: "POST",
+	  url: "/graphql"
+	});
+	function withCustomRequest(customRequest) {
+	  return withDefaults(customRequest, {
+	    method: "POST",
+	    url: "/graphql"
+	  });
+	}
+	return distNode$4;
+}
+
+var distNode$3;
+var hasRequiredDistNode$3;
+
+function requireDistNode$3 () {
+	if (hasRequiredDistNode$3) return distNode$3;
+	hasRequiredDistNode$3 = 1;
+	var __defProp = Object.defineProperty;
+	var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+	var __getOwnPropNames = Object.getOwnPropertyNames;
+	var __hasOwnProp = Object.prototype.hasOwnProperty;
+	var __export = (target, all) => {
+	  for (var name in all)
+	    __defProp(target, name, { get: all[name], enumerable: true });
+	};
+	var __copyProps = (to, from, except, desc) => {
+	  if (from && typeof from === "object" || typeof from === "function") {
+	    for (let key of __getOwnPropNames(from))
+	      if (!__hasOwnProp.call(to, key) && key !== except)
+	        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+	  }
+	  return to;
+	};
+	var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+	// pkg/dist-src/index.js
+	var dist_src_exports = {};
+	__export(dist_src_exports, {
+	  createTokenAuth: () => createTokenAuth
+	});
+	distNode$3 = __toCommonJS(dist_src_exports);
+
+	// pkg/dist-src/auth.js
+	var REGEX_IS_INSTALLATION_LEGACY = /^v1\./;
+	var REGEX_IS_INSTALLATION = /^ghs_/;
+	var REGEX_IS_USER_TO_SERVER = /^ghu_/;
+	async function auth(token) {
+	  const isApp = token.split(/\./).length === 3;
+	  const isInstallation = REGEX_IS_INSTALLATION_LEGACY.test(token) || REGEX_IS_INSTALLATION.test(token);
+	  const isUserToServer = REGEX_IS_USER_TO_SERVER.test(token);
+	  const tokenType = isApp ? "app" : isInstallation ? "installation" : isUserToServer ? "user-to-server" : "oauth";
+	  return {
+	    type: "token",
+	    token,
+	    tokenType
+	  };
+	}
+
+	// pkg/dist-src/with-authorization-prefix.js
+	function withAuthorizationPrefix(token) {
+	  if (token.split(/\./).length === 3) {
+	    return `bearer ${token}`;
+	  }
+	  return `token ${token}`;
+	}
+
+	// pkg/dist-src/hook.js
+	async function hook(token, request, route, parameters) {
+	  const endpoint = request.endpoint.merge(
+	    route,
+	    parameters
+	  );
+	  endpoint.headers.authorization = withAuthorizationPrefix(token);
+	  return request(endpoint);
+	}
+
+	// pkg/dist-src/index.js
+	var createTokenAuth = function createTokenAuth2(token) {
+	  if (!token) {
+	    throw new Error("[@octokit/auth-token] No token passed to createTokenAuth");
+	  }
+	  if (typeof token !== "string") {
+	    throw new Error(
+	      "[@octokit/auth-token] Token passed to createTokenAuth is not a string"
+	    );
+	  }
+	  token = token.replace(/^(token|bearer) +/i, "");
+	  return Object.assign(auth.bind(null, token), {
+	    hook: hook.bind(null, token)
+	  });
+	};
+	return distNode$3;
+}
+
+var distNode$2;
+var hasRequiredDistNode$2;
+
+function requireDistNode$2 () {
+	if (hasRequiredDistNode$2) return distNode$2;
+	hasRequiredDistNode$2 = 1;
+	var __defProp = Object.defineProperty;
+	var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+	var __getOwnPropNames = Object.getOwnPropertyNames;
+	var __hasOwnProp = Object.prototype.hasOwnProperty;
+	var __export = (target, all) => {
+	  for (var name in all)
+	    __defProp(target, name, { get: all[name], enumerable: true });
+	};
+	var __copyProps = (to, from, except, desc) => {
+	  if (from && typeof from === "object" || typeof from === "function") {
+	    for (let key of __getOwnPropNames(from))
+	      if (!__hasOwnProp.call(to, key) && key !== except)
+	        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+	  }
+	  return to;
+	};
+	var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+	// pkg/dist-src/index.js
+	var dist_src_exports = {};
+	__export(dist_src_exports, {
+	  Octokit: () => Octokit
+	});
+	distNode$2 = __toCommonJS(dist_src_exports);
+	var import_universal_user_agent = /*@__PURE__*/ requireDistNode$9();
+	var import_before_after_hook = requireBeforeAfterHook();
+	var import_request = /*@__PURE__*/ requireDistNode$5();
+	var import_graphql = /*@__PURE__*/ requireDistNode$4();
+	var import_auth_token = /*@__PURE__*/ requireDistNode$3();
+
+	// pkg/dist-src/version.js
+	var VERSION = "5.0.1";
+
+	// pkg/dist-src/index.js
+	var Octokit = class {
+	  static {
+	    this.VERSION = VERSION;
+	  }
+	  static defaults(defaults) {
+	    const OctokitWithDefaults = class extends this {
+	      constructor(...args) {
+	        const options = args[0] || {};
+	        if (typeof defaults === "function") {
+	          super(defaults(options));
+	          return;
+	        }
+	        super(
+	          Object.assign(
+	            {},
+	            defaults,
+	            options,
+	            options.userAgent && defaults.userAgent ? {
+	              userAgent: `${options.userAgent} ${defaults.userAgent}`
+	            } : null
+	          )
+	        );
+	      }
+	    };
+	    return OctokitWithDefaults;
+	  }
+	  static {
+	    this.plugins = [];
+	  }
+	  /**
+	   * Attach a plugin (or many) to your Octokit instance.
+	   *
+	   * @example
+	   * const API = Octokit.plugin(plugin1, plugin2, plugin3, ...)
+	   */
+	  static plugin(...newPlugins) {
+	    const currentPlugins = this.plugins;
+	    const NewOctokit = class extends this {
+	      static {
+	        this.plugins = currentPlugins.concat(
+	          newPlugins.filter((plugin) => !currentPlugins.includes(plugin))
+	        );
+	      }
+	    };
+	    return NewOctokit;
+	  }
+	  constructor(options = {}) {
+	    const hook = new import_before_after_hook.Collection();
+	    const requestDefaults = {
+	      baseUrl: import_request.request.endpoint.DEFAULTS.baseUrl,
+	      headers: {},
+	      request: Object.assign({}, options.request, {
+	        // @ts-ignore internal usage only, no need to type
+	        hook: hook.bind(null, "request")
+	      }),
+	      mediaType: {
+	        previews: [],
+	        format: ""
+	      }
+	    };
+	    requestDefaults.headers["user-agent"] = [
+	      options.userAgent,
+	      `octokit-core.js/${VERSION} ${(0, import_universal_user_agent.getUserAgent)()}`
+	    ].filter(Boolean).join(" ");
+	    if (options.baseUrl) {
+	      requestDefaults.baseUrl = options.baseUrl;
+	    }
+	    if (options.previews) {
+	      requestDefaults.mediaType.previews = options.previews;
+	    }
+	    if (options.timeZone) {
+	      requestDefaults.headers["time-zone"] = options.timeZone;
+	    }
+	    this.request = import_request.request.defaults(requestDefaults);
+	    this.graphql = (0, import_graphql.withCustomRequest)(this.request).defaults(requestDefaults);
+	    this.log = Object.assign(
+	      {
+	        debug: () => {
+	        },
+	        info: () => {
+	        },
+	        warn: console.warn.bind(console),
+	        error: console.error.bind(console)
+	      },
+	      options.log
+	    );
+	    this.hook = hook;
+	    if (!options.authStrategy) {
+	      if (!options.auth) {
+	        this.auth = async () => ({
+	          type: "unauthenticated"
+	        });
+	      } else {
+	        const auth = (0, import_auth_token.createTokenAuth)(options.auth);
+	        hook.wrap("request", auth.hook);
+	        this.auth = auth;
+	      }
+	    } else {
+	      const { authStrategy, ...otherOptions } = options;
+	      const auth = authStrategy(
+	        Object.assign(
+	          {
+	            request: this.request,
+	            log: this.log,
+	            // we pass the current octokit instance as well as its constructor options
+	            // to allow for authentication strategies that return a new octokit instance
+	            // that shares the same internal state as the current one. The original
+	            // requirement for this was the "event-octokit" authentication strategy
+	            // of https://github.com/probot/octokit-auth-probot.
+	            octokit: this,
+	            octokitOptions: otherOptions
+	          },
+	          options.auth
+	        )
+	      );
+	      hook.wrap("request", auth.hook);
+	      this.auth = auth;
+	    }
+	    const classConstructor = this.constructor;
+	    classConstructor.plugins.forEach((plugin) => {
+	      Object.assign(this, plugin(this, options));
+	    });
+	  }
+	};
+	return distNode$2;
+}
+
+var distNode$1;
+var hasRequiredDistNode$1;
+
+function requireDistNode$1 () {
+	if (hasRequiredDistNode$1) return distNode$1;
+	hasRequiredDistNode$1 = 1;
+	var __defProp = Object.defineProperty;
+	var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+	var __getOwnPropNames = Object.getOwnPropertyNames;
+	var __hasOwnProp = Object.prototype.hasOwnProperty;
+	var __export = (target, all) => {
+	  for (var name in all)
+	    __defProp(target, name, { get: all[name], enumerable: true });
+	};
+	var __copyProps = (to, from, except, desc) => {
+	  if (from && typeof from === "object" || typeof from === "function") {
+	    for (let key of __getOwnPropNames(from))
+	      if (!__hasOwnProp.call(to, key) && key !== except)
+	        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+	  }
+	  return to;
+	};
+	var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+	// pkg/dist-src/index.js
+	var dist_src_exports = {};
+	__export(dist_src_exports, {
+	  legacyRestEndpointMethods: () => legacyRestEndpointMethods,
+	  restEndpointMethods: () => restEndpointMethods
+	});
+	distNode$1 = __toCommonJS(dist_src_exports);
+
+	// pkg/dist-src/version.js
+	var VERSION = "10.0.1";
+
+	// pkg/dist-src/generated/endpoints.js
+	var Endpoints = {
+	  actions: {
+	    addCustomLabelsToSelfHostedRunnerForOrg: [
+	      "POST /orgs/{org}/actions/runners/{runner_id}/labels"
+	    ],
+	    addCustomLabelsToSelfHostedRunnerForRepo: [
+	      "POST /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
+	    ],
+	    addSelectedRepoToOrgSecret: [
+	      "PUT /orgs/{org}/actions/secrets/{secret_name}/repositories/{repository_id}"
+	    ],
+	    addSelectedRepoToOrgVariable: [
+	      "PUT /orgs/{org}/actions/variables/{name}/repositories/{repository_id}"
+	    ],
+	    approveWorkflowRun: [
+	      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/approve"
+	    ],
+	    cancelWorkflowRun: [
+	      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/cancel"
+	    ],
+	    createEnvironmentVariable: [
+	      "POST /repositories/{repository_id}/environments/{environment_name}/variables"
+	    ],
+	    createOrUpdateEnvironmentSecret: [
+	      "PUT /repositories/{repository_id}/environments/{environment_name}/secrets/{secret_name}"
+	    ],
+	    createOrUpdateOrgSecret: ["PUT /orgs/{org}/actions/secrets/{secret_name}"],
+	    createOrUpdateRepoSecret: [
+	      "PUT /repos/{owner}/{repo}/actions/secrets/{secret_name}"
+	    ],
+	    createOrgVariable: ["POST /orgs/{org}/actions/variables"],
+	    createRegistrationTokenForOrg: [
+	      "POST /orgs/{org}/actions/runners/registration-token"
+	    ],
+	    createRegistrationTokenForRepo: [
+	      "POST /repos/{owner}/{repo}/actions/runners/registration-token"
+	    ],
+	    createRemoveTokenForOrg: ["POST /orgs/{org}/actions/runners/remove-token"],
+	    createRemoveTokenForRepo: [
+	      "POST /repos/{owner}/{repo}/actions/runners/remove-token"
+	    ],
+	    createRepoVariable: ["POST /repos/{owner}/{repo}/actions/variables"],
+	    createWorkflowDispatch: [
+	      "POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches"
+	    ],
+	    deleteActionsCacheById: [
+	      "DELETE /repos/{owner}/{repo}/actions/caches/{cache_id}"
+	    ],
+	    deleteActionsCacheByKey: [
+	      "DELETE /repos/{owner}/{repo}/actions/caches{?key,ref}"
+	    ],
+	    deleteArtifact: [
+	      "DELETE /repos/{owner}/{repo}/actions/artifacts/{artifact_id}"
+	    ],
+	    deleteEnvironmentSecret: [
+	      "DELETE /repositories/{repository_id}/environments/{environment_name}/secrets/{secret_name}"
+	    ],
+	    deleteEnvironmentVariable: [
+	      "DELETE /repositories/{repository_id}/environments/{environment_name}/variables/{name}"
+	    ],
+	    deleteOrgSecret: ["DELETE /orgs/{org}/actions/secrets/{secret_name}"],
+	    deleteOrgVariable: ["DELETE /orgs/{org}/actions/variables/{name}"],
+	    deleteRepoSecret: [
+	      "DELETE /repos/{owner}/{repo}/actions/secrets/{secret_name}"
+	    ],
+	    deleteRepoVariable: [
+	      "DELETE /repos/{owner}/{repo}/actions/variables/{name}"
+	    ],
+	    deleteSelfHostedRunnerFromOrg: [
+	      "DELETE /orgs/{org}/actions/runners/{runner_id}"
+	    ],
+	    deleteSelfHostedRunnerFromRepo: [
+	      "DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}"
+	    ],
+	    deleteWorkflowRun: ["DELETE /repos/{owner}/{repo}/actions/runs/{run_id}"],
+	    deleteWorkflowRunLogs: [
+	      "DELETE /repos/{owner}/{repo}/actions/runs/{run_id}/logs"
+	    ],
+	    disableSelectedRepositoryGithubActionsOrganization: [
+	      "DELETE /orgs/{org}/actions/permissions/repositories/{repository_id}"
+	    ],
+	    disableWorkflow: [
+	      "PUT /repos/{owner}/{repo}/actions/workflows/{workflow_id}/disable"
+	    ],
+	    downloadArtifact: [
+	      "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}"
+	    ],
+	    downloadJobLogsForWorkflowRun: [
+	      "GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs"
+	    ],
+	    downloadWorkflowRunAttemptLogs: [
+	      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/logs"
+	    ],
+	    downloadWorkflowRunLogs: [
+	      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/logs"
+	    ],
+	    enableSelectedRepositoryGithubActionsOrganization: [
+	      "PUT /orgs/{org}/actions/permissions/repositories/{repository_id}"
+	    ],
+	    enableWorkflow: [
+	      "PUT /repos/{owner}/{repo}/actions/workflows/{workflow_id}/enable"
+	    ],
+	    generateRunnerJitconfigForOrg: [
+	      "POST /orgs/{org}/actions/runners/generate-jitconfig"
+	    ],
+	    generateRunnerJitconfigForRepo: [
+	      "POST /repos/{owner}/{repo}/actions/runners/generate-jitconfig"
+	    ],
+	    getActionsCacheList: ["GET /repos/{owner}/{repo}/actions/caches"],
+	    getActionsCacheUsage: ["GET /repos/{owner}/{repo}/actions/cache/usage"],
+	    getActionsCacheUsageByRepoForOrg: [
+	      "GET /orgs/{org}/actions/cache/usage-by-repository"
+	    ],
+	    getActionsCacheUsageForOrg: ["GET /orgs/{org}/actions/cache/usage"],
+	    getAllowedActionsOrganization: [
+	      "GET /orgs/{org}/actions/permissions/selected-actions"
+	    ],
+	    getAllowedActionsRepository: [
+	      "GET /repos/{owner}/{repo}/actions/permissions/selected-actions"
+	    ],
+	    getArtifact: ["GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}"],
+	    getEnvironmentPublicKey: [
+	      "GET /repositories/{repository_id}/environments/{environment_name}/secrets/public-key"
+	    ],
+	    getEnvironmentSecret: [
+	      "GET /repositories/{repository_id}/environments/{environment_name}/secrets/{secret_name}"
+	    ],
+	    getEnvironmentVariable: [
+	      "GET /repositories/{repository_id}/environments/{environment_name}/variables/{name}"
+	    ],
+	    getGithubActionsDefaultWorkflowPermissionsOrganization: [
+	      "GET /orgs/{org}/actions/permissions/workflow"
+	    ],
+	    getGithubActionsDefaultWorkflowPermissionsRepository: [
+	      "GET /repos/{owner}/{repo}/actions/permissions/workflow"
+	    ],
+	    getGithubActionsPermissionsOrganization: [
+	      "GET /orgs/{org}/actions/permissions"
+	    ],
+	    getGithubActionsPermissionsRepository: [
+	      "GET /repos/{owner}/{repo}/actions/permissions"
+	    ],
+	    getJobForWorkflowRun: ["GET /repos/{owner}/{repo}/actions/jobs/{job_id}"],
+	    getOrgPublicKey: ["GET /orgs/{org}/actions/secrets/public-key"],
+	    getOrgSecret: ["GET /orgs/{org}/actions/secrets/{secret_name}"],
+	    getOrgVariable: ["GET /orgs/{org}/actions/variables/{name}"],
+	    getPendingDeploymentsForRun: [
+	      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/pending_deployments"
+	    ],
+	    getRepoPermissions: [
+	      "GET /repos/{owner}/{repo}/actions/permissions",
+	      {},
+	      { renamed: ["actions", "getGithubActionsPermissionsRepository"] }
+	    ],
+	    getRepoPublicKey: ["GET /repos/{owner}/{repo}/actions/secrets/public-key"],
+	    getRepoSecret: ["GET /repos/{owner}/{repo}/actions/secrets/{secret_name}"],
+	    getRepoVariable: ["GET /repos/{owner}/{repo}/actions/variables/{name}"],
+	    getReviewsForRun: [
+	      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/approvals"
+	    ],
+	    getSelfHostedRunnerForOrg: ["GET /orgs/{org}/actions/runners/{runner_id}"],
+	    getSelfHostedRunnerForRepo: [
+	      "GET /repos/{owner}/{repo}/actions/runners/{runner_id}"
+	    ],
+	    getWorkflow: ["GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}"],
+	    getWorkflowAccessToRepository: [
+	      "GET /repos/{owner}/{repo}/actions/permissions/access"
+	    ],
+	    getWorkflowRun: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}"],
+	    getWorkflowRunAttempt: [
+	      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}"
+	    ],
+	    getWorkflowRunUsage: [
+	      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/timing"
+	    ],
+	    getWorkflowUsage: [
+	      "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/timing"
+	    ],
+	    listArtifactsForRepo: ["GET /repos/{owner}/{repo}/actions/artifacts"],
+	    listEnvironmentSecrets: [
+	      "GET /repositories/{repository_id}/environments/{environment_name}/secrets"
+	    ],
+	    listEnvironmentVariables: [
+	      "GET /repositories/{repository_id}/environments/{environment_name}/variables"
+	    ],
+	    listJobsForWorkflowRun: [
+	      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs"
+	    ],
+	    listJobsForWorkflowRunAttempt: [
+	      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/jobs"
+	    ],
+	    listLabelsForSelfHostedRunnerForOrg: [
+	      "GET /orgs/{org}/actions/runners/{runner_id}/labels"
+	    ],
+	    listLabelsForSelfHostedRunnerForRepo: [
+	      "GET /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
+	    ],
+	    listOrgSecrets: ["GET /orgs/{org}/actions/secrets"],
+	    listOrgVariables: ["GET /orgs/{org}/actions/variables"],
+	    listRepoOrganizationSecrets: [
+	      "GET /repos/{owner}/{repo}/actions/organization-secrets"
+	    ],
+	    listRepoOrganizationVariables: [
+	      "GET /repos/{owner}/{repo}/actions/organization-variables"
+	    ],
+	    listRepoSecrets: ["GET /repos/{owner}/{repo}/actions/secrets"],
+	    listRepoVariables: ["GET /repos/{owner}/{repo}/actions/variables"],
+	    listRepoWorkflows: ["GET /repos/{owner}/{repo}/actions/workflows"],
+	    listRunnerApplicationsForOrg: ["GET /orgs/{org}/actions/runners/downloads"],
+	    listRunnerApplicationsForRepo: [
+	      "GET /repos/{owner}/{repo}/actions/runners/downloads"
+	    ],
+	    listSelectedReposForOrgSecret: [
+	      "GET /orgs/{org}/actions/secrets/{secret_name}/repositories"
+	    ],
+	    listSelectedReposForOrgVariable: [
+	      "GET /orgs/{org}/actions/variables/{name}/repositories"
+	    ],
+	    listSelectedRepositoriesEnabledGithubActionsOrganization: [
+	      "GET /orgs/{org}/actions/permissions/repositories"
+	    ],
+	    listSelfHostedRunnersForOrg: ["GET /orgs/{org}/actions/runners"],
+	    listSelfHostedRunnersForRepo: ["GET /repos/{owner}/{repo}/actions/runners"],
+	    listWorkflowRunArtifacts: [
+	      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts"
+	    ],
+	    listWorkflowRuns: [
+	      "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs"
+	    ],
+	    listWorkflowRunsForRepo: ["GET /repos/{owner}/{repo}/actions/runs"],
+	    reRunJobForWorkflowRun: [
+	      "POST /repos/{owner}/{repo}/actions/jobs/{job_id}/rerun"
+	    ],
+	    reRunWorkflow: ["POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun"],
+	    reRunWorkflowFailedJobs: [
+	      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun-failed-jobs"
+	    ],
+	    removeAllCustomLabelsFromSelfHostedRunnerForOrg: [
+	      "DELETE /orgs/{org}/actions/runners/{runner_id}/labels"
+	    ],
+	    removeAllCustomLabelsFromSelfHostedRunnerForRepo: [
+	      "DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
+	    ],
+	    removeCustomLabelFromSelfHostedRunnerForOrg: [
+	      "DELETE /orgs/{org}/actions/runners/{runner_id}/labels/{name}"
+	    ],
+	    removeCustomLabelFromSelfHostedRunnerForRepo: [
+	      "DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}/labels/{name}"
+	    ],
+	    removeSelectedRepoFromOrgSecret: [
+	      "DELETE /orgs/{org}/actions/secrets/{secret_name}/repositories/{repository_id}"
+	    ],
+	    removeSelectedRepoFromOrgVariable: [
+	      "DELETE /orgs/{org}/actions/variables/{name}/repositories/{repository_id}"
+	    ],
+	    reviewCustomGatesForRun: [
+	      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/deployment_protection_rule"
+	    ],
+	    reviewPendingDeploymentsForRun: [
+	      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/pending_deployments"
+	    ],
+	    setAllowedActionsOrganization: [
+	      "PUT /orgs/{org}/actions/permissions/selected-actions"
+	    ],
+	    setAllowedActionsRepository: [
+	      "PUT /repos/{owner}/{repo}/actions/permissions/selected-actions"
+	    ],
+	    setCustomLabelsForSelfHostedRunnerForOrg: [
+	      "PUT /orgs/{org}/actions/runners/{runner_id}/labels"
+	    ],
+	    setCustomLabelsForSelfHostedRunnerForRepo: [
+	      "PUT /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
+	    ],
+	    setGithubActionsDefaultWorkflowPermissionsOrganization: [
+	      "PUT /orgs/{org}/actions/permissions/workflow"
+	    ],
+	    setGithubActionsDefaultWorkflowPermissionsRepository: [
+	      "PUT /repos/{owner}/{repo}/actions/permissions/workflow"
+	    ],
+	    setGithubActionsPermissionsOrganization: [
+	      "PUT /orgs/{org}/actions/permissions"
+	    ],
+	    setGithubActionsPermissionsRepository: [
+	      "PUT /repos/{owner}/{repo}/actions/permissions"
+	    ],
+	    setSelectedReposForOrgSecret: [
+	      "PUT /orgs/{org}/actions/secrets/{secret_name}/repositories"
+	    ],
+	    setSelectedReposForOrgVariable: [
+	      "PUT /orgs/{org}/actions/variables/{name}/repositories"
+	    ],
+	    setSelectedRepositoriesEnabledGithubActionsOrganization: [
+	      "PUT /orgs/{org}/actions/permissions/repositories"
+	    ],
+	    setWorkflowAccessToRepository: [
+	      "PUT /repos/{owner}/{repo}/actions/permissions/access"
+	    ],
+	    updateEnvironmentVariable: [
+	      "PATCH /repositories/{repository_id}/environments/{environment_name}/variables/{name}"
+	    ],
+	    updateOrgVariable: ["PATCH /orgs/{org}/actions/variables/{name}"],
+	    updateRepoVariable: [
+	      "PATCH /repos/{owner}/{repo}/actions/variables/{name}"
+	    ]
+	  },
+	  activity: {
+	    checkRepoIsStarredByAuthenticatedUser: ["GET /user/starred/{owner}/{repo}"],
+	    deleteRepoSubscription: ["DELETE /repos/{owner}/{repo}/subscription"],
+	    deleteThreadSubscription: [
+	      "DELETE /notifications/threads/{thread_id}/subscription"
+	    ],
+	    getFeeds: ["GET /feeds"],
+	    getRepoSubscription: ["GET /repos/{owner}/{repo}/subscription"],
+	    getThread: ["GET /notifications/threads/{thread_id}"],
+	    getThreadSubscriptionForAuthenticatedUser: [
+	      "GET /notifications/threads/{thread_id}/subscription"
+	    ],
+	    listEventsForAuthenticatedUser: ["GET /users/{username}/events"],
+	    listNotificationsForAuthenticatedUser: ["GET /notifications"],
+	    listOrgEventsForAuthenticatedUser: [
+	      "GET /users/{username}/events/orgs/{org}"
+	    ],
+	    listPublicEvents: ["GET /events"],
+	    listPublicEventsForRepoNetwork: ["GET /networks/{owner}/{repo}/events"],
+	    listPublicEventsForUser: ["GET /users/{username}/events/public"],
+	    listPublicOrgEvents: ["GET /orgs/{org}/events"],
+	    listReceivedEventsForUser: ["GET /users/{username}/received_events"],
+	    listReceivedPublicEventsForUser: [
+	      "GET /users/{username}/received_events/public"
+	    ],
+	    listRepoEvents: ["GET /repos/{owner}/{repo}/events"],
+	    listRepoNotificationsForAuthenticatedUser: [
+	      "GET /repos/{owner}/{repo}/notifications"
+	    ],
+	    listReposStarredByAuthenticatedUser: ["GET /user/starred"],
+	    listReposStarredByUser: ["GET /users/{username}/starred"],
+	    listReposWatchedByUser: ["GET /users/{username}/subscriptions"],
+	    listStargazersForRepo: ["GET /repos/{owner}/{repo}/stargazers"],
+	    listWatchedReposForAuthenticatedUser: ["GET /user/subscriptions"],
+	    listWatchersForRepo: ["GET /repos/{owner}/{repo}/subscribers"],
+	    markNotificationsAsRead: ["PUT /notifications"],
+	    markRepoNotificationsAsRead: ["PUT /repos/{owner}/{repo}/notifications"],
+	    markThreadAsRead: ["PATCH /notifications/threads/{thread_id}"],
+	    setRepoSubscription: ["PUT /repos/{owner}/{repo}/subscription"],
+	    setThreadSubscription: [
+	      "PUT /notifications/threads/{thread_id}/subscription"
+	    ],
+	    starRepoForAuthenticatedUser: ["PUT /user/starred/{owner}/{repo}"],
+	    unstarRepoForAuthenticatedUser: ["DELETE /user/starred/{owner}/{repo}"]
+	  },
+	  apps: {
+	    addRepoToInstallation: [
+	      "PUT /user/installations/{installation_id}/repositories/{repository_id}",
+	      {},
+	      { renamed: ["apps", "addRepoToInstallationForAuthenticatedUser"] }
+	    ],
+	    addRepoToInstallationForAuthenticatedUser: [
+	      "PUT /user/installations/{installation_id}/repositories/{repository_id}"
+	    ],
+	    checkToken: ["POST /applications/{client_id}/token"],
+	    createFromManifest: ["POST /app-manifests/{code}/conversions"],
+	    createInstallationAccessToken: [
+	      "POST /app/installations/{installation_id}/access_tokens"
+	    ],
+	    deleteAuthorization: ["DELETE /applications/{client_id}/grant"],
+	    deleteInstallation: ["DELETE /app/installations/{installation_id}"],
+	    deleteToken: ["DELETE /applications/{client_id}/token"],
+	    getAuthenticated: ["GET /app"],
+	    getBySlug: ["GET /apps/{app_slug}"],
+	    getInstallation: ["GET /app/installations/{installation_id}"],
+	    getOrgInstallation: ["GET /orgs/{org}/installation"],
+	    getRepoInstallation: ["GET /repos/{owner}/{repo}/installation"],
+	    getSubscriptionPlanForAccount: [
+	      "GET /marketplace_listing/accounts/{account_id}"
+	    ],
+	    getSubscriptionPlanForAccountStubbed: [
+	      "GET /marketplace_listing/stubbed/accounts/{account_id}"
+	    ],
+	    getUserInstallation: ["GET /users/{username}/installation"],
+	    getWebhookConfigForApp: ["GET /app/hook/config"],
+	    getWebhookDelivery: ["GET /app/hook/deliveries/{delivery_id}"],
+	    listAccountsForPlan: ["GET /marketplace_listing/plans/{plan_id}/accounts"],
+	    listAccountsForPlanStubbed: [
+	      "GET /marketplace_listing/stubbed/plans/{plan_id}/accounts"
+	    ],
+	    listInstallationReposForAuthenticatedUser: [
+	      "GET /user/installations/{installation_id}/repositories"
+	    ],
+	    listInstallationRequestsForAuthenticatedApp: [
+	      "GET /app/installation-requests"
+	    ],
+	    listInstallations: ["GET /app/installations"],
+	    listInstallationsForAuthenticatedUser: ["GET /user/installations"],
+	    listPlans: ["GET /marketplace_listing/plans"],
+	    listPlansStubbed: ["GET /marketplace_listing/stubbed/plans"],
+	    listReposAccessibleToInstallation: ["GET /installation/repositories"],
+	    listSubscriptionsForAuthenticatedUser: ["GET /user/marketplace_purchases"],
+	    listSubscriptionsForAuthenticatedUserStubbed: [
+	      "GET /user/marketplace_purchases/stubbed"
+	    ],
+	    listWebhookDeliveries: ["GET /app/hook/deliveries"],
+	    redeliverWebhookDelivery: [
+	      "POST /app/hook/deliveries/{delivery_id}/attempts"
+	    ],
+	    removeRepoFromInstallation: [
+	      "DELETE /user/installations/{installation_id}/repositories/{repository_id}",
+	      {},
+	      { renamed: ["apps", "removeRepoFromInstallationForAuthenticatedUser"] }
+	    ],
+	    removeRepoFromInstallationForAuthenticatedUser: [
+	      "DELETE /user/installations/{installation_id}/repositories/{repository_id}"
+	    ],
+	    resetToken: ["PATCH /applications/{client_id}/token"],
+	    revokeInstallationAccessToken: ["DELETE /installation/token"],
+	    scopeToken: ["POST /applications/{client_id}/token/scoped"],
+	    suspendInstallation: ["PUT /app/installations/{installation_id}/suspended"],
+	    unsuspendInstallation: [
+	      "DELETE /app/installations/{installation_id}/suspended"
+	    ],
+	    updateWebhookConfigForApp: ["PATCH /app/hook/config"]
+	  },
+	  billing: {
+	    getGithubActionsBillingOrg: ["GET /orgs/{org}/settings/billing/actions"],
+	    getGithubActionsBillingUser: [
+	      "GET /users/{username}/settings/billing/actions"
+	    ],
+	    getGithubPackagesBillingOrg: ["GET /orgs/{org}/settings/billing/packages"],
+	    getGithubPackagesBillingUser: [
+	      "GET /users/{username}/settings/billing/packages"
+	    ],
+	    getSharedStorageBillingOrg: [
+	      "GET /orgs/{org}/settings/billing/shared-storage"
+	    ],
+	    getSharedStorageBillingUser: [
+	      "GET /users/{username}/settings/billing/shared-storage"
+	    ]
+	  },
+	  checks: {
+	    create: ["POST /repos/{owner}/{repo}/check-runs"],
+	    createSuite: ["POST /repos/{owner}/{repo}/check-suites"],
+	    get: ["GET /repos/{owner}/{repo}/check-runs/{check_run_id}"],
+	    getSuite: ["GET /repos/{owner}/{repo}/check-suites/{check_suite_id}"],
+	    listAnnotations: [
+	      "GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations"
+	    ],
+	    listForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-runs"],
+	    listForSuite: [
+	      "GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs"
+	    ],
+	    listSuitesForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-suites"],
+	    rerequestRun: [
+	      "POST /repos/{owner}/{repo}/check-runs/{check_run_id}/rerequest"
+	    ],
+	    rerequestSuite: [
+	      "POST /repos/{owner}/{repo}/check-suites/{check_suite_id}/rerequest"
+	    ],
+	    setSuitesPreferences: [
+	      "PATCH /repos/{owner}/{repo}/check-suites/preferences"
+	    ],
+	    update: ["PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}"]
+	  },
+	  codeScanning: {
+	    deleteAnalysis: [
+	      "DELETE /repos/{owner}/{repo}/code-scanning/analyses/{analysis_id}{?confirm_delete}"
+	    ],
+	    getAlert: [
+	      "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}",
+	      {},
+	      { renamedParameters: { alert_id: "alert_number" } }
+	    ],
+	    getAnalysis: [
+	      "GET /repos/{owner}/{repo}/code-scanning/analyses/{analysis_id}"
+	    ],
+	    getCodeqlDatabase: [
+	      "GET /repos/{owner}/{repo}/code-scanning/codeql/databases/{language}"
+	    ],
+	    getDefaultSetup: ["GET /repos/{owner}/{repo}/code-scanning/default-setup"],
+	    getSarif: ["GET /repos/{owner}/{repo}/code-scanning/sarifs/{sarif_id}"],
+	    listAlertInstances: [
+	      "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances"
+	    ],
+	    listAlertsForOrg: ["GET /orgs/{org}/code-scanning/alerts"],
+	    listAlertsForRepo: ["GET /repos/{owner}/{repo}/code-scanning/alerts"],
+	    listAlertsInstances: [
+	      "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances",
+	      {},
+	      { renamed: ["codeScanning", "listAlertInstances"] }
+	    ],
+	    listCodeqlDatabases: [
+	      "GET /repos/{owner}/{repo}/code-scanning/codeql/databases"
+	    ],
+	    listRecentAnalyses: ["GET /repos/{owner}/{repo}/code-scanning/analyses"],
+	    updateAlert: [
+	      "PATCH /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}"
+	    ],
+	    updateDefaultSetup: [
+	      "PATCH /repos/{owner}/{repo}/code-scanning/default-setup"
+	    ],
+	    uploadSarif: ["POST /repos/{owner}/{repo}/code-scanning/sarifs"]
+	  },
+	  codesOfConduct: {
+	    getAllCodesOfConduct: ["GET /codes_of_conduct"],
+	    getConductCode: ["GET /codes_of_conduct/{key}"]
+	  },
+	  codespaces: {
+	    addRepositoryForSecretForAuthenticatedUser: [
+	      "PUT /user/codespaces/secrets/{secret_name}/repositories/{repository_id}"
+	    ],
+	    addSelectedRepoToOrgSecret: [
+	      "PUT /orgs/{org}/codespaces/secrets/{secret_name}/repositories/{repository_id}"
+	    ],
+	    codespaceMachinesForAuthenticatedUser: [
+	      "GET /user/codespaces/{codespace_name}/machines"
+	    ],
+	    createForAuthenticatedUser: ["POST /user/codespaces"],
+	    createOrUpdateOrgSecret: [
+	      "PUT /orgs/{org}/codespaces/secrets/{secret_name}"
+	    ],
+	    createOrUpdateRepoSecret: [
+	      "PUT /repos/{owner}/{repo}/codespaces/secrets/{secret_name}"
+	    ],
+	    createOrUpdateSecretForAuthenticatedUser: [
+	      "PUT /user/codespaces/secrets/{secret_name}"
+	    ],
+	    createWithPrForAuthenticatedUser: [
+	      "POST /repos/{owner}/{repo}/pulls/{pull_number}/codespaces"
+	    ],
+	    createWithRepoForAuthenticatedUser: [
+	      "POST /repos/{owner}/{repo}/codespaces"
+	    ],
+	    deleteForAuthenticatedUser: ["DELETE /user/codespaces/{codespace_name}"],
+	    deleteFromOrganization: [
+	      "DELETE /orgs/{org}/members/{username}/codespaces/{codespace_name}"
+	    ],
+	    deleteOrgSecret: ["DELETE /orgs/{org}/codespaces/secrets/{secret_name}"],
+	    deleteRepoSecret: [
+	      "DELETE /repos/{owner}/{repo}/codespaces/secrets/{secret_name}"
+	    ],
+	    deleteSecretForAuthenticatedUser: [
+	      "DELETE /user/codespaces/secrets/{secret_name}"
+	    ],
+	    exportForAuthenticatedUser: [
+	      "POST /user/codespaces/{codespace_name}/exports"
+	    ],
+	    getCodespacesForUserInOrg: [
+	      "GET /orgs/{org}/members/{username}/codespaces"
+	    ],
+	    getExportDetailsForAuthenticatedUser: [
+	      "GET /user/codespaces/{codespace_name}/exports/{export_id}"
+	    ],
+	    getForAuthenticatedUser: ["GET /user/codespaces/{codespace_name}"],
+	    getOrgPublicKey: ["GET /orgs/{org}/codespaces/secrets/public-key"],
+	    getOrgSecret: ["GET /orgs/{org}/codespaces/secrets/{secret_name}"],
+	    getPublicKeyForAuthenticatedUser: [
+	      "GET /user/codespaces/secrets/public-key"
+	    ],
+	    getRepoPublicKey: [
+	      "GET /repos/{owner}/{repo}/codespaces/secrets/public-key"
+	    ],
+	    getRepoSecret: [
+	      "GET /repos/{owner}/{repo}/codespaces/secrets/{secret_name}"
+	    ],
+	    getSecretForAuthenticatedUser: [
+	      "GET /user/codespaces/secrets/{secret_name}"
+	    ],
+	    listDevcontainersInRepositoryForAuthenticatedUser: [
+	      "GET /repos/{owner}/{repo}/codespaces/devcontainers"
+	    ],
+	    listForAuthenticatedUser: ["GET /user/codespaces"],
+	    listInOrganization: [
+	      "GET /orgs/{org}/codespaces",
+	      {},
+	      { renamedParameters: { org_id: "org" } }
+	    ],
+	    listInRepositoryForAuthenticatedUser: [
+	      "GET /repos/{owner}/{repo}/codespaces"
+	    ],
+	    listOrgSecrets: ["GET /orgs/{org}/codespaces/secrets"],
+	    listRepoSecrets: ["GET /repos/{owner}/{repo}/codespaces/secrets"],
+	    listRepositoriesForSecretForAuthenticatedUser: [
+	      "GET /user/codespaces/secrets/{secret_name}/repositories"
+	    ],
+	    listSecretsForAuthenticatedUser: ["GET /user/codespaces/secrets"],
+	    listSelectedReposForOrgSecret: [
+	      "GET /orgs/{org}/codespaces/secrets/{secret_name}/repositories"
+	    ],
+	    preFlightWithRepoForAuthenticatedUser: [
+	      "GET /repos/{owner}/{repo}/codespaces/new"
+	    ],
+	    publishForAuthenticatedUser: [
+	      "POST /user/codespaces/{codespace_name}/publish"
+	    ],
+	    removeRepositoryForSecretForAuthenticatedUser: [
+	      "DELETE /user/codespaces/secrets/{secret_name}/repositories/{repository_id}"
+	    ],
+	    removeSelectedRepoFromOrgSecret: [
+	      "DELETE /orgs/{org}/codespaces/secrets/{secret_name}/repositories/{repository_id}"
+	    ],
+	    repoMachinesForAuthenticatedUser: [
+	      "GET /repos/{owner}/{repo}/codespaces/machines"
+	    ],
+	    setRepositoriesForSecretForAuthenticatedUser: [
+	      "PUT /user/codespaces/secrets/{secret_name}/repositories"
+	    ],
+	    setSelectedReposForOrgSecret: [
+	      "PUT /orgs/{org}/codespaces/secrets/{secret_name}/repositories"
+	    ],
+	    startForAuthenticatedUser: ["POST /user/codespaces/{codespace_name}/start"],
+	    stopForAuthenticatedUser: ["POST /user/codespaces/{codespace_name}/stop"],
+	    stopInOrganization: [
+	      "POST /orgs/{org}/members/{username}/codespaces/{codespace_name}/stop"
+	    ],
+	    updateForAuthenticatedUser: ["PATCH /user/codespaces/{codespace_name}"]
+	  },
+	  copilot: {
+	    addCopilotForBusinessSeatsForTeams: [
+	      "POST /orgs/{org}/copilot/billing/selected_teams"
+	    ],
+	    addCopilotForBusinessSeatsForUsers: [
+	      "POST /orgs/{org}/copilot/billing/selected_users"
+	    ],
+	    cancelCopilotSeatAssignmentForTeams: [
+	      "DELETE /orgs/{org}/copilot/billing/selected_teams"
+	    ],
+	    cancelCopilotSeatAssignmentForUsers: [
+	      "DELETE /orgs/{org}/copilot/billing/selected_users"
+	    ],
+	    getCopilotOrganizationDetails: ["GET /orgs/{org}/copilot/billing"],
+	    getCopilotSeatAssignmentDetailsForUser: [
+	      "GET /orgs/{org}/members/{username}/copilot"
+	    ],
+	    listCopilotSeats: ["GET /orgs/{org}/copilot/billing/seats"]
+	  },
+	  dependabot: {
+	    addSelectedRepoToOrgSecret: [
+	      "PUT /orgs/{org}/dependabot/secrets/{secret_name}/repositories/{repository_id}"
+	    ],
+	    createOrUpdateOrgSecret: [
+	      "PUT /orgs/{org}/dependabot/secrets/{secret_name}"
+	    ],
+	    createOrUpdateRepoSecret: [
+	      "PUT /repos/{owner}/{repo}/dependabot/secrets/{secret_name}"
+	    ],
+	    deleteOrgSecret: ["DELETE /orgs/{org}/dependabot/secrets/{secret_name}"],
+	    deleteRepoSecret: [
+	      "DELETE /repos/{owner}/{repo}/dependabot/secrets/{secret_name}"
+	    ],
+	    getAlert: ["GET /repos/{owner}/{repo}/dependabot/alerts/{alert_number}"],
+	    getOrgPublicKey: ["GET /orgs/{org}/dependabot/secrets/public-key"],
+	    getOrgSecret: ["GET /orgs/{org}/dependabot/secrets/{secret_name}"],
+	    getRepoPublicKey: [
+	      "GET /repos/{owner}/{repo}/dependabot/secrets/public-key"
+	    ],
+	    getRepoSecret: [
+	      "GET /repos/{owner}/{repo}/dependabot/secrets/{secret_name}"
+	    ],
+	    listAlertsForEnterprise: [
+	      "GET /enterprises/{enterprise}/dependabot/alerts"
+	    ],
+	    listAlertsForOrg: ["GET /orgs/{org}/dependabot/alerts"],
+	    listAlertsForRepo: ["GET /repos/{owner}/{repo}/dependabot/alerts"],
+	    listOrgSecrets: ["GET /orgs/{org}/dependabot/secrets"],
+	    listRepoSecrets: ["GET /repos/{owner}/{repo}/dependabot/secrets"],
+	    listSelectedReposForOrgSecret: [
+	      "GET /orgs/{org}/dependabot/secrets/{secret_name}/repositories"
+	    ],
+	    removeSelectedRepoFromOrgSecret: [
+	      "DELETE /orgs/{org}/dependabot/secrets/{secret_name}/repositories/{repository_id}"
+	    ],
+	    setSelectedReposForOrgSecret: [
+	      "PUT /orgs/{org}/dependabot/secrets/{secret_name}/repositories"
+	    ],
+	    updateAlert: [
+	      "PATCH /repos/{owner}/{repo}/dependabot/alerts/{alert_number}"
+	    ]
+	  },
+	  dependencyGraph: {
+	    createRepositorySnapshot: [
+	      "POST /repos/{owner}/{repo}/dependency-graph/snapshots"
+	    ],
+	    diffRange: [
+	      "GET /repos/{owner}/{repo}/dependency-graph/compare/{basehead}"
+	    ],
+	    exportSbom: ["GET /repos/{owner}/{repo}/dependency-graph/sbom"]
+	  },
+	  emojis: { get: ["GET /emojis"] },
+	  gists: {
+	    checkIsStarred: ["GET /gists/{gist_id}/star"],
+	    create: ["POST /gists"],
+	    createComment: ["POST /gists/{gist_id}/comments"],
+	    delete: ["DELETE /gists/{gist_id}"],
+	    deleteComment: ["DELETE /gists/{gist_id}/comments/{comment_id}"],
+	    fork: ["POST /gists/{gist_id}/forks"],
+	    get: ["GET /gists/{gist_id}"],
+	    getComment: ["GET /gists/{gist_id}/comments/{comment_id}"],
+	    getRevision: ["GET /gists/{gist_id}/{sha}"],
+	    list: ["GET /gists"],
+	    listComments: ["GET /gists/{gist_id}/comments"],
+	    listCommits: ["GET /gists/{gist_id}/commits"],
+	    listForUser: ["GET /users/{username}/gists"],
+	    listForks: ["GET /gists/{gist_id}/forks"],
+	    listPublic: ["GET /gists/public"],
+	    listStarred: ["GET /gists/starred"],
+	    star: ["PUT /gists/{gist_id}/star"],
+	    unstar: ["DELETE /gists/{gist_id}/star"],
+	    update: ["PATCH /gists/{gist_id}"],
+	    updateComment: ["PATCH /gists/{gist_id}/comments/{comment_id}"]
+	  },
+	  git: {
+	    createBlob: ["POST /repos/{owner}/{repo}/git/blobs"],
+	    createCommit: ["POST /repos/{owner}/{repo}/git/commits"],
+	    createRef: ["POST /repos/{owner}/{repo}/git/refs"],
+	    createTag: ["POST /repos/{owner}/{repo}/git/tags"],
+	    createTree: ["POST /repos/{owner}/{repo}/git/trees"],
+	    deleteRef: ["DELETE /repos/{owner}/{repo}/git/refs/{ref}"],
+	    getBlob: ["GET /repos/{owner}/{repo}/git/blobs/{file_sha}"],
+	    getCommit: ["GET /repos/{owner}/{repo}/git/commits/{commit_sha}"],
+	    getRef: ["GET /repos/{owner}/{repo}/git/ref/{ref}"],
+	    getTag: ["GET /repos/{owner}/{repo}/git/tags/{tag_sha}"],
+	    getTree: ["GET /repos/{owner}/{repo}/git/trees/{tree_sha}"],
+	    listMatchingRefs: ["GET /repos/{owner}/{repo}/git/matching-refs/{ref}"],
+	    updateRef: ["PATCH /repos/{owner}/{repo}/git/refs/{ref}"]
+	  },
+	  gitignore: {
+	    getAllTemplates: ["GET /gitignore/templates"],
+	    getTemplate: ["GET /gitignore/templates/{name}"]
+	  },
+	  interactions: {
+	    getRestrictionsForAuthenticatedUser: ["GET /user/interaction-limits"],
+	    getRestrictionsForOrg: ["GET /orgs/{org}/interaction-limits"],
+	    getRestrictionsForRepo: ["GET /repos/{owner}/{repo}/interaction-limits"],
+	    getRestrictionsForYourPublicRepos: [
+	      "GET /user/interaction-limits",
+	      {},
+	      { renamed: ["interactions", "getRestrictionsForAuthenticatedUser"] }
+	    ],
+	    removeRestrictionsForAuthenticatedUser: ["DELETE /user/interaction-limits"],
+	    removeRestrictionsForOrg: ["DELETE /orgs/{org}/interaction-limits"],
+	    removeRestrictionsForRepo: [
+	      "DELETE /repos/{owner}/{repo}/interaction-limits"
+	    ],
+	    removeRestrictionsForYourPublicRepos: [
+	      "DELETE /user/interaction-limits",
+	      {},
+	      { renamed: ["interactions", "removeRestrictionsForAuthenticatedUser"] }
+	    ],
+	    setRestrictionsForAuthenticatedUser: ["PUT /user/interaction-limits"],
+	    setRestrictionsForOrg: ["PUT /orgs/{org}/interaction-limits"],
+	    setRestrictionsForRepo: ["PUT /repos/{owner}/{repo}/interaction-limits"],
+	    setRestrictionsForYourPublicRepos: [
+	      "PUT /user/interaction-limits",
+	      {},
+	      { renamed: ["interactions", "setRestrictionsForAuthenticatedUser"] }
+	    ]
+	  },
+	  issues: {
+	    addAssignees: [
+	      "POST /repos/{owner}/{repo}/issues/{issue_number}/assignees"
+	    ],
+	    addLabels: ["POST /repos/{owner}/{repo}/issues/{issue_number}/labels"],
+	    checkUserCanBeAssigned: ["GET /repos/{owner}/{repo}/assignees/{assignee}"],
+	    checkUserCanBeAssignedToIssue: [
+	      "GET /repos/{owner}/{repo}/issues/{issue_number}/assignees/{assignee}"
+	    ],
+	    create: ["POST /repos/{owner}/{repo}/issues"],
+	    createComment: [
+	      "POST /repos/{owner}/{repo}/issues/{issue_number}/comments"
+	    ],
+	    createLabel: ["POST /repos/{owner}/{repo}/labels"],
+	    createMilestone: ["POST /repos/{owner}/{repo}/milestones"],
+	    deleteComment: [
+	      "DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}"
+	    ],
+	    deleteLabel: ["DELETE /repos/{owner}/{repo}/labels/{name}"],
+	    deleteMilestone: [
+	      "DELETE /repos/{owner}/{repo}/milestones/{milestone_number}"
+	    ],
+	    get: ["GET /repos/{owner}/{repo}/issues/{issue_number}"],
+	    getComment: ["GET /repos/{owner}/{repo}/issues/comments/{comment_id}"],
+	    getEvent: ["GET /repos/{owner}/{repo}/issues/events/{event_id}"],
+	    getLabel: ["GET /repos/{owner}/{repo}/labels/{name}"],
+	    getMilestone: ["GET /repos/{owner}/{repo}/milestones/{milestone_number}"],
+	    list: ["GET /issues"],
+	    listAssignees: ["GET /repos/{owner}/{repo}/assignees"],
+	    listComments: ["GET /repos/{owner}/{repo}/issues/{issue_number}/comments"],
+	    listCommentsForRepo: ["GET /repos/{owner}/{repo}/issues/comments"],
+	    listEvents: ["GET /repos/{owner}/{repo}/issues/{issue_number}/events"],
+	    listEventsForRepo: ["GET /repos/{owner}/{repo}/issues/events"],
+	    listEventsForTimeline: [
+	      "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline"
+	    ],
+	    listForAuthenticatedUser: ["GET /user/issues"],
+	    listForOrg: ["GET /orgs/{org}/issues"],
+	    listForRepo: ["GET /repos/{owner}/{repo}/issues"],
+	    listLabelsForMilestone: [
+	      "GET /repos/{owner}/{repo}/milestones/{milestone_number}/labels"
+	    ],
+	    listLabelsForRepo: ["GET /repos/{owner}/{repo}/labels"],
+	    listLabelsOnIssue: [
+	      "GET /repos/{owner}/{repo}/issues/{issue_number}/labels"
+	    ],
+	    listMilestones: ["GET /repos/{owner}/{repo}/milestones"],
+	    lock: ["PUT /repos/{owner}/{repo}/issues/{issue_number}/lock"],
+	    removeAllLabels: [
+	      "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels"
+	    ],
+	    removeAssignees: [
+	      "DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees"
+	    ],
+	    removeLabel: [
+	      "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}"
+	    ],
+	    setLabels: ["PUT /repos/{owner}/{repo}/issues/{issue_number}/labels"],
+	    unlock: ["DELETE /repos/{owner}/{repo}/issues/{issue_number}/lock"],
+	    update: ["PATCH /repos/{owner}/{repo}/issues/{issue_number}"],
+	    updateComment: ["PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}"],
+	    updateLabel: ["PATCH /repos/{owner}/{repo}/labels/{name}"],
+	    updateMilestone: [
+	      "PATCH /repos/{owner}/{repo}/milestones/{milestone_number}"
+	    ]
+	  },
+	  licenses: {
+	    get: ["GET /licenses/{license}"],
+	    getAllCommonlyUsed: ["GET /licenses"],
+	    getForRepo: ["GET /repos/{owner}/{repo}/license"]
+	  },
+	  markdown: {
+	    render: ["POST /markdown"],
+	    renderRaw: [
+	      "POST /markdown/raw",
+	      { headers: { "content-type": "text/plain; charset=utf-8" } }
+	    ]
+	  },
+	  meta: {
+	    get: ["GET /meta"],
+	    getAllVersions: ["GET /versions"],
+	    getOctocat: ["GET /octocat"],
+	    getZen: ["GET /zen"],
+	    root: ["GET /"]
+	  },
+	  migrations: {
+	    cancelImport: ["DELETE /repos/{owner}/{repo}/import"],
+	    deleteArchiveForAuthenticatedUser: [
+	      "DELETE /user/migrations/{migration_id}/archive"
+	    ],
+	    deleteArchiveForOrg: [
+	      "DELETE /orgs/{org}/migrations/{migration_id}/archive"
+	    ],
+	    downloadArchiveForOrg: [
+	      "GET /orgs/{org}/migrations/{migration_id}/archive"
+	    ],
+	    getArchiveForAuthenticatedUser: [
+	      "GET /user/migrations/{migration_id}/archive"
+	    ],
+	    getCommitAuthors: ["GET /repos/{owner}/{repo}/import/authors"],
+	    getImportStatus: ["GET /repos/{owner}/{repo}/import"],
+	    getLargeFiles: ["GET /repos/{owner}/{repo}/import/large_files"],
+	    getStatusForAuthenticatedUser: ["GET /user/migrations/{migration_id}"],
+	    getStatusForOrg: ["GET /orgs/{org}/migrations/{migration_id}"],
+	    listForAuthenticatedUser: ["GET /user/migrations"],
+	    listForOrg: ["GET /orgs/{org}/migrations"],
+	    listReposForAuthenticatedUser: [
+	      "GET /user/migrations/{migration_id}/repositories"
+	    ],
+	    listReposForOrg: ["GET /orgs/{org}/migrations/{migration_id}/repositories"],
+	    listReposForUser: [
+	      "GET /user/migrations/{migration_id}/repositories",
+	      {},
+	      { renamed: ["migrations", "listReposForAuthenticatedUser"] }
+	    ],
+	    mapCommitAuthor: ["PATCH /repos/{owner}/{repo}/import/authors/{author_id}"],
+	    setLfsPreference: ["PATCH /repos/{owner}/{repo}/import/lfs"],
+	    startForAuthenticatedUser: ["POST /user/migrations"],
+	    startForOrg: ["POST /orgs/{org}/migrations"],
+	    startImport: ["PUT /repos/{owner}/{repo}/import"],
+	    unlockRepoForAuthenticatedUser: [
+	      "DELETE /user/migrations/{migration_id}/repos/{repo_name}/lock"
+	    ],
+	    unlockRepoForOrg: [
+	      "DELETE /orgs/{org}/migrations/{migration_id}/repos/{repo_name}/lock"
+	    ],
+	    updateImport: ["PATCH /repos/{owner}/{repo}/import"]
+	  },
+	  orgs: {
+	    addSecurityManagerTeam: [
+	      "PUT /orgs/{org}/security-managers/teams/{team_slug}"
+	    ],
+	    blockUser: ["PUT /orgs/{org}/blocks/{username}"],
+	    cancelInvitation: ["DELETE /orgs/{org}/invitations/{invitation_id}"],
+	    checkBlockedUser: ["GET /orgs/{org}/blocks/{username}"],
+	    checkMembershipForUser: ["GET /orgs/{org}/members/{username}"],
+	    checkPublicMembershipForUser: ["GET /orgs/{org}/public_members/{username}"],
+	    convertMemberToOutsideCollaborator: [
+	      "PUT /orgs/{org}/outside_collaborators/{username}"
+	    ],
+	    createInvitation: ["POST /orgs/{org}/invitations"],
+	    createWebhook: ["POST /orgs/{org}/hooks"],
+	    delete: ["DELETE /orgs/{org}"],
+	    deleteWebhook: ["DELETE /orgs/{org}/hooks/{hook_id}"],
+	    enableOrDisableSecurityProductOnAllOrgRepos: [
+	      "POST /orgs/{org}/{security_product}/{enablement}"
+	    ],
+	    get: ["GET /orgs/{org}"],
+	    getMembershipForAuthenticatedUser: ["GET /user/memberships/orgs/{org}"],
+	    getMembershipForUser: ["GET /orgs/{org}/memberships/{username}"],
+	    getWebhook: ["GET /orgs/{org}/hooks/{hook_id}"],
+	    getWebhookConfigForOrg: ["GET /orgs/{org}/hooks/{hook_id}/config"],
+	    getWebhookDelivery: [
+	      "GET /orgs/{org}/hooks/{hook_id}/deliveries/{delivery_id}"
+	    ],
+	    list: ["GET /organizations"],
+	    listAppInstallations: ["GET /orgs/{org}/installations"],
+	    listBlockedUsers: ["GET /orgs/{org}/blocks"],
+	    listFailedInvitations: ["GET /orgs/{org}/failed_invitations"],
+	    listForAuthenticatedUser: ["GET /user/orgs"],
+	    listForUser: ["GET /users/{username}/orgs"],
+	    listInvitationTeams: ["GET /orgs/{org}/invitations/{invitation_id}/teams"],
+	    listMembers: ["GET /orgs/{org}/members"],
+	    listMembershipsForAuthenticatedUser: ["GET /user/memberships/orgs"],
+	    listOutsideCollaborators: ["GET /orgs/{org}/outside_collaborators"],
+	    listPatGrantRepositories: [
+	      "GET /orgs/{org}/personal-access-tokens/{pat_id}/repositories"
+	    ],
+	    listPatGrantRequestRepositories: [
+	      "GET /orgs/{org}/personal-access-token-requests/{pat_request_id}/repositories"
+	    ],
+	    listPatGrantRequests: ["GET /orgs/{org}/personal-access-token-requests"],
+	    listPatGrants: ["GET /orgs/{org}/personal-access-tokens"],
+	    listPendingInvitations: ["GET /orgs/{org}/invitations"],
+	    listPublicMembers: ["GET /orgs/{org}/public_members"],
+	    listSecurityManagerTeams: ["GET /orgs/{org}/security-managers"],
+	    listWebhookDeliveries: ["GET /orgs/{org}/hooks/{hook_id}/deliveries"],
+	    listWebhooks: ["GET /orgs/{org}/hooks"],
+	    pingWebhook: ["POST /orgs/{org}/hooks/{hook_id}/pings"],
+	    redeliverWebhookDelivery: [
+	      "POST /orgs/{org}/hooks/{hook_id}/deliveries/{delivery_id}/attempts"
+	    ],
+	    removeMember: ["DELETE /orgs/{org}/members/{username}"],
+	    removeMembershipForUser: ["DELETE /orgs/{org}/memberships/{username}"],
+	    removeOutsideCollaborator: [
+	      "DELETE /orgs/{org}/outside_collaborators/{username}"
+	    ],
+	    removePublicMembershipForAuthenticatedUser: [
+	      "DELETE /orgs/{org}/public_members/{username}"
+	    ],
+	    removeSecurityManagerTeam: [
+	      "DELETE /orgs/{org}/security-managers/teams/{team_slug}"
+	    ],
+	    reviewPatGrantRequest: [
+	      "POST /orgs/{org}/personal-access-token-requests/{pat_request_id}"
+	    ],
+	    reviewPatGrantRequestsInBulk: [
+	      "POST /orgs/{org}/personal-access-token-requests"
+	    ],
+	    setMembershipForUser: ["PUT /orgs/{org}/memberships/{username}"],
+	    setPublicMembershipForAuthenticatedUser: [
+	      "PUT /orgs/{org}/public_members/{username}"
+	    ],
+	    unblockUser: ["DELETE /orgs/{org}/blocks/{username}"],
+	    update: ["PATCH /orgs/{org}"],
+	    updateMembershipForAuthenticatedUser: [
+	      "PATCH /user/memberships/orgs/{org}"
+	    ],
+	    updatePatAccess: ["POST /orgs/{org}/personal-access-tokens/{pat_id}"],
+	    updatePatAccesses: ["POST /orgs/{org}/personal-access-tokens"],
+	    updateWebhook: ["PATCH /orgs/{org}/hooks/{hook_id}"],
+	    updateWebhookConfigForOrg: ["PATCH /orgs/{org}/hooks/{hook_id}/config"]
+	  },
+	  packages: {
+	    deletePackageForAuthenticatedUser: [
+	      "DELETE /user/packages/{package_type}/{package_name}"
+	    ],
+	    deletePackageForOrg: [
+	      "DELETE /orgs/{org}/packages/{package_type}/{package_name}"
+	    ],
+	    deletePackageForUser: [
+	      "DELETE /users/{username}/packages/{package_type}/{package_name}"
+	    ],
+	    deletePackageVersionForAuthenticatedUser: [
+	      "DELETE /user/packages/{package_type}/{package_name}/versions/{package_version_id}"
+	    ],
+	    deletePackageVersionForOrg: [
+	      "DELETE /orgs/{org}/packages/{package_type}/{package_name}/versions/{package_version_id}"
+	    ],
+	    deletePackageVersionForUser: [
+	      "DELETE /users/{username}/packages/{package_type}/{package_name}/versions/{package_version_id}"
+	    ],
+	    getAllPackageVersionsForAPackageOwnedByAnOrg: [
+	      "GET /orgs/{org}/packages/{package_type}/{package_name}/versions",
+	      {},
+	      { renamed: ["packages", "getAllPackageVersionsForPackageOwnedByOrg"] }
+	    ],
+	    getAllPackageVersionsForAPackageOwnedByTheAuthenticatedUser: [
+	      "GET /user/packages/{package_type}/{package_name}/versions",
+	      {},
+	      {
+	        renamed: [
+	          "packages",
+	          "getAllPackageVersionsForPackageOwnedByAuthenticatedUser"
+	        ]
+	      }
+	    ],
+	    getAllPackageVersionsForPackageOwnedByAuthenticatedUser: [
+	      "GET /user/packages/{package_type}/{package_name}/versions"
+	    ],
+	    getAllPackageVersionsForPackageOwnedByOrg: [
+	      "GET /orgs/{org}/packages/{package_type}/{package_name}/versions"
+	    ],
+	    getAllPackageVersionsForPackageOwnedByUser: [
+	      "GET /users/{username}/packages/{package_type}/{package_name}/versions"
+	    ],
+	    getPackageForAuthenticatedUser: [
+	      "GET /user/packages/{package_type}/{package_name}"
+	    ],
+	    getPackageForOrganization: [
+	      "GET /orgs/{org}/packages/{package_type}/{package_name}"
+	    ],
+	    getPackageForUser: [
+	      "GET /users/{username}/packages/{package_type}/{package_name}"
+	    ],
+	    getPackageVersionForAuthenticatedUser: [
+	      "GET /user/packages/{package_type}/{package_name}/versions/{package_version_id}"
+	    ],
+	    getPackageVersionForOrganization: [
+	      "GET /orgs/{org}/packages/{package_type}/{package_name}/versions/{package_version_id}"
+	    ],
+	    getPackageVersionForUser: [
+	      "GET /users/{username}/packages/{package_type}/{package_name}/versions/{package_version_id}"
+	    ],
+	    listDockerMigrationConflictingPackagesForAuthenticatedUser: [
+	      "GET /user/docker/conflicts"
+	    ],
+	    listDockerMigrationConflictingPackagesForOrganization: [
+	      "GET /orgs/{org}/docker/conflicts"
+	    ],
+	    listDockerMigrationConflictingPackagesForUser: [
+	      "GET /users/{username}/docker/conflicts"
+	    ],
+	    listPackagesForAuthenticatedUser: ["GET /user/packages"],
+	    listPackagesForOrganization: ["GET /orgs/{org}/packages"],
+	    listPackagesForUser: ["GET /users/{username}/packages"],
+	    restorePackageForAuthenticatedUser: [
+	      "POST /user/packages/{package_type}/{package_name}/restore{?token}"
+	    ],
+	    restorePackageForOrg: [
+	      "POST /orgs/{org}/packages/{package_type}/{package_name}/restore{?token}"
+	    ],
+	    restorePackageForUser: [
+	      "POST /users/{username}/packages/{package_type}/{package_name}/restore{?token}"
+	    ],
+	    restorePackageVersionForAuthenticatedUser: [
+	      "POST /user/packages/{package_type}/{package_name}/versions/{package_version_id}/restore"
+	    ],
+	    restorePackageVersionForOrg: [
+	      "POST /orgs/{org}/packages/{package_type}/{package_name}/versions/{package_version_id}/restore"
+	    ],
+	    restorePackageVersionForUser: [
+	      "POST /users/{username}/packages/{package_type}/{package_name}/versions/{package_version_id}/restore"
+	    ]
+	  },
+	  projects: {
+	    addCollaborator: ["PUT /projects/{project_id}/collaborators/{username}"],
+	    createCard: ["POST /projects/columns/{column_id}/cards"],
+	    createColumn: ["POST /projects/{project_id}/columns"],
+	    createForAuthenticatedUser: ["POST /user/projects"],
+	    createForOrg: ["POST /orgs/{org}/projects"],
+	    createForRepo: ["POST /repos/{owner}/{repo}/projects"],
+	    delete: ["DELETE /projects/{project_id}"],
+	    deleteCard: ["DELETE /projects/columns/cards/{card_id}"],
+	    deleteColumn: ["DELETE /projects/columns/{column_id}"],
+	    get: ["GET /projects/{project_id}"],
+	    getCard: ["GET /projects/columns/cards/{card_id}"],
+	    getColumn: ["GET /projects/columns/{column_id}"],
+	    getPermissionForUser: [
+	      "GET /projects/{project_id}/collaborators/{username}/permission"
+	    ],
+	    listCards: ["GET /projects/columns/{column_id}/cards"],
+	    listCollaborators: ["GET /projects/{project_id}/collaborators"],
+	    listColumns: ["GET /projects/{project_id}/columns"],
+	    listForOrg: ["GET /orgs/{org}/projects"],
+	    listForRepo: ["GET /repos/{owner}/{repo}/projects"],
+	    listForUser: ["GET /users/{username}/projects"],
+	    moveCard: ["POST /projects/columns/cards/{card_id}/moves"],
+	    moveColumn: ["POST /projects/columns/{column_id}/moves"],
+	    removeCollaborator: [
+	      "DELETE /projects/{project_id}/collaborators/{username}"
+	    ],
+	    update: ["PATCH /projects/{project_id}"],
+	    updateCard: ["PATCH /projects/columns/cards/{card_id}"],
+	    updateColumn: ["PATCH /projects/columns/{column_id}"]
+	  },
+	  pulls: {
+	    checkIfMerged: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/merge"],
+	    create: ["POST /repos/{owner}/{repo}/pulls"],
+	    createReplyForReviewComment: [
+	      "POST /repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies"
+	    ],
+	    createReview: ["POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews"],
+	    createReviewComment: [
+	      "POST /repos/{owner}/{repo}/pulls/{pull_number}/comments"
+	    ],
+	    deletePendingReview: [
+	      "DELETE /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}"
+	    ],
+	    deleteReviewComment: [
+	      "DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}"
+	    ],
+	    dismissReview: [
+	      "PUT /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/dismissals"
+	    ],
+	    get: ["GET /repos/{owner}/{repo}/pulls/{pull_number}"],
+	    getReview: [
+	      "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}"
+	    ],
+	    getReviewComment: ["GET /repos/{owner}/{repo}/pulls/comments/{comment_id}"],
+	    list: ["GET /repos/{owner}/{repo}/pulls"],
+	    listCommentsForReview: [
+	      "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments"
+	    ],
+	    listCommits: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/commits"],
+	    listFiles: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/files"],
+	    listRequestedReviewers: [
+	      "GET /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"
+	    ],
+	    listReviewComments: [
+	      "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments"
+	    ],
+	    listReviewCommentsForRepo: ["GET /repos/{owner}/{repo}/pulls/comments"],
+	    listReviews: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews"],
+	    merge: ["PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge"],
+	    removeRequestedReviewers: [
+	      "DELETE /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"
+	    ],
+	    requestReviewers: [
+	      "POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"
+	    ],
+	    submitReview: [
+	      "POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/events"
+	    ],
+	    update: ["PATCH /repos/{owner}/{repo}/pulls/{pull_number}"],
+	    updateBranch: [
+	      "PUT /repos/{owner}/{repo}/pulls/{pull_number}/update-branch"
+	    ],
+	    updateReview: [
+	      "PUT /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}"
+	    ],
+	    updateReviewComment: [
+	      "PATCH /repos/{owner}/{repo}/pulls/comments/{comment_id}"
+	    ]
+	  },
+	  rateLimit: { get: ["GET /rate_limit"] },
+	  reactions: {
+	    createForCommitComment: [
+	      "POST /repos/{owner}/{repo}/comments/{comment_id}/reactions"
+	    ],
+	    createForIssue: [
+	      "POST /repos/{owner}/{repo}/issues/{issue_number}/reactions"
+	    ],
+	    createForIssueComment: [
+	      "POST /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions"
+	    ],
+	    createForPullRequestReviewComment: [
+	      "POST /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions"
+	    ],
+	    createForRelease: [
+	      "POST /repos/{owner}/{repo}/releases/{release_id}/reactions"
+	    ],
+	    createForTeamDiscussionCommentInOrg: [
+	      "POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions"
+	    ],
+	    createForTeamDiscussionInOrg: [
+	      "POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions"
+	    ],
+	    deleteForCommitComment: [
+	      "DELETE /repos/{owner}/{repo}/comments/{comment_id}/reactions/{reaction_id}"
+	    ],
+	    deleteForIssue: [
+	      "DELETE /repos/{owner}/{repo}/issues/{issue_number}/reactions/{reaction_id}"
+	    ],
+	    deleteForIssueComment: [
+	      "DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions/{reaction_id}"
+	    ],
+	    deleteForPullRequestComment: [
+	      "DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions/{reaction_id}"
+	    ],
+	    deleteForRelease: [
+	      "DELETE /repos/{owner}/{repo}/releases/{release_id}/reactions/{reaction_id}"
+	    ],
+	    deleteForTeamDiscussion: [
+	      "DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions/{reaction_id}"
+	    ],
+	    deleteForTeamDiscussionComment: [
+	      "DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions/{reaction_id}"
+	    ],
+	    listForCommitComment: [
+	      "GET /repos/{owner}/{repo}/comments/{comment_id}/reactions"
+	    ],
+	    listForIssue: ["GET /repos/{owner}/{repo}/issues/{issue_number}/reactions"],
+	    listForIssueComment: [
+	      "GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions"
+	    ],
+	    listForPullRequestReviewComment: [
+	      "GET /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions"
+	    ],
+	    listForRelease: [
+	      "GET /repos/{owner}/{repo}/releases/{release_id}/reactions"
+	    ],
+	    listForTeamDiscussionCommentInOrg: [
+	      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions"
+	    ],
+	    listForTeamDiscussionInOrg: [
+	      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions"
+	    ]
+	  },
+	  repos: {
+	    acceptInvitation: [
+	      "PATCH /user/repository_invitations/{invitation_id}",
+	      {},
+	      { renamed: ["repos", "acceptInvitationForAuthenticatedUser"] }
+	    ],
+	    acceptInvitationForAuthenticatedUser: [
+	      "PATCH /user/repository_invitations/{invitation_id}"
+	    ],
+	    addAppAccessRestrictions: [
+	      "POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps",
+	      {},
+	      { mapToData: "apps" }
+	    ],
+	    addCollaborator: ["PUT /repos/{owner}/{repo}/collaborators/{username}"],
+	    addStatusCheckContexts: [
+	      "POST /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts",
+	      {},
+	      { mapToData: "contexts" }
+	    ],
+	    addTeamAccessRestrictions: [
+	      "POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams",
+	      {},
+	      { mapToData: "teams" }
+	    ],
+	    addUserAccessRestrictions: [
+	      "POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users",
+	      {},
+	      { mapToData: "users" }
+	    ],
+	    checkAutomatedSecurityFixes: [
+	      "GET /repos/{owner}/{repo}/automated-security-fixes"
+	    ],
+	    checkCollaborator: ["GET /repos/{owner}/{repo}/collaborators/{username}"],
+	    checkVulnerabilityAlerts: [
+	      "GET /repos/{owner}/{repo}/vulnerability-alerts"
+	    ],
+	    codeownersErrors: ["GET /repos/{owner}/{repo}/codeowners/errors"],
+	    compareCommits: ["GET /repos/{owner}/{repo}/compare/{base}...{head}"],
+	    compareCommitsWithBasehead: [
+	      "GET /repos/{owner}/{repo}/compare/{basehead}"
+	    ],
+	    createAutolink: ["POST /repos/{owner}/{repo}/autolinks"],
+	    createCommitComment: [
+	      "POST /repos/{owner}/{repo}/commits/{commit_sha}/comments"
+	    ],
+	    createCommitSignatureProtection: [
+	      "POST /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures"
+	    ],
+	    createCommitStatus: ["POST /repos/{owner}/{repo}/statuses/{sha}"],
+	    createDeployKey: ["POST /repos/{owner}/{repo}/keys"],
+	    createDeployment: ["POST /repos/{owner}/{repo}/deployments"],
+	    createDeploymentBranchPolicy: [
+	      "POST /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies"
+	    ],
+	    createDeploymentProtectionRule: [
+	      "POST /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules"
+	    ],
+	    createDeploymentStatus: [
+	      "POST /repos/{owner}/{repo}/deployments/{deployment_id}/statuses"
+	    ],
+	    createDispatchEvent: ["POST /repos/{owner}/{repo}/dispatches"],
+	    createForAuthenticatedUser: ["POST /user/repos"],
+	    createFork: ["POST /repos/{owner}/{repo}/forks"],
+	    createInOrg: ["POST /orgs/{org}/repos"],
+	    createOrUpdateEnvironment: [
+	      "PUT /repos/{owner}/{repo}/environments/{environment_name}"
+	    ],
+	    createOrUpdateFileContents: ["PUT /repos/{owner}/{repo}/contents/{path}"],
+	    createOrgRuleset: ["POST /orgs/{org}/rulesets"],
+	    createPagesDeployment: ["POST /repos/{owner}/{repo}/pages/deployment"],
+	    createPagesSite: ["POST /repos/{owner}/{repo}/pages"],
+	    createRelease: ["POST /repos/{owner}/{repo}/releases"],
+	    createRepoRuleset: ["POST /repos/{owner}/{repo}/rulesets"],
+	    createTagProtection: ["POST /repos/{owner}/{repo}/tags/protection"],
+	    createUsingTemplate: [
+	      "POST /repos/{template_owner}/{template_repo}/generate"
+	    ],
+	    createWebhook: ["POST /repos/{owner}/{repo}/hooks"],
+	    declineInvitation: [
+	      "DELETE /user/repository_invitations/{invitation_id}",
+	      {},
+	      { renamed: ["repos", "declineInvitationForAuthenticatedUser"] }
+	    ],
+	    declineInvitationForAuthenticatedUser: [
+	      "DELETE /user/repository_invitations/{invitation_id}"
+	    ],
+	    delete: ["DELETE /repos/{owner}/{repo}"],
+	    deleteAccessRestrictions: [
+	      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions"
+	    ],
+	    deleteAdminBranchProtection: [
+	      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"
+	    ],
+	    deleteAnEnvironment: [
+	      "DELETE /repos/{owner}/{repo}/environments/{environment_name}"
+	    ],
+	    deleteAutolink: ["DELETE /repos/{owner}/{repo}/autolinks/{autolink_id}"],
+	    deleteBranchProtection: [
+	      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection"
+	    ],
+	    deleteCommitComment: ["DELETE /repos/{owner}/{repo}/comments/{comment_id}"],
+	    deleteCommitSignatureProtection: [
+	      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures"
+	    ],
+	    deleteDeployKey: ["DELETE /repos/{owner}/{repo}/keys/{key_id}"],
+	    deleteDeployment: [
+	      "DELETE /repos/{owner}/{repo}/deployments/{deployment_id}"
+	    ],
+	    deleteDeploymentBranchPolicy: [
+	      "DELETE /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies/{branch_policy_id}"
+	    ],
+	    deleteFile: ["DELETE /repos/{owner}/{repo}/contents/{path}"],
+	    deleteInvitation: [
+	      "DELETE /repos/{owner}/{repo}/invitations/{invitation_id}"
+	    ],
+	    deleteOrgRuleset: ["DELETE /orgs/{org}/rulesets/{ruleset_id}"],
+	    deletePagesSite: ["DELETE /repos/{owner}/{repo}/pages"],
+	    deletePullRequestReviewProtection: [
+	      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"
+	    ],
+	    deleteRelease: ["DELETE /repos/{owner}/{repo}/releases/{release_id}"],
+	    deleteReleaseAsset: [
+	      "DELETE /repos/{owner}/{repo}/releases/assets/{asset_id}"
+	    ],
+	    deleteRepoRuleset: ["DELETE /repos/{owner}/{repo}/rulesets/{ruleset_id}"],
+	    deleteTagProtection: [
+	      "DELETE /repos/{owner}/{repo}/tags/protection/{tag_protection_id}"
+	    ],
+	    deleteWebhook: ["DELETE /repos/{owner}/{repo}/hooks/{hook_id}"],
+	    disableAutomatedSecurityFixes: [
+	      "DELETE /repos/{owner}/{repo}/automated-security-fixes"
+	    ],
+	    disableDeploymentProtectionRule: [
+	      "DELETE /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/{protection_rule_id}"
+	    ],
+	    disablePrivateVulnerabilityReporting: [
+	      "DELETE /repos/{owner}/{repo}/private-vulnerability-reporting"
+	    ],
+	    disableVulnerabilityAlerts: [
+	      "DELETE /repos/{owner}/{repo}/vulnerability-alerts"
+	    ],
+	    downloadArchive: [
+	      "GET /repos/{owner}/{repo}/zipball/{ref}",
+	      {},
+	      { renamed: ["repos", "downloadZipballArchive"] }
+	    ],
+	    downloadTarballArchive: ["GET /repos/{owner}/{repo}/tarball/{ref}"],
+	    downloadZipballArchive: ["GET /repos/{owner}/{repo}/zipball/{ref}"],
+	    enableAutomatedSecurityFixes: [
+	      "PUT /repos/{owner}/{repo}/automated-security-fixes"
+	    ],
+	    enablePrivateVulnerabilityReporting: [
+	      "PUT /repos/{owner}/{repo}/private-vulnerability-reporting"
+	    ],
+	    enableVulnerabilityAlerts: [
+	      "PUT /repos/{owner}/{repo}/vulnerability-alerts"
+	    ],
+	    generateReleaseNotes: [
+	      "POST /repos/{owner}/{repo}/releases/generate-notes"
+	    ],
+	    get: ["GET /repos/{owner}/{repo}"],
+	    getAccessRestrictions: [
+	      "GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions"
+	    ],
+	    getAdminBranchProtection: [
+	      "GET /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"
+	    ],
+	    getAllDeploymentProtectionRules: [
+	      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules"
+	    ],
+	    getAllEnvironments: ["GET /repos/{owner}/{repo}/environments"],
+	    getAllStatusCheckContexts: [
+	      "GET /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts"
+	    ],
+	    getAllTopics: ["GET /repos/{owner}/{repo}/topics"],
+	    getAppsWithAccessToProtectedBranch: [
+	      "GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps"
+	    ],
+	    getAutolink: ["GET /repos/{owner}/{repo}/autolinks/{autolink_id}"],
+	    getBranch: ["GET /repos/{owner}/{repo}/branches/{branch}"],
+	    getBranchProtection: [
+	      "GET /repos/{owner}/{repo}/branches/{branch}/protection"
+	    ],
+	    getBranchRules: ["GET /repos/{owner}/{repo}/rules/branches/{branch}"],
+	    getClones: ["GET /repos/{owner}/{repo}/traffic/clones"],
+	    getCodeFrequencyStats: ["GET /repos/{owner}/{repo}/stats/code_frequency"],
+	    getCollaboratorPermissionLevel: [
+	      "GET /repos/{owner}/{repo}/collaborators/{username}/permission"
+	    ],
+	    getCombinedStatusForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/status"],
+	    getCommit: ["GET /repos/{owner}/{repo}/commits/{ref}"],
+	    getCommitActivityStats: ["GET /repos/{owner}/{repo}/stats/commit_activity"],
+	    getCommitComment: ["GET /repos/{owner}/{repo}/comments/{comment_id}"],
+	    getCommitSignatureProtection: [
+	      "GET /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures"
+	    ],
+	    getCommunityProfileMetrics: ["GET /repos/{owner}/{repo}/community/profile"],
+	    getContent: ["GET /repos/{owner}/{repo}/contents/{path}"],
+	    getContributorsStats: ["GET /repos/{owner}/{repo}/stats/contributors"],
+	    getCustomDeploymentProtectionRule: [
+	      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/{protection_rule_id}"
+	    ],
+	    getDeployKey: ["GET /repos/{owner}/{repo}/keys/{key_id}"],
+	    getDeployment: ["GET /repos/{owner}/{repo}/deployments/{deployment_id}"],
+	    getDeploymentBranchPolicy: [
+	      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies/{branch_policy_id}"
+	    ],
+	    getDeploymentStatus: [
+	      "GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses/{status_id}"
+	    ],
+	    getEnvironment: [
+	      "GET /repos/{owner}/{repo}/environments/{environment_name}"
+	    ],
+	    getLatestPagesBuild: ["GET /repos/{owner}/{repo}/pages/builds/latest"],
+	    getLatestRelease: ["GET /repos/{owner}/{repo}/releases/latest"],
+	    getOrgRuleset: ["GET /orgs/{org}/rulesets/{ruleset_id}"],
+	    getOrgRulesets: ["GET /orgs/{org}/rulesets"],
+	    getPages: ["GET /repos/{owner}/{repo}/pages"],
+	    getPagesBuild: ["GET /repos/{owner}/{repo}/pages/builds/{build_id}"],
+	    getPagesHealthCheck: ["GET /repos/{owner}/{repo}/pages/health"],
+	    getParticipationStats: ["GET /repos/{owner}/{repo}/stats/participation"],
+	    getPullRequestReviewProtection: [
+	      "GET /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"
+	    ],
+	    getPunchCardStats: ["GET /repos/{owner}/{repo}/stats/punch_card"],
+	    getReadme: ["GET /repos/{owner}/{repo}/readme"],
+	    getReadmeInDirectory: ["GET /repos/{owner}/{repo}/readme/{dir}"],
+	    getRelease: ["GET /repos/{owner}/{repo}/releases/{release_id}"],
+	    getReleaseAsset: ["GET /repos/{owner}/{repo}/releases/assets/{asset_id}"],
+	    getReleaseByTag: ["GET /repos/{owner}/{repo}/releases/tags/{tag}"],
+	    getRepoRuleset: ["GET /repos/{owner}/{repo}/rulesets/{ruleset_id}"],
+	    getRepoRulesets: ["GET /repos/{owner}/{repo}/rulesets"],
+	    getStatusChecksProtection: [
+	      "GET /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"
+	    ],
+	    getTeamsWithAccessToProtectedBranch: [
+	      "GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams"
+	    ],
+	    getTopPaths: ["GET /repos/{owner}/{repo}/traffic/popular/paths"],
+	    getTopReferrers: ["GET /repos/{owner}/{repo}/traffic/popular/referrers"],
+	    getUsersWithAccessToProtectedBranch: [
+	      "GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users"
+	    ],
+	    getViews: ["GET /repos/{owner}/{repo}/traffic/views"],
+	    getWebhook: ["GET /repos/{owner}/{repo}/hooks/{hook_id}"],
+	    getWebhookConfigForRepo: [
+	      "GET /repos/{owner}/{repo}/hooks/{hook_id}/config"
+	    ],
+	    getWebhookDelivery: [
+	      "GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries/{delivery_id}"
+	    ],
+	    listActivities: ["GET /repos/{owner}/{repo}/activity"],
+	    listAutolinks: ["GET /repos/{owner}/{repo}/autolinks"],
+	    listBranches: ["GET /repos/{owner}/{repo}/branches"],
+	    listBranchesForHeadCommit: [
+	      "GET /repos/{owner}/{repo}/commits/{commit_sha}/branches-where-head"
+	    ],
+	    listCollaborators: ["GET /repos/{owner}/{repo}/collaborators"],
+	    listCommentsForCommit: [
+	      "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments"
+	    ],
+	    listCommitCommentsForRepo: ["GET /repos/{owner}/{repo}/comments"],
+	    listCommitStatusesForRef: [
+	      "GET /repos/{owner}/{repo}/commits/{ref}/statuses"
+	    ],
+	    listCommits: ["GET /repos/{owner}/{repo}/commits"],
+	    listContributors: ["GET /repos/{owner}/{repo}/contributors"],
+	    listCustomDeploymentRuleIntegrations: [
+	      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/apps"
+	    ],
+	    listDeployKeys: ["GET /repos/{owner}/{repo}/keys"],
+	    listDeploymentBranchPolicies: [
+	      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies"
+	    ],
+	    listDeploymentStatuses: [
+	      "GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses"
+	    ],
+	    listDeployments: ["GET /repos/{owner}/{repo}/deployments"],
+	    listForAuthenticatedUser: ["GET /user/repos"],
+	    listForOrg: ["GET /orgs/{org}/repos"],
+	    listForUser: ["GET /users/{username}/repos"],
+	    listForks: ["GET /repos/{owner}/{repo}/forks"],
+	    listInvitations: ["GET /repos/{owner}/{repo}/invitations"],
+	    listInvitationsForAuthenticatedUser: ["GET /user/repository_invitations"],
+	    listLanguages: ["GET /repos/{owner}/{repo}/languages"],
+	    listPagesBuilds: ["GET /repos/{owner}/{repo}/pages/builds"],
+	    listPublic: ["GET /repositories"],
+	    listPullRequestsAssociatedWithCommit: [
+	      "GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls"
+	    ],
+	    listReleaseAssets: [
+	      "GET /repos/{owner}/{repo}/releases/{release_id}/assets"
+	    ],
+	    listReleases: ["GET /repos/{owner}/{repo}/releases"],
+	    listTagProtection: ["GET /repos/{owner}/{repo}/tags/protection"],
+	    listTags: ["GET /repos/{owner}/{repo}/tags"],
+	    listTeams: ["GET /repos/{owner}/{repo}/teams"],
+	    listWebhookDeliveries: [
+	      "GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries"
+	    ],
+	    listWebhooks: ["GET /repos/{owner}/{repo}/hooks"],
+	    merge: ["POST /repos/{owner}/{repo}/merges"],
+	    mergeUpstream: ["POST /repos/{owner}/{repo}/merge-upstream"],
+	    pingWebhook: ["POST /repos/{owner}/{repo}/hooks/{hook_id}/pings"],
+	    redeliverWebhookDelivery: [
+	      "POST /repos/{owner}/{repo}/hooks/{hook_id}/deliveries/{delivery_id}/attempts"
+	    ],
+	    removeAppAccessRestrictions: [
+	      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps",
+	      {},
+	      { mapToData: "apps" }
+	    ],
+	    removeCollaborator: [
+	      "DELETE /repos/{owner}/{repo}/collaborators/{username}"
+	    ],
+	    removeStatusCheckContexts: [
+	      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts",
+	      {},
+	      { mapToData: "contexts" }
+	    ],
+	    removeStatusCheckProtection: [
+	      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"
+	    ],
+	    removeTeamAccessRestrictions: [
+	      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams",
+	      {},
+	      { mapToData: "teams" }
+	    ],
+	    removeUserAccessRestrictions: [
+	      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users",
+	      {},
+	      { mapToData: "users" }
+	    ],
+	    renameBranch: ["POST /repos/{owner}/{repo}/branches/{branch}/rename"],
+	    replaceAllTopics: ["PUT /repos/{owner}/{repo}/topics"],
+	    requestPagesBuild: ["POST /repos/{owner}/{repo}/pages/builds"],
+	    setAdminBranchProtection: [
+	      "POST /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"
+	    ],
+	    setAppAccessRestrictions: [
+	      "PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps",
+	      {},
+	      { mapToData: "apps" }
+	    ],
+	    setStatusCheckContexts: [
+	      "PUT /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts",
+	      {},
+	      { mapToData: "contexts" }
+	    ],
+	    setTeamAccessRestrictions: [
+	      "PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams",
+	      {},
+	      { mapToData: "teams" }
+	    ],
+	    setUserAccessRestrictions: [
+	      "PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users",
+	      {},
+	      { mapToData: "users" }
+	    ],
+	    testPushWebhook: ["POST /repos/{owner}/{repo}/hooks/{hook_id}/tests"],
+	    transfer: ["POST /repos/{owner}/{repo}/transfer"],
+	    update: ["PATCH /repos/{owner}/{repo}"],
+	    updateBranchProtection: [
+	      "PUT /repos/{owner}/{repo}/branches/{branch}/protection"
+	    ],
+	    updateCommitComment: ["PATCH /repos/{owner}/{repo}/comments/{comment_id}"],
+	    updateDeploymentBranchPolicy: [
+	      "PUT /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies/{branch_policy_id}"
+	    ],
+	    updateInformationAboutPagesSite: ["PUT /repos/{owner}/{repo}/pages"],
+	    updateInvitation: [
+	      "PATCH /repos/{owner}/{repo}/invitations/{invitation_id}"
+	    ],
+	    updateOrgRuleset: ["PUT /orgs/{org}/rulesets/{ruleset_id}"],
+	    updatePullRequestReviewProtection: [
+	      "PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"
+	    ],
+	    updateRelease: ["PATCH /repos/{owner}/{repo}/releases/{release_id}"],
+	    updateReleaseAsset: [
+	      "PATCH /repos/{owner}/{repo}/releases/assets/{asset_id}"
+	    ],
+	    updateRepoRuleset: ["PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}"],
+	    updateStatusCheckPotection: [
+	      "PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks",
+	      {},
+	      { renamed: ["repos", "updateStatusCheckProtection"] }
+	    ],
+	    updateStatusCheckProtection: [
+	      "PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"
+	    ],
+	    updateWebhook: ["PATCH /repos/{owner}/{repo}/hooks/{hook_id}"],
+	    updateWebhookConfigForRepo: [
+	      "PATCH /repos/{owner}/{repo}/hooks/{hook_id}/config"
+	    ],
+	    uploadReleaseAsset: [
+	      "POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name,label}",
+	      { baseUrl: "https://uploads.github.com" }
+	    ]
+	  },
+	  search: {
+	    code: ["GET /search/code"],
+	    commits: ["GET /search/commits"],
+	    issuesAndPullRequests: ["GET /search/issues"],
+	    labels: ["GET /search/labels"],
+	    repos: ["GET /search/repositories"],
+	    topics: ["GET /search/topics"],
+	    users: ["GET /search/users"]
+	  },
+	  secretScanning: {
+	    getAlert: [
+	      "GET /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}"
+	    ],
+	    listAlertsForEnterprise: [
+	      "GET /enterprises/{enterprise}/secret-scanning/alerts"
+	    ],
+	    listAlertsForOrg: ["GET /orgs/{org}/secret-scanning/alerts"],
+	    listAlertsForRepo: ["GET /repos/{owner}/{repo}/secret-scanning/alerts"],
+	    listLocationsForAlert: [
+	      "GET /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}/locations"
+	    ],
+	    updateAlert: [
+	      "PATCH /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}"
+	    ]
+	  },
+	  securityAdvisories: {
+	    createPrivateVulnerabilityReport: [
+	      "POST /repos/{owner}/{repo}/security-advisories/reports"
+	    ],
+	    createRepositoryAdvisory: [
+	      "POST /repos/{owner}/{repo}/security-advisories"
+	    ],
+	    createRepositoryAdvisoryCveRequest: [
+	      "POST /repos/{owner}/{repo}/security-advisories/{ghsa_id}/cve"
+	    ],
+	    getGlobalAdvisory: ["GET /advisories/{ghsa_id}"],
+	    getRepositoryAdvisory: [
+	      "GET /repos/{owner}/{repo}/security-advisories/{ghsa_id}"
+	    ],
+	    listGlobalAdvisories: ["GET /advisories"],
+	    listOrgRepositoryAdvisories: ["GET /orgs/{org}/security-advisories"],
+	    listRepositoryAdvisories: ["GET /repos/{owner}/{repo}/security-advisories"],
+	    updateRepositoryAdvisory: [
+	      "PATCH /repos/{owner}/{repo}/security-advisories/{ghsa_id}"
+	    ]
+	  },
+	  teams: {
+	    addOrUpdateMembershipForUserInOrg: [
+	      "PUT /orgs/{org}/teams/{team_slug}/memberships/{username}"
+	    ],
+	    addOrUpdateProjectPermissionsInOrg: [
+	      "PUT /orgs/{org}/teams/{team_slug}/projects/{project_id}"
+	    ],
+	    addOrUpdateRepoPermissionsInOrg: [
+	      "PUT /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"
+	    ],
+	    checkPermissionsForProjectInOrg: [
+	      "GET /orgs/{org}/teams/{team_slug}/projects/{project_id}"
+	    ],
+	    checkPermissionsForRepoInOrg: [
+	      "GET /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"
+	    ],
+	    create: ["POST /orgs/{org}/teams"],
+	    createDiscussionCommentInOrg: [
+	      "POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments"
+	    ],
+	    createDiscussionInOrg: ["POST /orgs/{org}/teams/{team_slug}/discussions"],
+	    deleteDiscussionCommentInOrg: [
+	      "DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}"
+	    ],
+	    deleteDiscussionInOrg: [
+	      "DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}"
+	    ],
+	    deleteInOrg: ["DELETE /orgs/{org}/teams/{team_slug}"],
+	    getByName: ["GET /orgs/{org}/teams/{team_slug}"],
+	    getDiscussionCommentInOrg: [
+	      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}"
+	    ],
+	    getDiscussionInOrg: [
+	      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}"
+	    ],
+	    getMembershipForUserInOrg: [
+	      "GET /orgs/{org}/teams/{team_slug}/memberships/{username}"
+	    ],
+	    list: ["GET /orgs/{org}/teams"],
+	    listChildInOrg: ["GET /orgs/{org}/teams/{team_slug}/teams"],
+	    listDiscussionCommentsInOrg: [
+	      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments"
+	    ],
+	    listDiscussionsInOrg: ["GET /orgs/{org}/teams/{team_slug}/discussions"],
+	    listForAuthenticatedUser: ["GET /user/teams"],
+	    listMembersInOrg: ["GET /orgs/{org}/teams/{team_slug}/members"],
+	    listPendingInvitationsInOrg: [
+	      "GET /orgs/{org}/teams/{team_slug}/invitations"
+	    ],
+	    listProjectsInOrg: ["GET /orgs/{org}/teams/{team_slug}/projects"],
+	    listReposInOrg: ["GET /orgs/{org}/teams/{team_slug}/repos"],
+	    removeMembershipForUserInOrg: [
+	      "DELETE /orgs/{org}/teams/{team_slug}/memberships/{username}"
+	    ],
+	    removeProjectInOrg: [
+	      "DELETE /orgs/{org}/teams/{team_slug}/projects/{project_id}"
+	    ],
+	    removeRepoInOrg: [
+	      "DELETE /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"
+	    ],
+	    updateDiscussionCommentInOrg: [
+	      "PATCH /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}"
+	    ],
+	    updateDiscussionInOrg: [
+	      "PATCH /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}"
+	    ],
+	    updateInOrg: ["PATCH /orgs/{org}/teams/{team_slug}"]
+	  },
+	  users: {
+	    addEmailForAuthenticated: [
+	      "POST /user/emails",
+	      {},
+	      { renamed: ["users", "addEmailForAuthenticatedUser"] }
+	    ],
+	    addEmailForAuthenticatedUser: ["POST /user/emails"],
+	    addSocialAccountForAuthenticatedUser: ["POST /user/social_accounts"],
+	    block: ["PUT /user/blocks/{username}"],
+	    checkBlocked: ["GET /user/blocks/{username}"],
+	    checkFollowingForUser: ["GET /users/{username}/following/{target_user}"],
+	    checkPersonIsFollowedByAuthenticated: ["GET /user/following/{username}"],
+	    createGpgKeyForAuthenticated: [
+	      "POST /user/gpg_keys",
+	      {},
+	      { renamed: ["users", "createGpgKeyForAuthenticatedUser"] }
+	    ],
+	    createGpgKeyForAuthenticatedUser: ["POST /user/gpg_keys"],
+	    createPublicSshKeyForAuthenticated: [
+	      "POST /user/keys",
+	      {},
+	      { renamed: ["users", "createPublicSshKeyForAuthenticatedUser"] }
+	    ],
+	    createPublicSshKeyForAuthenticatedUser: ["POST /user/keys"],
+	    createSshSigningKeyForAuthenticatedUser: ["POST /user/ssh_signing_keys"],
+	    deleteEmailForAuthenticated: [
+	      "DELETE /user/emails",
+	      {},
+	      { renamed: ["users", "deleteEmailForAuthenticatedUser"] }
+	    ],
+	    deleteEmailForAuthenticatedUser: ["DELETE /user/emails"],
+	    deleteGpgKeyForAuthenticated: [
+	      "DELETE /user/gpg_keys/{gpg_key_id}",
+	      {},
+	      { renamed: ["users", "deleteGpgKeyForAuthenticatedUser"] }
+	    ],
+	    deleteGpgKeyForAuthenticatedUser: ["DELETE /user/gpg_keys/{gpg_key_id}"],
+	    deletePublicSshKeyForAuthenticated: [
+	      "DELETE /user/keys/{key_id}",
+	      {},
+	      { renamed: ["users", "deletePublicSshKeyForAuthenticatedUser"] }
+	    ],
+	    deletePublicSshKeyForAuthenticatedUser: ["DELETE /user/keys/{key_id}"],
+	    deleteSocialAccountForAuthenticatedUser: ["DELETE /user/social_accounts"],
+	    deleteSshSigningKeyForAuthenticatedUser: [
+	      "DELETE /user/ssh_signing_keys/{ssh_signing_key_id}"
+	    ],
+	    follow: ["PUT /user/following/{username}"],
+	    getAuthenticated: ["GET /user"],
+	    getByUsername: ["GET /users/{username}"],
+	    getContextForUser: ["GET /users/{username}/hovercard"],
+	    getGpgKeyForAuthenticated: [
+	      "GET /user/gpg_keys/{gpg_key_id}",
+	      {},
+	      { renamed: ["users", "getGpgKeyForAuthenticatedUser"] }
+	    ],
+	    getGpgKeyForAuthenticatedUser: ["GET /user/gpg_keys/{gpg_key_id}"],
+	    getPublicSshKeyForAuthenticated: [
+	      "GET /user/keys/{key_id}",
+	      {},
+	      { renamed: ["users", "getPublicSshKeyForAuthenticatedUser"] }
+	    ],
+	    getPublicSshKeyForAuthenticatedUser: ["GET /user/keys/{key_id}"],
+	    getSshSigningKeyForAuthenticatedUser: [
+	      "GET /user/ssh_signing_keys/{ssh_signing_key_id}"
+	    ],
+	    list: ["GET /users"],
+	    listBlockedByAuthenticated: [
+	      "GET /user/blocks",
+	      {},
+	      { renamed: ["users", "listBlockedByAuthenticatedUser"] }
+	    ],
+	    listBlockedByAuthenticatedUser: ["GET /user/blocks"],
+	    listEmailsForAuthenticated: [
+	      "GET /user/emails",
+	      {},
+	      { renamed: ["users", "listEmailsForAuthenticatedUser"] }
+	    ],
+	    listEmailsForAuthenticatedUser: ["GET /user/emails"],
+	    listFollowedByAuthenticated: [
+	      "GET /user/following",
+	      {},
+	      { renamed: ["users", "listFollowedByAuthenticatedUser"] }
+	    ],
+	    listFollowedByAuthenticatedUser: ["GET /user/following"],
+	    listFollowersForAuthenticatedUser: ["GET /user/followers"],
+	    listFollowersForUser: ["GET /users/{username}/followers"],
+	    listFollowingForUser: ["GET /users/{username}/following"],
+	    listGpgKeysForAuthenticated: [
+	      "GET /user/gpg_keys",
+	      {},
+	      { renamed: ["users", "listGpgKeysForAuthenticatedUser"] }
+	    ],
+	    listGpgKeysForAuthenticatedUser: ["GET /user/gpg_keys"],
+	    listGpgKeysForUser: ["GET /users/{username}/gpg_keys"],
+	    listPublicEmailsForAuthenticated: [
+	      "GET /user/public_emails",
+	      {},
+	      { renamed: ["users", "listPublicEmailsForAuthenticatedUser"] }
+	    ],
+	    listPublicEmailsForAuthenticatedUser: ["GET /user/public_emails"],
+	    listPublicKeysForUser: ["GET /users/{username}/keys"],
+	    listPublicSshKeysForAuthenticated: [
+	      "GET /user/keys",
+	      {},
+	      { renamed: ["users", "listPublicSshKeysForAuthenticatedUser"] }
+	    ],
+	    listPublicSshKeysForAuthenticatedUser: ["GET /user/keys"],
+	    listSocialAccountsForAuthenticatedUser: ["GET /user/social_accounts"],
+	    listSocialAccountsForUser: ["GET /users/{username}/social_accounts"],
+	    listSshSigningKeysForAuthenticatedUser: ["GET /user/ssh_signing_keys"],
+	    listSshSigningKeysForUser: ["GET /users/{username}/ssh_signing_keys"],
+	    setPrimaryEmailVisibilityForAuthenticated: [
+	      "PATCH /user/email/visibility",
+	      {},
+	      { renamed: ["users", "setPrimaryEmailVisibilityForAuthenticatedUser"] }
+	    ],
+	    setPrimaryEmailVisibilityForAuthenticatedUser: [
+	      "PATCH /user/email/visibility"
+	    ],
+	    unblock: ["DELETE /user/blocks/{username}"],
+	    unfollow: ["DELETE /user/following/{username}"],
+	    updateAuthenticated: ["PATCH /user"]
+	  }
+	};
+	var endpoints_default = Endpoints;
+
+	// pkg/dist-src/endpoints-to-methods.js
+	var endpointMethodsMap = /* @__PURE__ */ new Map();
+	for (const [scope, endpoints] of Object.entries(endpoints_default)) {
+	  for (const [methodName, endpoint] of Object.entries(endpoints)) {
+	    const [route, defaults, decorations] = endpoint;
+	    const [method, url] = route.split(/ /);
+	    const endpointDefaults = Object.assign(
+	      {
+	        method,
+	        url
+	      },
+	      defaults
+	    );
+	    if (!endpointMethodsMap.has(scope)) {
+	      endpointMethodsMap.set(scope, /* @__PURE__ */ new Map());
+	    }
+	    endpointMethodsMap.get(scope).set(methodName, {
+	      scope,
+	      methodName,
+	      endpointDefaults,
+	      decorations
+	    });
+	  }
+	}
+	var handler = {
+	  has({ scope }, methodName) {
+	    return endpointMethodsMap.get(scope).has(methodName);
+	  },
+	  getOwnPropertyDescriptor(target, methodName) {
+	    return {
+	      value: this.get(target, methodName),
+	      // ensures method is in the cache
+	      configurable: true,
+	      writable: true,
+	      enumerable: true
+	    };
+	  },
+	  defineProperty(target, methodName, descriptor) {
+	    Object.defineProperty(target.cache, methodName, descriptor);
+	    return true;
+	  },
+	  deleteProperty(target, methodName) {
+	    delete target.cache[methodName];
+	    return true;
+	  },
+	  ownKeys({ scope }) {
+	    return [...endpointMethodsMap.get(scope).keys()];
+	  },
+	  set(target, methodName, value) {
+	    return target.cache[methodName] = value;
+	  },
+	  get({ octokit, scope, cache }, methodName) {
+	    if (cache[methodName]) {
+	      return cache[methodName];
+	    }
+	    const method = endpointMethodsMap.get(scope).get(methodName);
+	    if (!method) {
+	      return void 0;
+	    }
+	    const { endpointDefaults, decorations } = method;
+	    if (decorations) {
+	      cache[methodName] = decorate(
+	        octokit,
+	        scope,
+	        methodName,
+	        endpointDefaults,
+	        decorations
+	      );
+	    } else {
+	      cache[methodName] = octokit.request.defaults(endpointDefaults);
+	    }
+	    return cache[methodName];
+	  }
+	};
+	function endpointsToMethods(octokit) {
+	  const newMethods = {};
+	  for (const scope of endpointMethodsMap.keys()) {
+	    newMethods[scope] = new Proxy({ octokit, scope, cache: {} }, handler);
+	  }
+	  return newMethods;
+	}
+	function decorate(octokit, scope, methodName, defaults, decorations) {
+	  const requestWithDefaults = octokit.request.defaults(defaults);
+	  function withDecorations(...args) {
+	    let options = requestWithDefaults.endpoint.merge(...args);
+	    if (decorations.mapToData) {
+	      options = Object.assign({}, options, {
+	        data: options[decorations.mapToData],
+	        [decorations.mapToData]: void 0
+	      });
+	      return requestWithDefaults(options);
+	    }
+	    if (decorations.renamed) {
+	      const [newScope, newMethodName] = decorations.renamed;
+	      octokit.log.warn(
+	        `octokit.${scope}.${methodName}() has been renamed to octokit.${newScope}.${newMethodName}()`
+	      );
+	    }
+	    if (decorations.deprecated) {
+	      octokit.log.warn(decorations.deprecated);
+	    }
+	    if (decorations.renamedParameters) {
+	      const options2 = requestWithDefaults.endpoint.merge(...args);
+	      for (const [name, alias] of Object.entries(
+	        decorations.renamedParameters
+	      )) {
+	        if (name in options2) {
+	          octokit.log.warn(
+	            `"${name}" parameter is deprecated for "octokit.${scope}.${methodName}()". Use "${alias}" instead`
+	          );
+	          if (!(alias in options2)) {
+	            options2[alias] = options2[name];
+	          }
+	          delete options2[name];
+	        }
+	      }
+	      return requestWithDefaults(options2);
+	    }
+	    return requestWithDefaults(...args);
+	  }
+	  return Object.assign(withDecorations, requestWithDefaults);
+	}
+
+	// pkg/dist-src/index.js
+	function restEndpointMethods(octokit) {
+	  const api = endpointsToMethods(octokit);
+	  return {
+	    rest: api
+	  };
+	}
+	restEndpointMethods.VERSION = VERSION;
+	function legacyRestEndpointMethods(octokit) {
+	  const api = endpointsToMethods(octokit);
+	  return {
+	    ...api,
+	    rest: api
+	  };
+	}
+	legacyRestEndpointMethods.VERSION = VERSION;
+	return distNode$1;
+}
+
+var distNode;
+var hasRequiredDistNode;
+
+function requireDistNode () {
+	if (hasRequiredDistNode) return distNode;
+	hasRequiredDistNode = 1;
+	var __defProp = Object.defineProperty;
+	var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+	var __getOwnPropNames = Object.getOwnPropertyNames;
+	var __hasOwnProp = Object.prototype.hasOwnProperty;
+	var __export = (target, all) => {
+	  for (var name in all)
+	    __defProp(target, name, { get: all[name], enumerable: true });
+	};
+	var __copyProps = (to, from, except, desc) => {
+	  if (from && typeof from === "object" || typeof from === "function") {
+	    for (let key of __getOwnPropNames(from))
+	      if (!__hasOwnProp.call(to, key) && key !== except)
+	        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+	  }
+	  return to;
+	};
+	var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+	// pkg/dist-src/index.js
+	var dist_src_exports = {};
+	__export(dist_src_exports, {
+	  composePaginateRest: () => composePaginateRest,
+	  isPaginatingEndpoint: () => isPaginatingEndpoint,
+	  paginateRest: () => paginateRest,
+	  paginatingEndpoints: () => paginatingEndpoints
+	});
+	distNode = __toCommonJS(dist_src_exports);
+
+	// pkg/dist-src/version.js
+	var VERSION = "9.0.0";
+
+	// pkg/dist-src/normalize-paginated-list-response.js
+	function normalizePaginatedListResponse(response) {
+	  if (!response.data) {
+	    return {
+	      ...response,
+	      data: []
+	    };
+	  }
+	  const responseNeedsNormalization = "total_count" in response.data && !("url" in response.data);
+	  if (!responseNeedsNormalization)
+	    return response;
+	  const incompleteResults = response.data.incomplete_results;
+	  const repositorySelection = response.data.repository_selection;
+	  const totalCount = response.data.total_count;
+	  delete response.data.incomplete_results;
+	  delete response.data.repository_selection;
+	  delete response.data.total_count;
+	  const namespaceKey = Object.keys(response.data)[0];
+	  const data = response.data[namespaceKey];
+	  response.data = data;
+	  if (typeof incompleteResults !== "undefined") {
+	    response.data.incomplete_results = incompleteResults;
+	  }
+	  if (typeof repositorySelection !== "undefined") {
+	    response.data.repository_selection = repositorySelection;
+	  }
+	  response.data.total_count = totalCount;
+	  return response;
+	}
+
+	// pkg/dist-src/iterator.js
+	function iterator(octokit, route, parameters) {
+	  const options = typeof route === "function" ? route.endpoint(parameters) : octokit.request.endpoint(route, parameters);
+	  const requestMethod = typeof route === "function" ? route : octokit.request;
+	  const method = options.method;
+	  const headers = options.headers;
+	  let url = options.url;
+	  return {
+	    [Symbol.asyncIterator]: () => ({
+	      async next() {
+	        if (!url)
+	          return { done: true };
+	        try {
+	          const response = await requestMethod({ method, url, headers });
+	          const normalizedResponse = normalizePaginatedListResponse(response);
+	          url = ((normalizedResponse.headers.link || "").match(
+	            /<([^>]+)>;\s*rel="next"/
+	          ) || [])[1];
+	          return { value: normalizedResponse };
+	        } catch (error) {
+	          if (error.status !== 409)
+	            throw error;
+	          url = "";
+	          return {
+	            value: {
+	              status: 200,
+	              headers: {},
+	              data: []
+	            }
+	          };
+	        }
+	      }
+	    })
+	  };
+	}
+
+	// pkg/dist-src/paginate.js
+	function paginate(octokit, route, parameters, mapFn) {
+	  if (typeof parameters === "function") {
+	    mapFn = parameters;
+	    parameters = void 0;
+	  }
+	  return gather(
+	    octokit,
+	    [],
+	    iterator(octokit, route, parameters)[Symbol.asyncIterator](),
+	    mapFn
+	  );
+	}
+	function gather(octokit, results, iterator2, mapFn) {
+	  return iterator2.next().then((result) => {
+	    if (result.done) {
+	      return results;
+	    }
+	    let earlyExit = false;
+	    function done() {
+	      earlyExit = true;
+	    }
+	    results = results.concat(
+	      mapFn ? mapFn(result.value, done) : result.value.data
+	    );
+	    if (earlyExit) {
+	      return results;
+	    }
+	    return gather(octokit, results, iterator2, mapFn);
+	  });
+	}
+
+	// pkg/dist-src/compose-paginate.js
+	var composePaginateRest = Object.assign(paginate, {
+	  iterator
+	});
+
+	// pkg/dist-src/generated/paginating-endpoints.js
+	var paginatingEndpoints = [
+	  "GET /advisories",
+	  "GET /app/hook/deliveries",
+	  "GET /app/installation-requests",
+	  "GET /app/installations",
+	  "GET /assignments/{assignment_id}/accepted_assignments",
+	  "GET /classrooms",
+	  "GET /classrooms/{classroom_id}/assignments",
+	  "GET /enterprises/{enterprise}/dependabot/alerts",
+	  "GET /enterprises/{enterprise}/secret-scanning/alerts",
+	  "GET /events",
+	  "GET /gists",
+	  "GET /gists/public",
+	  "GET /gists/starred",
+	  "GET /gists/{gist_id}/comments",
+	  "GET /gists/{gist_id}/commits",
+	  "GET /gists/{gist_id}/forks",
+	  "GET /installation/repositories",
+	  "GET /issues",
+	  "GET /licenses",
+	  "GET /marketplace_listing/plans",
+	  "GET /marketplace_listing/plans/{plan_id}/accounts",
+	  "GET /marketplace_listing/stubbed/plans",
+	  "GET /marketplace_listing/stubbed/plans/{plan_id}/accounts",
+	  "GET /networks/{owner}/{repo}/events",
+	  "GET /notifications",
+	  "GET /organizations",
+	  "GET /orgs/{org}/actions/cache/usage-by-repository",
+	  "GET /orgs/{org}/actions/permissions/repositories",
+	  "GET /orgs/{org}/actions/runners",
+	  "GET /orgs/{org}/actions/secrets",
+	  "GET /orgs/{org}/actions/secrets/{secret_name}/repositories",
+	  "GET /orgs/{org}/actions/variables",
+	  "GET /orgs/{org}/actions/variables/{name}/repositories",
+	  "GET /orgs/{org}/blocks",
+	  "GET /orgs/{org}/code-scanning/alerts",
+	  "GET /orgs/{org}/codespaces",
+	  "GET /orgs/{org}/codespaces/secrets",
+	  "GET /orgs/{org}/codespaces/secrets/{secret_name}/repositories",
+	  "GET /orgs/{org}/copilot/billing/seats",
+	  "GET /orgs/{org}/dependabot/alerts",
+	  "GET /orgs/{org}/dependabot/secrets",
+	  "GET /orgs/{org}/dependabot/secrets/{secret_name}/repositories",
+	  "GET /orgs/{org}/events",
+	  "GET /orgs/{org}/failed_invitations",
+	  "GET /orgs/{org}/hooks",
+	  "GET /orgs/{org}/hooks/{hook_id}/deliveries",
+	  "GET /orgs/{org}/installations",
+	  "GET /orgs/{org}/invitations",
+	  "GET /orgs/{org}/invitations/{invitation_id}/teams",
+	  "GET /orgs/{org}/issues",
+	  "GET /orgs/{org}/members",
+	  "GET /orgs/{org}/members/{username}/codespaces",
+	  "GET /orgs/{org}/migrations",
+	  "GET /orgs/{org}/migrations/{migration_id}/repositories",
+	  "GET /orgs/{org}/outside_collaborators",
+	  "GET /orgs/{org}/packages",
+	  "GET /orgs/{org}/packages/{package_type}/{package_name}/versions",
+	  "GET /orgs/{org}/personal-access-token-requests",
+	  "GET /orgs/{org}/personal-access-token-requests/{pat_request_id}/repositories",
+	  "GET /orgs/{org}/personal-access-tokens",
+	  "GET /orgs/{org}/personal-access-tokens/{pat_id}/repositories",
+	  "GET /orgs/{org}/projects",
+	  "GET /orgs/{org}/public_members",
+	  "GET /orgs/{org}/repos",
+	  "GET /orgs/{org}/rulesets",
+	  "GET /orgs/{org}/secret-scanning/alerts",
+	  "GET /orgs/{org}/security-advisories",
+	  "GET /orgs/{org}/teams",
+	  "GET /orgs/{org}/teams/{team_slug}/discussions",
+	  "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments",
+	  "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions",
+	  "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions",
+	  "GET /orgs/{org}/teams/{team_slug}/invitations",
+	  "GET /orgs/{org}/teams/{team_slug}/members",
+	  "GET /orgs/{org}/teams/{team_slug}/projects",
+	  "GET /orgs/{org}/teams/{team_slug}/repos",
+	  "GET /orgs/{org}/teams/{team_slug}/teams",
+	  "GET /projects/columns/{column_id}/cards",
+	  "GET /projects/{project_id}/collaborators",
+	  "GET /projects/{project_id}/columns",
+	  "GET /repos/{owner}/{repo}/actions/artifacts",
+	  "GET /repos/{owner}/{repo}/actions/caches",
+	  "GET /repos/{owner}/{repo}/actions/organization-secrets",
+	  "GET /repos/{owner}/{repo}/actions/organization-variables",
+	  "GET /repos/{owner}/{repo}/actions/runners",
+	  "GET /repos/{owner}/{repo}/actions/runs",
+	  "GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts",
+	  "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/jobs",
+	  "GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs",
+	  "GET /repos/{owner}/{repo}/actions/secrets",
+	  "GET /repos/{owner}/{repo}/actions/variables",
+	  "GET /repos/{owner}/{repo}/actions/workflows",
+	  "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs",
+	  "GET /repos/{owner}/{repo}/activity",
+	  "GET /repos/{owner}/{repo}/assignees",
+	  "GET /repos/{owner}/{repo}/branches",
+	  "GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations",
+	  "GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs",
+	  "GET /repos/{owner}/{repo}/code-scanning/alerts",
+	  "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances",
+	  "GET /repos/{owner}/{repo}/code-scanning/analyses",
+	  "GET /repos/{owner}/{repo}/codespaces",
+	  "GET /repos/{owner}/{repo}/codespaces/devcontainers",
+	  "GET /repos/{owner}/{repo}/codespaces/secrets",
+	  "GET /repos/{owner}/{repo}/collaborators",
+	  "GET /repos/{owner}/{repo}/comments",
+	  "GET /repos/{owner}/{repo}/comments/{comment_id}/reactions",
+	  "GET /repos/{owner}/{repo}/commits",
+	  "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments",
+	  "GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls",
+	  "GET /repos/{owner}/{repo}/commits/{ref}/check-runs",
+	  "GET /repos/{owner}/{repo}/commits/{ref}/check-suites",
+	  "GET /repos/{owner}/{repo}/commits/{ref}/status",
+	  "GET /repos/{owner}/{repo}/commits/{ref}/statuses",
+	  "GET /repos/{owner}/{repo}/contributors",
+	  "GET /repos/{owner}/{repo}/dependabot/alerts",
+	  "GET /repos/{owner}/{repo}/dependabot/secrets",
+	  "GET /repos/{owner}/{repo}/deployments",
+	  "GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses",
+	  "GET /repos/{owner}/{repo}/environments",
+	  "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies",
+	  "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/apps",
+	  "GET /repos/{owner}/{repo}/events",
+	  "GET /repos/{owner}/{repo}/forks",
+	  "GET /repos/{owner}/{repo}/hooks",
+	  "GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries",
+	  "GET /repos/{owner}/{repo}/invitations",
+	  "GET /repos/{owner}/{repo}/issues",
+	  "GET /repos/{owner}/{repo}/issues/comments",
+	  "GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions",
+	  "GET /repos/{owner}/{repo}/issues/events",
+	  "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
+	  "GET /repos/{owner}/{repo}/issues/{issue_number}/events",
+	  "GET /repos/{owner}/{repo}/issues/{issue_number}/labels",
+	  "GET /repos/{owner}/{repo}/issues/{issue_number}/reactions",
+	  "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline",
+	  "GET /repos/{owner}/{repo}/keys",
+	  "GET /repos/{owner}/{repo}/labels",
+	  "GET /repos/{owner}/{repo}/milestones",
+	  "GET /repos/{owner}/{repo}/milestones/{milestone_number}/labels",
+	  "GET /repos/{owner}/{repo}/notifications",
+	  "GET /repos/{owner}/{repo}/pages/builds",
+	  "GET /repos/{owner}/{repo}/projects",
+	  "GET /repos/{owner}/{repo}/pulls",
+	  "GET /repos/{owner}/{repo}/pulls/comments",
+	  "GET /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions",
+	  "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments",
+	  "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits",
+	  "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
+	  "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews",
+	  "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments",
+	  "GET /repos/{owner}/{repo}/releases",
+	  "GET /repos/{owner}/{repo}/releases/{release_id}/assets",
+	  "GET /repos/{owner}/{repo}/releases/{release_id}/reactions",
+	  "GET /repos/{owner}/{repo}/rules/branches/{branch}",
+	  "GET /repos/{owner}/{repo}/rulesets",
+	  "GET /repos/{owner}/{repo}/secret-scanning/alerts",
+	  "GET /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}/locations",
+	  "GET /repos/{owner}/{repo}/security-advisories",
+	  "GET /repos/{owner}/{repo}/stargazers",
+	  "GET /repos/{owner}/{repo}/subscribers",
+	  "GET /repos/{owner}/{repo}/tags",
+	  "GET /repos/{owner}/{repo}/teams",
+	  "GET /repos/{owner}/{repo}/topics",
+	  "GET /repositories",
+	  "GET /repositories/{repository_id}/environments/{environment_name}/secrets",
+	  "GET /repositories/{repository_id}/environments/{environment_name}/variables",
+	  "GET /search/code",
+	  "GET /search/commits",
+	  "GET /search/issues",
+	  "GET /search/labels",
+	  "GET /search/repositories",
+	  "GET /search/topics",
+	  "GET /search/users",
+	  "GET /teams/{team_id}/discussions",
+	  "GET /teams/{team_id}/discussions/{discussion_number}/comments",
+	  "GET /teams/{team_id}/discussions/{discussion_number}/comments/{comment_number}/reactions",
+	  "GET /teams/{team_id}/discussions/{discussion_number}/reactions",
+	  "GET /teams/{team_id}/invitations",
+	  "GET /teams/{team_id}/members",
+	  "GET /teams/{team_id}/projects",
+	  "GET /teams/{team_id}/repos",
+	  "GET /teams/{team_id}/teams",
+	  "GET /user/blocks",
+	  "GET /user/codespaces",
+	  "GET /user/codespaces/secrets",
+	  "GET /user/emails",
+	  "GET /user/followers",
+	  "GET /user/following",
+	  "GET /user/gpg_keys",
+	  "GET /user/installations",
+	  "GET /user/installations/{installation_id}/repositories",
+	  "GET /user/issues",
+	  "GET /user/keys",
+	  "GET /user/marketplace_purchases",
+	  "GET /user/marketplace_purchases/stubbed",
+	  "GET /user/memberships/orgs",
+	  "GET /user/migrations",
+	  "GET /user/migrations/{migration_id}/repositories",
+	  "GET /user/orgs",
+	  "GET /user/packages",
+	  "GET /user/packages/{package_type}/{package_name}/versions",
+	  "GET /user/public_emails",
+	  "GET /user/repos",
+	  "GET /user/repository_invitations",
+	  "GET /user/social_accounts",
+	  "GET /user/ssh_signing_keys",
+	  "GET /user/starred",
+	  "GET /user/subscriptions",
+	  "GET /user/teams",
+	  "GET /users",
+	  "GET /users/{username}/events",
+	  "GET /users/{username}/events/orgs/{org}",
+	  "GET /users/{username}/events/public",
+	  "GET /users/{username}/followers",
+	  "GET /users/{username}/following",
+	  "GET /users/{username}/gists",
+	  "GET /users/{username}/gpg_keys",
+	  "GET /users/{username}/keys",
+	  "GET /users/{username}/orgs",
+	  "GET /users/{username}/packages",
+	  "GET /users/{username}/projects",
+	  "GET /users/{username}/received_events",
+	  "GET /users/{username}/received_events/public",
+	  "GET /users/{username}/repos",
+	  "GET /users/{username}/social_accounts",
+	  "GET /users/{username}/ssh_signing_keys",
+	  "GET /users/{username}/starred",
+	  "GET /users/{username}/subscriptions"
+	];
+
+	// pkg/dist-src/paginating-endpoints.js
+	function isPaginatingEndpoint(arg) {
+	  if (typeof arg === "string") {
+	    return paginatingEndpoints.includes(arg);
+	  } else {
+	    return false;
+	  }
+	}
+
+	// pkg/dist-src/index.js
+	function paginateRest(octokit) {
+	  return {
+	    paginate: Object.assign(paginate.bind(null, octokit), {
+	      iterator: iterator.bind(null, octokit)
+	    })
+	  };
+	}
+	paginateRest.VERSION = VERSION;
+	return distNode;
+}
+
+var hasRequiredUtils;
+
+function requireUtils () {
+	if (hasRequiredUtils) return utils$1;
+	hasRequiredUtils = 1;
+	(function (exports) {
+		var __createBinding = (utils$1 && utils$1.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+		    if (k2 === undefined) k2 = k;
+		    var desc = Object.getOwnPropertyDescriptor(m, k);
+		    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+		      desc = { enumerable: true, get: function() { return m[k]; } };
+		    }
+		    Object.defineProperty(o, k2, desc);
+		}) : (function(o, m, k, k2) {
+		    if (k2 === undefined) k2 = k;
+		    o[k2] = m[k];
+		}));
+		var __setModuleDefault = (utils$1 && utils$1.__setModuleDefault) || (Object.create ? (function(o, v) {
+		    Object.defineProperty(o, "default", { enumerable: true, value: v });
+		}) : function(o, v) {
+		    o["default"] = v;
+		});
+		var __importStar = (utils$1 && utils$1.__importStar) || function (mod) {
+		    if (mod && mod.__esModule) return mod;
+		    var result = {};
+		    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+		    __setModuleDefault(result, mod);
+		    return result;
+		};
+		Object.defineProperty(exports, "__esModule", { value: true });
+		exports.getOctokitOptions = exports.GitHub = exports.defaults = exports.context = void 0;
+		const Context = __importStar(requireContext());
+		const Utils = __importStar(requireUtils$1());
+		// octokit + plugins
+		const core_1 = /*@__PURE__*/ requireDistNode$2();
+		const plugin_rest_endpoint_methods_1 = /*@__PURE__*/ requireDistNode$1();
+		const plugin_paginate_rest_1 = /*@__PURE__*/ requireDistNode();
+		exports.context = new Context.Context();
+		const baseUrl = Utils.getApiBaseUrl();
+		exports.defaults = {
+		    baseUrl,
+		    request: {
+		        agent: Utils.getProxyAgent(baseUrl),
+		        fetch: Utils.getProxyFetch(baseUrl)
+		    }
+		};
+		exports.GitHub = core_1.Octokit.plugin(plugin_rest_endpoint_methods_1.restEndpointMethods, plugin_paginate_rest_1.paginateRest).defaults(exports.defaults);
+		/**
+		 * Convience function to correctly format Octokit Options to pass into the constructor.
+		 *
+		 * @param     token    the repo PAT or GITHUB_TOKEN
+		 * @param     options  other options to set
+		 */
+		function getOctokitOptions(token, options) {
+		    const opts = Object.assign({}, options || {}); // Shallow clone - don't mutate the object provided by the caller
+		    // Auth
+		    const auth = Utils.getAuthString(token, opts);
+		    if (auth) {
+		        opts.auth = auth;
+		    }
+		    return opts;
+		}
+		exports.getOctokitOptions = getOctokitOptions;
+		
+	} (utils$1));
+	return utils$1;
+}
+
+var hasRequiredGithub;
+
+function requireGithub () {
+	if (hasRequiredGithub) return github;
+	hasRequiredGithub = 1;
+	var __createBinding = (github && github.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    var desc = Object.getOwnPropertyDescriptor(m, k);
+	    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+	      desc = { enumerable: true, get: function() { return m[k]; } };
+	    }
+	    Object.defineProperty(o, k2, desc);
+	}) : (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    o[k2] = m[k];
+	}));
+	var __setModuleDefault = (github && github.__setModuleDefault) || (Object.create ? (function(o, v) {
+	    Object.defineProperty(o, "default", { enumerable: true, value: v });
+	}) : function(o, v) {
+	    o["default"] = v;
+	});
+	var __importStar = (github && github.__importStar) || function (mod) {
+	    if (mod && mod.__esModule) return mod;
+	    var result = {};
+	    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+	    __setModuleDefault(result, mod);
+	    return result;
+	};
+	Object.defineProperty(github, "__esModule", { value: true });
+	github.getOctokit = github.context = void 0;
+	const Context = __importStar(requireContext());
+	const utils_1 = requireUtils();
+	github.context = new Context.Context();
 	/**
-	 * Convience function to correctly format Octokit Options to pass into the constructor.
+	 * Returns a hydrated octokit ready to use for GitHub Actions
 	 *
 	 * @param     token    the repo PAT or GITHUB_TOKEN
 	 * @param     options  other options to set
 	 */
-	function getOctokitOptions(token, options) {
-	    const opts = Object.assign({}, options || {}); // Shallow clone - don't mutate the object provided by the caller
-	    // Auth
-	    const auth = Utils.getAuthString(token, opts);
-	    if (auth) {
-	        opts.auth = auth;
-	    }
-	    return opts;
+	function getOctokit(token, options, ...additionalPlugins) {
+	    const GitHubWithPlugins = utils_1.GitHub.plugin(...additionalPlugins);
+	    return new GitHubWithPlugins((0, utils_1.getOctokitOptions)(token, options));
 	}
-	exports.getOctokitOptions = getOctokitOptions;
+	github.getOctokit = getOctokit;
 	
-} (utils$1));
-
-var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(github, "__esModule", { value: true });
-var getOctokit_1 = github.getOctokit = context = github.context = void 0;
-const Context = __importStar(context$1);
-const utils_1 = utils$1;
-var context = github.context = new Context.Context();
-/**
- * Returns a hydrated octokit ready to use for GitHub Actions
- *
- * @param     token    the repo PAT or GITHUB_TOKEN
- * @param     options  other options to set
- */
-function getOctokit(token, options, ...additionalPlugins) {
-    const GitHubWithPlugins = utils_1.GitHub.plugin(...additionalPlugins);
-    return new GitHubWithPlugins((0, utils_1.getOctokitOptions)(token, options));
+	return github;
 }
-getOctokit_1 = github.getOctokit = getOctokit;
+
+var githubExports = requireGithub();
 
 var lib = {exports: {}};
 
@@ -29843,128 +30437,135 @@ Code licensed under the BSD License:
 http://yuilibrary.com/license/
 */
 
-var fs = require$$0$1,
-    path = require$$0$8;
+var hasRequiredLib;
 
-/* istanbul ignore next */
-var exists = fs.exists || path.exists;
+function requireLib () {
+	if (hasRequiredLib) return lib.exports;
+	hasRequiredLib = 1;
+	var fs = require$$0$1,
+	    path = require$$0$8;
 
-var walkFile = function(str, cb) {
-    var data = [], item;
+	/* istanbul ignore next */
+	var exists = fs.exists || path.exists;
 
-    [ 'end_of_record' ].concat(str.split('\n')).forEach(function(line) {
-        line = line.trim();
-        var allparts = line.split(':'),
-            parts = [allparts.shift(), allparts.join(':')],
-            lines, fn;
+	var walkFile = function(str, cb) {
+	    var data = [], item;
 
-        switch (parts[0].toUpperCase()) {
-            case 'TN':
-                item.title = parts[1].trim();
-                break;
-            case 'SF':
-                item.file = parts.slice(1).join(':').trim();
-                break;
-            case 'FNF':
-                item.functions.found = Number(parts[1].trim());
-                break;
-            case 'FNH':
-                item.functions.hit = Number(parts[1].trim());
-                break;
-            case 'LF':
-                item.lines.found = Number(parts[1].trim());
-                break;
-            case 'LH':
-                item.lines.hit = Number(parts[1].trim());
-                break;
-            case 'DA':
-                lines = parts[1].split(',');
-                item.lines.details.push({
-                    line: Number(lines[0]),
-                    hit: Number(lines[1])
-                });
-                break;
-            case 'FN':
-                fn = parts[1].split(',');
-                item.functions.details.push({
-                    name: fn[1],
-                    line: Number(fn[0])
-                });
-                break;
-            case 'FNDA':
-                fn = parts[1].split(',');
-                item.functions.details.some(function(i, k) {
-                    if (i.name === fn[1] && i.hit === undefined) {
-                        item.functions.details[k].hit = Number(fn[0]);
-                        return true;
-                    }
-                });
-                break;
-            case 'BRDA':
-                fn = parts[1].split(',');
-                item.branches.details.push({
-                    line: Number(fn[0]),
-                    block: Number(fn[1]),
-                    branch: Number(fn[2]),
-                    taken: ((fn[3] === '-') ? 0 : Number(fn[3]))
-                });
-                break;
-            case 'BRF':
-                item.branches.found = Number(parts[1]);
-                break;
-            case 'BRH':
-                item.branches.hit = Number(parts[1]);
-                break;
-        }
+	    [ 'end_of_record' ].concat(str.split('\n')).forEach(function(line) {
+	        line = line.trim();
+	        var allparts = line.split(':'),
+	            parts = [allparts.shift(), allparts.join(':')],
+	            lines, fn;
 
-        if (line.indexOf('end_of_record') > -1) {
-            data.push(item);
-            item = {
-              lines: {
-                  found: 0,
-                  hit: 0,
-                  details: []
-              },
-              functions: {
-                  hit: 0,
-                  found: 0,
-                  details: []
-              },
-              branches: {
-                hit: 0,
-                found: 0,
-                details: []
-              }
-            };
-        }
-    });
+	        switch (parts[0].toUpperCase()) {
+	            case 'TN':
+	                item.title = parts[1].trim();
+	                break;
+	            case 'SF':
+	                item.file = parts.slice(1).join(':').trim();
+	                break;
+	            case 'FNF':
+	                item.functions.found = Number(parts[1].trim());
+	                break;
+	            case 'FNH':
+	                item.functions.hit = Number(parts[1].trim());
+	                break;
+	            case 'LF':
+	                item.lines.found = Number(parts[1].trim());
+	                break;
+	            case 'LH':
+	                item.lines.hit = Number(parts[1].trim());
+	                break;
+	            case 'DA':
+	                lines = parts[1].split(',');
+	                item.lines.details.push({
+	                    line: Number(lines[0]),
+	                    hit: Number(lines[1])
+	                });
+	                break;
+	            case 'FN':
+	                fn = parts[1].split(',');
+	                item.functions.details.push({
+	                    name: fn[1],
+	                    line: Number(fn[0])
+	                });
+	                break;
+	            case 'FNDA':
+	                fn = parts[1].split(',');
+	                item.functions.details.some(function(i, k) {
+	                    if (i.name === fn[1] && i.hit === undefined) {
+	                        item.functions.details[k].hit = Number(fn[0]);
+	                        return true;
+	                    }
+	                });
+	                break;
+	            case 'BRDA':
+	                fn = parts[1].split(',');
+	                item.branches.details.push({
+	                    line: Number(fn[0]),
+	                    block: Number(fn[1]),
+	                    branch: Number(fn[2]),
+	                    taken: ((fn[3] === '-') ? 0 : Number(fn[3]))
+	                });
+	                break;
+	            case 'BRF':
+	                item.branches.found = Number(parts[1]);
+	                break;
+	            case 'BRH':
+	                item.branches.hit = Number(parts[1]);
+	                break;
+	        }
 
-    data.shift();
+	        if (line.indexOf('end_of_record') > -1) {
+	            data.push(item);
+	            item = {
+	              lines: {
+	                  found: 0,
+	                  hit: 0,
+	                  details: []
+	              },
+	              functions: {
+	                  hit: 0,
+	                  found: 0,
+	                  details: []
+	              },
+	              branches: {
+	                hit: 0,
+	                found: 0,
+	                details: []
+	              }
+	            };
+	        }
+	    });
 
-    if (data.length) {
-        cb(null, data);
-    } else {
-        cb('Failed to parse string');
-    }
-};
+	    data.shift();
 
-var parse$1 = function(file, cb) {
-    exists(file, function(x) {
-        if (!x) {
-            return walkFile(file, cb);
-        }
-        fs.readFile(file, 'utf8', function(err, str) {
-            walkFile(str, cb);
-        });
-    });
+	    if (data.length) {
+	        cb(null, data);
+	    } else {
+	        cb('Failed to parse string');
+	    }
+	};
 
-};
+	var parse = function(file, cb) {
+	    exists(file, function(x) {
+	        if (!x) {
+	            return walkFile(file, cb);
+	        }
+	        fs.readFile(file, 'utf8', function(err, str) {
+	            walkFile(str, cb);
+	        });
+	    });
+
+	};
 
 
-lib.exports = parse$1;
-lib.exports.source = walkFile;
+	lib.exports = parse;
+	lib.exports.source = walkFile;
+	return lib.exports;
+}
 
-var libExports = lib.exports;
+var libExports = requireLib();
 var lcov = /*@__PURE__*/getDefaultExportFromCjs(libExports);
 
 // Parse lcov string into lcov data
@@ -30237,7 +30838,7 @@ async function main() {
 	const hide_branch_coverage = core.getInput("hide-branch-coverage") == "true";
 	const outputFile = core.getInput("output-file");
 
-	const octokit = getOctokit_1(token);
+	const octokit = githubExports.getOctokit(token);
 
 	const raw = await require$$0$1.promises.readFile(lcovFile, "utf-8").catch((err) => null);
 	if (!raw) {
@@ -30252,13 +30853,13 @@ async function main() {
 	}
 
 	const { data } = await octokit.rest.pulls.get({
-		owner: context.repo.owner,
-		repo: context.repo.repo,
+		owner: githubExports.context.repo.owner,
+		repo: githubExports.context.repo.repo,
 		pull_number: prNumber,
 	});
 
 	const options = {
-		repository: context.payload.repository.full_name,
+		repository: githubExports.context.payload.repository.full_name,
 		prefix: `${process.env.GITHUB_WORKSPACE}/`,
 		commit: data.head.sha,
 		head: data.head.ref,
@@ -30274,8 +30875,8 @@ async function main() {
 		await require$$0$1.promises.writeFile(outputFile, body);
 	} else {
 		await new octokit.rest.issues.createComment({
-			repo: context.repo.repo,
-			owner: context.repo.owner,
+			repo: githubExports.context.repo.repo,
+			owner: githubExports.context.repo.owner,
 			issue_number: prNumber,
 			body: body,
 		});
