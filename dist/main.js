@@ -10,8 +10,8 @@ var require$$1 = require('node:tls');
 var require$$0$3 = require('node:events');
 var require$$1$1 = require('node:util');
 var require$$0$4 = require('node:assert');
-var require$$0$5 = require('node:net');
-var require$$0$6 = require('node:stream');
+var require$$0$6 = require('node:net');
+var require$$0$5 = require('node:stream');
 var require$$7 = require('node:buffer');
 var require$$8 = require('node:querystring');
 var require$$13 = require('node:stream/web');
@@ -1083,8 +1083,8 @@ function requireUtil$6 () {
 	const assert = require$$0$4;
 	const { kDestroyed, kBodyUsed } = requireSymbols$4();
 	const { IncomingMessage } = require$$2;
-	const stream = require$$0$6;
-	const net = require$$0$5;
+	const stream = require$$0$5;
+	const net = require$$0$6;
 	const { InvalidArgumentError } = requireErrors();
 	const { Blob } = require$$7;
 	const nodeUtil = require$$1$1;
@@ -1954,7 +1954,7 @@ function requirePartStream () {
 	hasRequiredPartStream = 1;
 
 	const inherits = require$$1$1.inherits;
-	const ReadableStream = require$$0$6.Readable;
+	const ReadableStream = require$$0$5.Readable;
 
 	function PartStream (opts) {
 	  ReadableStream.call(this, opts);
@@ -2106,7 +2106,7 @@ function requireDicer () {
 	if (hasRequiredDicer) return Dicer_1;
 	hasRequiredDicer = 1;
 
-	const WritableStream = require$$0$6.Writable;
+	const WritableStream = require$$0$5.Writable;
 	const inherits = require$$1$1.inherits;
 
 	const StreamSearch = requireSbmh();
@@ -2479,7 +2479,7 @@ function requireMultipart () {
 	//  * support limits.fieldNameSize
 	//     -- this will require modifications to utils.parseParams
 
-	const { Readable } = require$$0$6;
+	const { Readable } = require$$0$5;
 	const { inherits } = require$$1$1;
 
 	const Dicer = requireDicer();
@@ -3045,7 +3045,7 @@ function requireMain () {
 	if (hasRequiredMain) return main$1.exports;
 	hasRequiredMain = 1;
 
-	const WritableStream = require$$0$6.Writable;
+	const WritableStream = require$$0$5.Writable;
 	const { inherits } = require$$1$1;
 	const Dicer = requireDicer();
 
@@ -7776,7 +7776,7 @@ function requireConnect () {
 	if (hasRequiredConnect) return connect;
 	hasRequiredConnect = 1;
 
-	const net = require$$0$5;
+	const net = require$$0$6;
 	const assert = require$$0$4;
 	const util = requireUtil$6();
 	const { InvalidArgumentError, ConnectTimeoutError } = requireErrors();
@@ -8543,9 +8543,9 @@ function requireClient () {
 	/* global WebAssembly */
 
 	const assert = require$$0$4;
-	const net = require$$0$5;
+	const net = require$$0$6;
 	const http = require$$2;
-	const { pipeline } = require$$0$6;
+	const { pipeline } = require$$0$5;
 	const util = requireUtil$6();
 	const timers = requireTimers();
 	const Request = requireRequest$1();
@@ -11714,7 +11714,7 @@ function requireReadable () {
 	hasRequiredReadable = 1;
 
 	const assert = require$$0$4;
-	const { Readable } = require$$0$6;
+	const { Readable } = require$$0$5;
 	const { RequestAbortedError, NotSupportedError, InvalidArgumentError } = requireErrors();
 	const util = requireUtil$6();
 	const { ReadableStreamFrom, toUSVString } = requireUtil$6();
@@ -12346,7 +12346,7 @@ function requireApiStream () {
 	if (hasRequiredApiStream) return apiStream;
 	hasRequiredApiStream = 1;
 
-	const { finished, PassThrough } = require$$0$6;
+	const { finished, PassThrough } = require$$0$5;
 	const {
 	  InvalidArgumentError,
 	  InvalidReturnValueError,
@@ -12578,7 +12578,7 @@ function requireApiPipeline () {
 	  Readable,
 	  Duplex,
 	  PassThrough
-	} = require$$0$6;
+	} = require$$0$5;
 	const {
 	  InvalidArgumentError,
 	  InvalidReturnValueError,
@@ -13871,7 +13871,7 @@ function requirePendingInterceptorsFormatter () {
 	if (hasRequiredPendingInterceptorsFormatter) return pendingInterceptorsFormatter;
 	hasRequiredPendingInterceptorsFormatter = 1;
 
-	const { Transform } = require$$0$6;
+	const { Transform } = require$$0$5;
 	const { Console } = require$$1$2;
 
 	/**
@@ -16897,7 +16897,7 @@ function requireFetch () {
 	} = requireConstants$3();
 	const { kHeadersList } = requireSymbols$4();
 	const EE = require$$0$3;
-	const { Readable, pipeline } = require$$0$6;
+	const { Readable, pipeline } = require$$0$5;
 	const { addAbortListener, isErrored, isReadable, nodeMajor, nodeMinor } = requireUtil$6();
 	const { dataURLProcessor, serializeAMimeType } = requireDataURL();
 	const { TransformStream } = require$$13;
@@ -22960,7 +22960,7 @@ function requireReceiver () {
 	if (hasRequiredReceiver) return receiver;
 	hasRequiredReceiver = 1;
 
-	const { Writable } = require$$0$6;
+	const { Writable } = require$$0$5;
 	const diagnosticsChannel = require$$0$8;
 	const { parserStates, opcodes, states, emptyBuffer } = requireConstants();
 	const { kReadyState, kSentClose, kResponse, kReceivedClose } = requireSymbols();
