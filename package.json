@@ -27,7 +27,7 @@
 		"@babel/core": "^7.27.4",
 		"@babel/node": "^7.27.1",
 		"@babel/preset-env": "^7.27.2",
-		"@rollup/plugin-commonjs": "^28.0.3",
+		"@rollup/plugin-commonjs": "^28.0.6",
 		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^16.0.1",
 		"babel-jest": "^29.7.0",
