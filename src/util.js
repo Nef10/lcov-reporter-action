@@ -1,3 +1,3 @@
 export function normalisePath(file) {
-	return file.replace(/\\/g, "/")
+	return file.replace(/\\/g, "/");
 }
