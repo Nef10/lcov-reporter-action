@@ -10,13 +10,24 @@ inputs:
     required: false
     default: ${{ github.token }}
   pr-number:
-    descirption: Number of the Pull Request
+    description: Number of the Pull Request
     required: true
   lcov-file:
     description: The location of the lcov.info file
     required: false
   lcov-base:
     description: The location of the lcov file for the base branch
+    required: false
+  filter-changed-files:
+    description: Set to true to only comment with coverage on files changed in this commit
+    required: false
+    default: false
+  delete-old-comments:
+    description: Set to true to delete old Coverage Report comments
+    required: false
+    default: false
+  title:
+    description: Title to add to the comment
     required: false
   hide-branch-coverage:
     description: Hides the branch coverage in the output if set to true
