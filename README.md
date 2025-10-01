@@ -26,6 +26,15 @@ The location of the lcov file to read the coverage report from. Defaults to
 The location of the lcov file resulting from running the tests in the base
 branch. When this is set a diff of the coverage percentages is shown.
 
+##### `filter-changed-files` (**Default: false**)
+If set to true, only changed files will be included in the report. Total percentage will still include all files.
+
+##### `delete-old-comments` (**Default: false**)
+If set to true, old comments will be deleted before a new comment is posted
+
+##### `title` (**Optional**)
+If included, will be added as a title for the comment produced.
+
 ##### `hide-branch-coverage` (**Optional**)
 Hides the branch coverage in the output if set to true
 
@@ -46,3 +55,5 @@ with:
 ## Acknowledgements
 
 The code is based on [romeovs/lcov-reporter-action](https://github.com/romeovs/jest-reporter-action), which itself was based on [ziishaned/jest-reporter-action](https://github.com/ziishaned/jest-reporter-action).
+
+Changed file retrieval based on [jitterbit/get-changed-files](https://github.com/jitterbit/get-changed-files).

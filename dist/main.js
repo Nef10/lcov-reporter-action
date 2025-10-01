@@ -31504,10 +31504,15 @@ const b = tag("b");
 const table = tag("table");
 const tbody = tag("tbody");
 const a = tag("a");
+const h2 = tag("h2");
 
 const fragment = function (...children) {
 	return children.join("");
 };
+
+function normalisePath(file) {
+	return file.replace(/\\/g, "/");
+}
 
 // Tabulate the lcov data in a HTML table.
 function tabulate(lcov, options) {
@@ -31532,7 +31537,7 @@ function tabulate(lcov, options) {
 	}
 
 	const folders = {};
-	for (const file of lcov) {
+	for (const file of filterAndNormaliseLcov(lcov, options)) {
 		const parts = file.file.replace(options.prefix, "").split("/");
 		const folder = parts.slice(0, -1).join("/");
 		folders[folder] = folders[folder] || [];
@@ -31551,6 +31556,22 @@ function tabulate(lcov, options) {
 		);
 
 	return table(tbody(head, ...rows));
+}
+
+function filterAndNormaliseLcov(lcov, options) {
+	return lcov
+		.map((file) => ({
+			...file,
+			file: normalisePath(file.file),
+		}))
+		.filter((file) => shouldBeIncluded(file.file, options));
+}
+
+function shouldBeIncluded(fileName, options) {
+	if (!options.shouldFilterChangedFiles) {
+		return true;
+	}
+	return options.changedFiles.includes(fileName.replace(options.prefix, ""));
 }
 
 function toFolder(path, options) {
@@ -31680,12 +31701,22 @@ function ranges(linenos) {
 
 function comment(lcov, options) {
 	return fragment(
+		options.title ? h2(options.title) : "",
 		options.base
-			? `Coverage after merging ${b(options.head)} into ${b(options.base)}`
+			? `Coverage after merging ${b(options.head)} into ${b(
+					options.base,
+				)} will be`
 			: `Coverage for this commit`,
 		table(tbody(tr(th(percentage$1(lcov).toFixed(2), "%")))),
 		"\n\n",
-		details(summary("Coverage Report"), tabulate(lcov, options)),
+		details(
+			summary(
+				options.shouldFilterChangedFiles
+					? "Coverage Report for Changed Files"
+					: "Coverage Report",
+			),
+			tabulate(lcov, options),
+		),
 	);
 }
 
@@ -31701,8 +31732,11 @@ function diff(lcov, before, options) {
 	const arrow = pdiff === 0 ? "" : pdiff < 0 ? "▾" : "▴";
 
 	return fragment(
+		options.title ? h2(options.title) : "",
 		options.base
-			? `Coverage after merging ${b(options.head)} into ${b(options.base)}`
+			? `Coverage after merging ${b(options.head)} into ${b(
+					options.base,
+				)} will be`
 			: `Coverage for this commit`,
 		table(
 			tbody(
@@ -31713,14 +31747,98 @@ function diff(lcov, before, options) {
 			),
 		),
 		"\n\n",
-		details(summary("Coverage Report"), tabulate(lcov, options)),
+		details(
+			summary(
+				options.shouldFilterChangedFiles
+					? "Coverage Report for Changed Files"
+					: "Coverage Report",
+			),
+			tabulate(lcov, options),
+		),
 	);
 }
+
+// Get list of changed files
+async function getChangedFiles(githubClient, options, context) {
+	if (!options.commit || !options.baseCommit) {
+		coreExports.setFailed(
+			`The base and head commits are missing from the payload for this ${context.eventName} event.`,
+		);
+	}
+
+	// Use GitHub's compare two commits API.
+	// https://developer.github.com/v3/repos/commits/#compare-two-commits
+	const response = await githubClient.repos.compareCommits({
+		base: options.baseCommit,
+		head: options.commit,
+		owner: context.repo.owner,
+		repo: context.repo.repo,
+	});
+
+	if (response.status !== 200) {
+		coreExports.setFailed(
+			`The GitHub API for comparing the base and head commits for this ${context.eventName} event returned ${response.status}, expected 200.`,
+		);
+	}
+
+	return response.data.files
+		.filter((file) => file.status == "modified" || file.status == "added")
+		.map((file) => file.filename);
+}
+
+const REQUESTED_COMMENTS_PER_PAGE = 20;
+
+async function deleteOldComments(github, options, context) {
+	const existingComments = await getExistingComments(github, options, context);
+	for (const comment of existingComments) {
+		coreExports.debug(`Deleting comment: ${comment.id}`);
+		try {
+			await github.issues.deleteComment({
+				owner: context.repo.owner,
+				repo: context.repo.repo,
+				comment_id: comment.id,
+			});
+		} catch (error) {
+			console.error(error);
+		}
+	}
+}
+
+async function getExistingComments(github, options, context) {
+	let page = 0;
+	let results = [];
+	let response;
+	do {
+		response = await github.issues.listComments({
+			issue_number: options.issue_number,
+			owner: context.repo.owner,
+			repo: context.repo.repo,
+			per_page: REQUESTED_COMMENTS_PER_PAGE,
+			page: page,
+		});
+		results = results.concat(response.data);
+		page++;
+	} while (response.data.length === REQUESTED_COMMENTS_PER_PAGE);
+
+	return results.filter(
+		(comment) =>
+			!!comment.user &&
+			(!options.title || comment.body.includes(options.title)) &&
+			comment.body.includes("Coverage Report"),
+	);
+}
+
+const MAX_COMMENT_CHARS = 65536;
 
 async function main() {
 	const token = core.getInput("github-token");
 	const lcovFile = core.getInput("lcov-file") || "./coverage/lcov.info";
 	const baseFile = core.getInput("lcov-base");
+	const shouldFilterChangedFiles =
+		core.getInput("filter-changed-files").toLowerCase() === "true";
+	const shouldDeleteOldComments =
+		core.getInput("delete-old-comments").toLowerCase() === "true";
+	const title = core.getInput("title");
 	const prNumber = core.getInput("pr-number");
 	const hide_branch_coverage = core.getInput("hide-branch-coverage") == "true";
 	const outputFile = core.getInput("output-file");
@@ -31747,16 +31865,32 @@ async function main() {
 
 	const options = {
 		repository: githubExports.context.payload.repository.full_name,
-		prefix: `${process.env.GITHUB_WORKSPACE}/`,
+		prefix: normalisePath(`${process.env.GITHUB_WORKSPACE}/`),
 		commit: data.head.sha,
+		baseCommit: data.base.sha,
 		head: data.head.ref,
 		base: data.base.ref,
 		hide_branch_coverage: hide_branch_coverage,
+		title: title,
+		shouldFilterChangedFiles: shouldFilterChangedFiles,
+		issue_number: prNumber,
 	};
+
+	if (shouldFilterChangedFiles) {
+		options.changedFiles = await getChangedFiles(
+			octokit.rest,
+			options,
+			githubExports.context,
+		);
+	}
 
 	const lcov = await parse(raw);
 	const baselcov = baseRaw && (await parse(baseRaw));
-	const body = diff(lcov, baselcov, options);
+	const body = diff(lcov, baselcov, options).substring(0, MAX_COMMENT_CHARS);
+
+	if (shouldDeleteOldComments) {
+		await deleteOldComments(octokit.rest, options, githubExports.context);
+	}
 
 	if (outputFile != null && outputFile != "") {
 		await require$$0$2.promises.writeFile(outputFile, body);
