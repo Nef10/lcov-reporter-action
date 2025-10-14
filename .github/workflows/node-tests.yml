@@ -23,19 +23,11 @@ jobs:
     runs-on: ubuntu-latest
     name: Check build and format have been run
     steps:
-      - name: Generate token
-        id: generate_token
-        uses: tibdex/github-app-token@v2.1.0
-        with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Checkout code
         uses: actions/checkout@v5
         with:
-          token: ${{ steps.generate_token.outputs.token }} 
+          persist-credentials: false
           fetch-depth: 0
-      - name: Set git user config
-        run: git config user.email "217586+NodeBuilder[bot]@users.noreply.github.com" && git config user.name "Node Builder"
       - name: Setup node
         uses: actions/setup-node@v5
         with:
@@ -53,6 +45,25 @@ jobs:
           else
             exit 0
           fi
+      - name: Generate token
+        if: ${{ failure() && steps.file-changed.conclusion == 'failure' }}
+        id: generate_token
+        uses: tibdex/github-app-token@v2.1.0
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+      - name: "Clean up repo"
+        if: ${{ failure() && steps.file-changed.conclusion == 'failure' }}
+        run: cd .. && rm -rf lcov-reporter-action
+      - name: "Re-setup repo with token"
+        if: ${{ failure() && steps.file-changed.conclusion == 'failure' }}
+        uses: actions/checkout@v5
+        with:
+          token: ${{ steps.generate_token.outputs.token }}
+          fetch-depth: 0
+      - name: Set git user config
+        if: ${{ failure() && steps.file-changed.conclusion == 'failure' }}
+        run: git config user.email "217586+NodeBuilder[bot]@users.noreply.github.com" && git config user.name "Node Builder"
       - name: Fix missing build
         if: ${{ failure() && steps.file-changed.conclusion == 'failure' }}
         run: git checkout ${{ github.event.pull_request.head.ref }} && npm ci && npm run format && npm run build && git add --all && git commit -m "npm run build" && git push
