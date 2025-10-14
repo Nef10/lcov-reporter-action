@@ -36,6 +36,10 @@ jobs:
               .replace(/ZZZ/g, "${{github.event.pull_request.head.sha }}");
             const got = comment.data.body;
             if (expected.trim() != got.trim()) {
+              console.log('Expected:');
+              console.log(expected);
+              console.log('Got:');
+              console.log(got);
               throw 'Strings are not equal';
             }
   file:
@@ -60,6 +64,10 @@ jobs:
               .replace(/ZZZ/g, "${{github.event.pull_request.head.sha }}");
             const got = await fs.readFile("test.html", "utf-8");
             if (expected.trim() != got.trim()) {
+              console.log('Expected:');
+              console.log(expected);
+              console.log('Got:');
+              console.log(got);
               throw 'Strings are not equal';
             }
   hide-branch-coverage:
@@ -85,5 +93,9 @@ jobs:
               .replace(/ZZZ/g, "${{github.event.pull_request.head.sha }}");
             const got = await fs.readFile("test-no-branch.html", "utf-8");
             if (expected.trim() != got.trim()) {
+              console.log('Expected:');
+              console.log(expected);
+              console.log('Got:');
+              console.log(got);
               throw 'Strings are not equal';
             }
