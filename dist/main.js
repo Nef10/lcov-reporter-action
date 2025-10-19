@@ -1,32 +1,9 @@
 'use strict';
 
-var require$$0$2 = require('node:fs');
-var require$$0 = require('node:os');
-var require$$0$1 = require('node:crypto');
-var require$$1$4 = require('node:path');
-var require$$2 = require('node:http');
-var require$$3 = require('node:https');
-var require$$0$5 = require('node:net');
-var require$$1$1 = require('node:tls');
-var require$$0$3 = require('node:events');
-var require$$0$4 = require('node:assert');
-var require$$1 = require('node:util');
-var require$$0$6 = require('node:stream');
-var require$$7 = require('node:buffer');
-var require$$8 = require('node:querystring');
-var require$$14 = require('node:stream/web');
-var require$$0$7 = require('node:worker_threads');
-var require$$2$1 = require('node:perf_hooks');
-var require$$5 = require('node:util/types');
-var require$$4 = require('node:async_hooks');
-var require$$1$2 = require('node:console');
-var require$$1$3 = require('node:url');
-var require$$3$1 = require('node:zlib');
-var require$$6 = require('node:string_decoder');
-var require$$0$8 = require('node:diagnostics_channel');
-var require$$2$2 = require('node:child_process');
-var require$$6$1 = require('node:timers');
+var node_fs = require('node:fs');
+var node_module = require('node:module');
 
+var _documentCurrentScript = typeof document !== 'undefined' ? document.currentScript : null;
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
 function getDefaultExportFromCjs (x) {
@@ -36,6 +13,9 @@ function getDefaultExportFromCjs (x) {
 var core$1 = {};
 
 var command = {};
+
+const require$q = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$p() { return require$q("node:os"); }
 
 var utils$3 = {};
 
@@ -116,7 +96,7 @@ function requireCommand () {
 	};
 	Object.defineProperty(command, "__esModule", { value: true });
 	command.issue = command.issueCommand = void 0;
-	const os = __importStar(require$$0);
+	const os = __importStar(__require$p());
 	const utils_1 = requireUtils$3();
 	/**
 	 * Commands
@@ -191,6 +171,12 @@ function requireCommand () {
 
 var fileCommand = {};
 
+const require$p = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$o() { return require$p("node:crypto"); }
+
+const require$o = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$n() { return require$o("node:fs"); }
+
 var hasRequiredFileCommand;
 
 function requireFileCommand () {
@@ -224,9 +210,9 @@ function requireFileCommand () {
 	fileCommand.prepareKeyValueMessage = fileCommand.issueFileCommand = void 0;
 	// We use any as a valid input type
 	/* eslint-disable @typescript-eslint/no-explicit-any */
-	const crypto = __importStar(require$$0$1);
-	const fs = __importStar(require$$0$2);
-	const os = __importStar(require$$0);
+	const crypto = __importStar(__require$o());
+	const fs = __importStar(__require$n());
+	const os = __importStar(__require$p());
 	const utils_1 = requireUtils$3();
 	function issueFileCommand(command, message) {
 	    const filePath = process.env[`GITHUB_${command}`];
@@ -260,9 +246,18 @@ function requireFileCommand () {
 	return fileCommand;
 }
 
+const require$n = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$m() { return require$n("node:path"); }
+
 var oidcUtils = {};
 
 var lib$1 = {};
+
+const require$m = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$l() { return require$m("node:http"); }
+
+const require$l = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$k() { return require$l("node:https"); }
 
 var proxy = {};
 
@@ -357,16 +352,34 @@ function requireProxy () {
 
 var tunnel$1 = {};
 
+const require$k = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$j() { return require$k("node:net"); }
+
+const require$j = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$i() { return require$j("node:tls"); }
+
+const require$i = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$h() { return require$i("node:events"); }
+
+const require$h = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$g() { return require$h("node:assert"); }
+
+const require$g = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$f() { return require$g("node:util"); }
+
 var hasRequiredTunnel$1;
 
 function requireTunnel$1 () {
 	if (hasRequiredTunnel$1) return tunnel$1;
 	hasRequiredTunnel$1 = 1;
-	var tls = require$$1$1;
-	var http = require$$2;
-	var https = require$$3;
-	var events = require$$0$3;
-	var util = require$$1;
+
+	__require$j();
+	var tls = __require$i();
+	var http = __require$l();
+	var https = __require$k();
+	var events = __require$h();
+	__require$g();
+	var util = __require$f();
 
 
 	tunnel$1.httpOverHttp = httpOverHttp;
@@ -636,6 +649,9 @@ function requireTunnel () {
 }
 
 var undici = {};
+
+const require$f = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$e() { return require$f("node:stream"); }
 
 var symbols$4;
 var hasRequiredSymbols$4;
@@ -947,6 +963,12 @@ function requireErrors () {
 	return errors;
 }
 
+const require$e = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$d() { return require$e("node:buffer"); }
+
+const require$d = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$c() { return require$d("node:querystring"); }
+
 var constants$4;
 var hasRequiredConstants$4;
 
@@ -1073,6 +1095,9 @@ function requireConstants$4 () {
 	return constants$4;
 }
 
+const require$c = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$b() { return require$c("node:stream/web"); }
+
 var util$6;
 var hasRequiredUtil$6;
 
@@ -1080,15 +1105,15 @@ function requireUtil$6 () {
 	if (hasRequiredUtil$6) return util$6;
 	hasRequiredUtil$6 = 1;
 
-	const assert = require$$0$4;
+	const assert = __require$g();
 	const { kDestroyed, kBodyUsed } = requireSymbols$4();
-	const { IncomingMessage } = require$$2;
-	const stream = require$$0$6;
-	const net = require$$0$5;
+	const { IncomingMessage } = __require$l();
+	const stream = __require$e();
+	const net = __require$j();
 	const { InvalidArgumentError } = requireErrors();
-	const { Blob } = require$$7;
-	const nodeUtil = require$$1;
-	const { stringify } = require$$8;
+	const { Blob } = __require$d();
+	const nodeUtil = __require$f();
+	const { stringify } = __require$c();
 	const { headerNameLowerCasedRecord } = requireConstants$4();
 
 	const [nodeMajor, nodeMinor] = process.versions.node.split('.').map(v => Number(v));
@@ -1458,7 +1483,7 @@ function requireUtil$6 () {
 	let ReadableStream;
 	function ReadableStreamFrom (iterable) {
 	  if (!ReadableStream) {
-	    ReadableStream = require$$14.ReadableStream;
+	    ReadableStream = __require$b().ReadableStream;
 	  }
 
 	  if (ReadableStream.from) {
@@ -1743,8 +1768,8 @@ function requireSbmh () {
 	 * Based heavily on the Streaming Boyer-Moore-Horspool C++ implementation
 	 * by Hongli Lai at: https://github.com/FooBarWidget/boyer-moore-horspool
 	 */
-	const EventEmitter = require$$0$3.EventEmitter;
-	const inherits = require$$1.inherits;
+	const EventEmitter = __require$h().EventEmitter;
+	const inherits = __require$f().inherits;
 
 	function SBMH (needle) {
 	  if (typeof needle === 'string') {
@@ -1953,8 +1978,8 @@ function requirePartStream () {
 	if (hasRequiredPartStream) return PartStream_1;
 	hasRequiredPartStream = 1;
 
-	const inherits = require$$1.inherits;
-	const ReadableStream = require$$0$6.Readable;
+	const inherits = __require$f().inherits;
+	const ReadableStream = __require$e().Readable;
 
 	function PartStream (opts) {
 	  ReadableStream.call(this, opts);
@@ -1998,8 +2023,8 @@ function requireHeaderParser () {
 	if (hasRequiredHeaderParser) return HeaderParser_1;
 	hasRequiredHeaderParser = 1;
 
-	const EventEmitter = require$$0$3.EventEmitter;
-	const inherits = require$$1.inherits;
+	const EventEmitter = __require$h().EventEmitter;
+	const inherits = __require$f().inherits;
 	const getLimit = requireGetLimit();
 
 	const StreamSearch = requireSbmh();
@@ -2106,8 +2131,8 @@ function requireDicer () {
 	if (hasRequiredDicer) return Dicer_1;
 	hasRequiredDicer = 1;
 
-	const WritableStream = require$$0$6.Writable;
-	const inherits = require$$1.inherits;
+	const WritableStream = __require$e().Writable;
+	const inherits = __require$f().inherits;
 
 	const StreamSearch = requireSbmh();
 
@@ -2479,8 +2504,8 @@ function requireMultipart () {
 	//  * support limits.fieldNameSize
 	//     -- this will require modifications to utils.parseParams
 
-	const { Readable } = require$$0$6;
-	const { inherits } = require$$1;
+	const { Readable } = __require$e();
+	const { inherits } = __require$f();
 
 	const Dicer = requireDicer();
 
@@ -3045,8 +3070,8 @@ function requireMain () {
 	if (hasRequiredMain) return main$1.exports;
 	hasRequiredMain = 1;
 
-	const WritableStream = require$$0$6.Writable;
-	const { inherits } = require$$1;
+	const WritableStream = __require$e().Writable;
+	const { inherits } = __require$f();
 	const Dicer = requireDicer();
 
 	const MultipartParser = requireMultipart();
@@ -3131,6 +3156,9 @@ function requireMain () {
 	return main$1.exports;
 }
 
+const require$b = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$a() { return require$b("node:worker_threads"); }
+
 var constants$3;
 var hasRequiredConstants$3;
 
@@ -3138,7 +3166,7 @@ function requireConstants$3 () {
 	if (hasRequiredConstants$3) return constants$3;
 	hasRequiredConstants$3 = 1;
 
-	const { MessageChannel, receiveMessageOnPort } = require$$0$7;
+	const { MessageChannel, receiveMessageOnPort } = __require$a();
 
 	const corsSafeListedMethods = ['GET', 'HEAD', 'POST'];
 	const corsSafeListedMethodsSet = new Set(corsSafeListedMethods);
@@ -3338,6 +3366,12 @@ function requireGlobal$1 () {
 	return global$2;
 }
 
+const require$a = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$9() { return require$a("node:perf_hooks"); }
+
+const require$9 = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$8() { return require$9("node:util/types"); }
+
 var util$5;
 var hasRequiredUtil$5;
 
@@ -3347,10 +3381,10 @@ function requireUtil$5 () {
 
 	const { redirectStatusSet, referrerPolicySet: referrerPolicyTokens, badPortsSet } = requireConstants$3();
 	const { getGlobalOrigin } = requireGlobal$1();
-	const { performance } = require$$2$1;
+	const { performance } = __require$9();
 	const { isBlobLike, toUSVString, ReadableStreamFrom } = requireUtil$6();
-	const assert = require$$0$4;
-	const { isUint8Array } = require$$5;
+	const assert = __require$g();
+	const { isUint8Array } = __require$8();
 
 	let supportedHashes = [];
 
@@ -4311,7 +4345,7 @@ function requireUtil$5 () {
 
 	function isReadableStreamLike (stream) {
 	  if (!ReadableStream) {
-	    ReadableStream = require$$14.ReadableStream;
+	    ReadableStream = __require$b().ReadableStream;
 	  }
 
 	  return stream instanceof ReadableStream || (
@@ -4514,7 +4548,7 @@ function requireWebidl () {
 	if (hasRequiredWebidl) return webidl_1;
 	hasRequiredWebidl = 1;
 
-	const { types } = require$$1;
+	const { types } = __require$f();
 	const { hasOwn, toUSVString } = requireUtil$5();
 
 	/** @type {import('../../types/webidl').Webidl} */
@@ -5167,8 +5201,8 @@ var hasRequiredDataURL;
 function requireDataURL () {
 	if (hasRequiredDataURL) return dataURL;
 	hasRequiredDataURL = 1;
-	const assert = require$$0$4;
-	const { atob } = require$$7;
+	const assert = __require$g();
+	const { atob } = __require$d();
 	const { isomorphicDecode } = requireUtil$5();
 
 	const encoder = new TextEncoder();
@@ -5804,8 +5838,8 @@ function requireFile () {
 	if (hasRequiredFile) return file;
 	hasRequiredFile = 1;
 
-	const { Blob, File: NativeFile } = require$$7;
-	const { types } = require$$1;
+	const { Blob, File: NativeFile } = __require$d();
+	const { types } = __require$f();
 	const { kState } = requireSymbols$3();
 	const { isBlobLike } = requireUtil$5();
 	const { webidl } = requireWebidl();
@@ -6160,7 +6194,7 @@ function requireFormdata () {
 	const { kState } = requireSymbols$3();
 	const { File: UndiciFile, FileLike, isFileLike } = requireFile();
 	const { webidl } = requireWebidl();
-	const { Blob, File: NativeFile } = require$$7;
+	const { Blob, File: NativeFile } = __require$d();
 
 	/** @type {globalThis['File']} */
 	const File = NativeFile ?? UndiciFile;
@@ -6443,11 +6477,11 @@ function requireBody () {
 	const { kState } = requireSymbols$3();
 	const { webidl } = requireWebidl();
 	const { DOMException, structuredClone } = requireConstants$3();
-	const { Blob, File: NativeFile } = require$$7;
+	const { Blob, File: NativeFile } = __require$d();
 	const { kBodyUsed } = requireSymbols$4();
-	const assert = require$$0$4;
+	const assert = __require$g();
 	const { isErrored } = requireUtil$6();
-	const { isUint8Array, isArrayBuffer } = require$$5;
+	const { isUint8Array, isArrayBuffer } = __require$8();
 	const { File: UndiciFile } = requireFile();
 	const { parseMIMEType, serializeAMimeType } = requireDataURL();
 
@@ -6469,7 +6503,7 @@ function requireBody () {
 	// https://fetch.spec.whatwg.org/#concept-bodyinit-extract
 	function extractBody (object, keepalive = false) {
 	  if (!ReadableStream) {
-	    ReadableStream = require$$14.ReadableStream;
+	    ReadableStream = __require$b().ReadableStream;
 	  }
 
 	  // 1. Let stream be null.
@@ -6690,7 +6724,7 @@ function requireBody () {
 	function safelyExtractBody (object, keepalive = false) {
 	  if (!ReadableStream) {
 	    // istanbul ignore next
-	    ReadableStream = require$$14.ReadableStream;
+	    ReadableStream = __require$b().ReadableStream;
 	  }
 
 	  // To safely extract a body and a `Content-Type` value from
@@ -7054,7 +7088,7 @@ function requireRequest$1 () {
 	  InvalidArgumentError,
 	  NotSupportedError
 	} = requireErrors();
-	const assert = require$$0$4;
+	const assert = __require$g();
 	const { kHTTP2BuildRequest, kHTTP2CopyHeaders, kHTTP1BuildRequest } = requireSymbols$4();
 	const util = requireUtil$6();
 
@@ -7557,7 +7591,7 @@ function requireDispatcher () {
 	if (hasRequiredDispatcher) return dispatcher;
 	hasRequiredDispatcher = 1;
 
-	const EventEmitter = require$$0$3;
+	const EventEmitter = __require$h();
 
 	class Dispatcher extends EventEmitter {
 	  dispatch () {
@@ -7784,8 +7818,8 @@ function requireConnect () {
 	if (hasRequiredConnect) return connect;
 	hasRequiredConnect = 1;
 
-	const net = require$$0$5;
-	const assert = require$$0$4;
+	const net = __require$j();
+	const assert = __require$g();
 	const util = requireUtil$6();
 	const { InvalidArgumentError, ConnectTimeoutError } = requireErrors();
 
@@ -7870,7 +7904,7 @@ function requireConnect () {
 	    let socket;
 	    if (protocol === 'https:') {
 	      if (!tls) {
-	        tls = require$$1$1;
+	        tls = __require$i();
 	      }
 	      servername = servername || options.servername || util.getServerName(host) || null;
 
@@ -8290,9 +8324,9 @@ function requireRedirectHandler () {
 
 	const util = requireUtil$6();
 	const { kBodyUsed } = requireSymbols$4();
-	const assert = require$$0$4;
+	const assert = __require$g();
 	const { InvalidArgumentError } = requireErrors();
-	const EE = require$$0$3;
+	const EE = __require$h();
 
 	const redirectableStatusCodes = [300, 301, 302, 303, 307, 308];
 
@@ -8550,10 +8584,10 @@ function requireClient () {
 
 	/* global WebAssembly */
 
-	const assert = require$$0$4;
-	const net = require$$0$5;
-	const http = require$$2;
-	const { pipeline } = require$$0$6;
+	const assert = __require$g();
+	const net = __require$j();
+	const http = __require$l();
+	const { pipeline } = __require$e();
 	const util = requireUtil$6();
 	const timers = requireTimers();
 	const Request = requireRequest$1();
@@ -11735,8 +11769,8 @@ function requireReadable () {
 	if (hasRequiredReadable) return readable;
 	hasRequiredReadable = 1;
 
-	const assert = require$$0$4;
-	const { Readable } = require$$0$6;
+	const assert = __require$g();
+	const { Readable } = __require$e();
 	const { RequestAbortedError, NotSupportedError, InvalidArgumentError } = requireErrors();
 	const util = requireUtil$6();
 	const { ReadableStreamFrom, toUSVString } = requireUtil$6();
@@ -12062,7 +12096,7 @@ var hasRequiredUtil$4;
 function requireUtil$4 () {
 	if (hasRequiredUtil$4) return util$4;
 	hasRequiredUtil$4 = 1;
-	const assert = require$$0$4;
+	const assert = __require$g();
 	const {
 	  ResponseStatusCodeError
 	} = requireErrors();
@@ -12110,6 +12144,9 @@ function requireUtil$4 () {
 	util$4 = { getResolveErrorBodyCallback };
 	return util$4;
 }
+
+const require$8 = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$7() { return require$8("node:async_hooks"); }
 
 var abortSignal;
 var hasRequiredAbortSignal;
@@ -12187,7 +12224,7 @@ function requireApiRequest () {
 	} = requireErrors();
 	const util = requireUtil$6();
 	const { getResolveErrorBodyCallback } = requireUtil$4();
-	const { AsyncResource } = require$$4;
+	const { AsyncResource } = __require$7();
 	const { addSignal, removeSignal } = requireAbortSignal();
 
 	class RequestHandler extends AsyncResource {
@@ -12368,7 +12405,7 @@ function requireApiStream () {
 	if (hasRequiredApiStream) return apiStream;
 	hasRequiredApiStream = 1;
 
-	const { finished, PassThrough } = require$$0$6;
+	const { finished, PassThrough } = __require$e();
 	const {
 	  InvalidArgumentError,
 	  InvalidReturnValueError,
@@ -12376,7 +12413,7 @@ function requireApiStream () {
 	} = requireErrors();
 	const util = requireUtil$6();
 	const { getResolveErrorBodyCallback } = requireUtil$4();
-	const { AsyncResource } = require$$4;
+	const { AsyncResource } = __require$7();
 	const { addSignal, removeSignal } = requireAbortSignal();
 
 	class StreamHandler extends AsyncResource {
@@ -12600,16 +12637,16 @@ function requireApiPipeline () {
 	  Readable,
 	  Duplex,
 	  PassThrough
-	} = require$$0$6;
+	} = __require$e();
 	const {
 	  InvalidArgumentError,
 	  InvalidReturnValueError,
 	  RequestAbortedError
 	} = requireErrors();
 	const util = requireUtil$6();
-	const { AsyncResource } = require$$4;
+	const { AsyncResource } = __require$7();
 	const { addSignal, removeSignal } = requireAbortSignal();
-	const assert = require$$0$4;
+	const assert = __require$g();
 
 	const kResume = Symbol('resume');
 
@@ -12854,10 +12891,10 @@ function requireApiUpgrade () {
 	hasRequiredApiUpgrade = 1;
 
 	const { InvalidArgumentError, RequestAbortedError, SocketError } = requireErrors();
-	const { AsyncResource } = require$$4;
+	const { AsyncResource } = __require$7();
 	const util = requireUtil$6();
 	const { addSignal, removeSignal } = requireAbortSignal();
-	const assert = require$$0$4;
+	const assert = __require$g();
 
 	class UpgradeHandler extends AsyncResource {
 	  constructor (opts, callback) {
@@ -12966,7 +13003,7 @@ function requireApiConnect () {
 	if (hasRequiredApiConnect) return apiConnect;
 	hasRequiredApiConnect = 1;
 
-	const { AsyncResource } = require$$4;
+	const { AsyncResource } = __require$7();
 	const { InvalidArgumentError, RequestAbortedError, SocketError } = requireErrors();
 	const util = requireUtil$6();
 	const { addSignal, removeSignal } = requireAbortSignal();
@@ -13157,12 +13194,12 @@ function requireMockUtils () {
 	  kGetNetConnect
 	} = requireMockSymbols();
 	const { buildURL, nop } = requireUtil$6();
-	const { STATUS_CODES } = require$$2;
+	const { STATUS_CODES } = __require$l();
 	const {
 	  types: {
 	    isPromise
 	  }
-	} = require$$1;
+	} = __require$f();
 
 	function matchValue (match, value) {
 	  if (typeof match === 'string') {
@@ -13722,7 +13759,7 @@ function requireMockClient () {
 	if (hasRequiredMockClient) return mockClient;
 	hasRequiredMockClient = 1;
 
-	const { promisify } = require$$1;
+	const { promisify } = __require$f();
 	const Client = requireClient();
 	const { buildMockDispatch } = requireMockUtils();
 	const {
@@ -13789,7 +13826,7 @@ function requireMockPool () {
 	if (hasRequiredMockPool) return mockPool;
 	hasRequiredMockPool = 1;
 
-	const { promisify } = require$$1;
+	const { promisify } = __require$f();
 	const Pool = requirePool();
 	const { buildMockDispatch } = requireMockUtils();
 	const {
@@ -13886,6 +13923,9 @@ function requirePluralizer () {
 	return pluralizer;
 }
 
+const require$7 = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$6() { return require$7("node:console"); }
+
 var pendingInterceptorsFormatter;
 var hasRequiredPendingInterceptorsFormatter;
 
@@ -13893,8 +13933,8 @@ function requirePendingInterceptorsFormatter () {
 	if (hasRequiredPendingInterceptorsFormatter) return pendingInterceptorsFormatter;
 	hasRequiredPendingInterceptorsFormatter = 1;
 
-	const { Transform } = require$$0$6;
-	const { Console } = require$$1$2;
+	const { Transform } = __require$e();
+	const { Console } = __require$6();
 
 	/**
 	 * Gets the output of `console.table(…)` as a string.
@@ -14113,6 +14153,9 @@ ${pendingInterceptorsFormatter.format(pending)}
 	return mockAgent;
 }
 
+const require$6 = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$5() { return require$6("node:url"); }
+
 var proxyAgent;
 var hasRequiredProxyAgent;
 
@@ -14121,7 +14164,7 @@ function requireProxyAgent () {
 	hasRequiredProxyAgent = 1;
 
 	const { kProxy, kClose, kDestroy, kInterceptors } = requireSymbols$4();
-	const { URL } = require$$1$3;
+	const { URL } = __require$5();
 	const Agent = requireAgent();
 	const Pool = requirePool();
 	const DispatcherBase = requireDispatcherBase();
@@ -14316,7 +14359,7 @@ var hasRequiredRetryHandler;
 function requireRetryHandler () {
 	if (hasRequiredRetryHandler) return RetryHandler_1;
 	hasRequiredRetryHandler = 1;
-	const assert = require$$0$4;
+	const assert = __require$g();
 
 	const { kRetryHandlerDefaultRetry } = requireSymbols$4();
 	const { RequestRetryError } = requireErrors();
@@ -14753,9 +14796,9 @@ function requireHeaders () {
 	  isValidHeaderName,
 	  isValidHeaderValue
 	} = requireUtil$5();
-	const util = require$$1;
+	const util = __require$f();
 	const { webidl } = requireWebidl();
-	const assert = require$$0$4;
+	const assert = __require$g();
 
 	const kHeadersMap = Symbol('headers map');
 	const kHeadersSortedMap = Symbol('headers map sorted');
@@ -15361,10 +15404,10 @@ function requireResponse () {
 	const { getGlobalOrigin } = requireGlobal$1();
 	const { URLSerializer } = requireDataURL();
 	const { kHeadersList, kConstruct } = requireSymbols$4();
-	const assert = require$$0$4;
-	const { types } = require$$1;
+	const assert = __require$g();
+	const { types } = __require$f();
 
-	const ReadableStream = globalThis.ReadableStream || require$$14.ReadableStream;
+	const ReadableStream = globalThis.ReadableStream || __require$b().ReadableStream;
 	const textEncoder = new TextEncoder('utf-8');
 
 	// https://fetch.spec.whatwg.org/#response-class
@@ -15945,8 +15988,8 @@ function requireRequest () {
 	const { getGlobalOrigin } = requireGlobal$1();
 	const { URLSerializer } = requireDataURL();
 	const { kHeadersList, kConstruct } = requireSymbols$4();
-	const assert = require$$0$4;
-	const { getMaxListeners, setMaxListeners, getEventListeners, defaultMaxListeners } = require$$0$3;
+	const assert = __require$g();
+	const { getMaxListeners, setMaxListeners, getEventListeners, defaultMaxListeners } = __require$h();
 
 	let TransformStream = globalThis.TransformStream;
 
@@ -16433,7 +16476,7 @@ function requireRequest () {
 
 	      // 2. Set finalBody to the result of creating a proxy for inputBody.
 	      if (!TransformStream) {
-	        TransformStream = require$$14.TransformStream;
+	        TransformStream = __require$b().TransformStream;
 	      }
 
 	      // https://streams.spec.whatwg.org/#readablestream-create-a-proxy
@@ -16863,6 +16906,9 @@ function requireRequest () {
 	return request;
 }
 
+const require$5 = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$4() { return require$5("node:zlib"); }
+
 var fetch_1;
 var hasRequiredFetch;
 
@@ -16879,7 +16925,7 @@ function requireFetch () {
 	} = requireResponse();
 	const { Headers } = requireHeaders();
 	const { Request, makeRequest } = requireRequest();
-	const zlib = require$$3$1;
+	const zlib = __require$4();
 	const {
 	  bytesMatch,
 	  makePolicyContainer,
@@ -16911,7 +16957,7 @@ function requireFetch () {
 	  urlHasHttpsScheme
 	} = requireUtil$5();
 	const { kState, kHeaders, kGuard, kRealm } = requireSymbols$3();
-	const assert = require$$0$4;
+	const assert = __require$g();
 	const { safelyExtractBody } = requireBody();
 	const {
 	  redirectStatusSet,
@@ -16922,14 +16968,14 @@ function requireFetch () {
 	  DOMException
 	} = requireConstants$3();
 	const { kHeadersList } = requireSymbols$4();
-	const EE = require$$0$3;
-	const { Readable, pipeline } = require$$0$6;
+	const EE = __require$h();
+	const { Readable, pipeline } = __require$e();
 	const { addAbortListener, isErrored, isReadable, nodeMajor, nodeMinor } = requireUtil$6();
 	const { dataURLProcessor, serializeAMimeType } = requireDataURL();
-	const { TransformStream } = require$$14;
+	const { TransformStream } = __require$b();
 	const { getGlobalDispatcher } = requireGlobal();
 	const { webidl } = requireWebidl();
-	const { STATUS_CODES } = require$$2;
+	const { STATUS_CODES } = __require$l();
 	const GET_OR_HEAD = ['GET', 'HEAD'];
 
 	/** @type {import('buffer').resolveObjectURL} */
@@ -17656,7 +17702,7 @@ function requireFetch () {
 	    }
 	    case 'blob:': {
 	      if (!resolveObjectURL) {
-	        resolveObjectURL = require$$7.resolveObjectURL;
+	        resolveObjectURL = __require$d().resolveObjectURL;
 	      }
 
 	      // 1. Let blobURLEntry be request’s current URL’s blob URL entry.
@@ -18596,7 +18642,7 @@ function requireFetch () {
 	  // cancelAlgorithm set to cancelAlgorithm, highWaterMark set to
 	  // highWaterMark, and sizeAlgorithm set to sizeAlgorithm.
 	  if (!ReadableStream) {
-	    ReadableStream = require$$14.ReadableStream;
+	    ReadableStream = __require$b().ReadableStream;
 	  }
 
 	  const stream = new ReadableStream(
@@ -19345,6 +19391,9 @@ function requireEncoding () {
 	return encoding;
 }
 
+const require$4 = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$3() { return require$4("node:string_decoder"); }
+
 var util$3;
 var hasRequiredUtil$3;
 
@@ -19363,9 +19412,9 @@ function requireUtil$3 () {
 	const { getEncoding } = requireEncoding();
 	const { DOMException } = requireConstants$3();
 	const { serializeAMimeType, parseMIMEType } = requireDataURL();
-	const { types } = require$$1;
-	const { StringDecoder } = require$$6;
-	const { btoa } = require$$7;
+	const { types } = __require$f();
+	const { StringDecoder } = __require$3();
+	const { btoa } = __require$d();
 
 	/** @type {PropertyDescriptor} */
 	const staticPropertyDescriptors = {
@@ -20117,7 +20166,7 @@ function requireUtil$2 () {
 	if (hasRequiredUtil$2) return util$2;
 	hasRequiredUtil$2 = 1;
 
-	const assert = require$$0$4;
+	const assert = __require$g();
 	const { URLSerializer } = requireDataURL();
 	const { isValidHeaderName } = requireUtil$5();
 
@@ -20184,7 +20233,7 @@ function requireCache () {
 	const { kState, kHeaders, kGuard, kRealm } = requireSymbols$3();
 	const { fetching } = requireFetch();
 	const { urlIsHttpHttpsScheme, createDeferredPromise, readAllBytes } = requireUtil$5();
-	const assert = require$$0$4;
+	const assert = __require$g();
 	const { getGlobalDispatcher } = requireGlobal();
 
 	/**
@@ -21477,7 +21526,7 @@ function requireParse () {
 	const { maxNameValuePairSize, maxAttributeValueSize } = requireConstants$1();
 	const { isCTLExcludingHtab } = requireUtil$1();
 	const { collectASequenceOfCodePointsFast } = requireDataURL();
-	const assert = require$$0$4;
+	const assert = __require$g();
 
 	/**
 	 * @description Parses the field-value attributes of a set-cookie header string.
@@ -22071,7 +22120,7 @@ function requireEvents () {
 
 	const { webidl } = requireWebidl();
 	const { kEnumerableProperty } = requireUtil$6();
-	const { MessagePort } = require$$0$7;
+	const { MessagePort } = __require$a();
 
 	/**
 	 * @see https://html.spec.whatwg.org/multipage/comms.html#messageevent
@@ -22581,6 +22630,9 @@ function requireUtil () {
 	return util;
 }
 
+const require$3 = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$2() { return require$3("node:diagnostics_channel"); }
+
 var connection;
 var hasRequiredConnection;
 
@@ -22588,7 +22640,7 @@ function requireConnection () {
 	if (hasRequiredConnection) return connection;
 	hasRequiredConnection = 1;
 
-	const diagnosticsChannel = require$$0$8;
+	const diagnosticsChannel = __require$2();
 	const { uid, states } = requireConstants();
 	const {
 	  kReadyState,
@@ -22968,8 +23020,8 @@ function requireReceiver () {
 	if (hasRequiredReceiver) return receiver;
 	hasRequiredReceiver = 1;
 
-	const { Writable } = require$$0$6;
-	const diagnosticsChannel = require$$0$8;
+	const { Writable } = __require$e();
+	const diagnosticsChannel = __require$2();
 	const { parserStates, opcodes, states, emptyBuffer } = requireConstants();
 	const { kReadyState, kSentClose, kResponse, kReceivedClose } = requireSymbols();
 	const { isValidStatusCode, failWebsocketConnection, websocketMessageReceived } = requireUtil();
@@ -23340,7 +23392,7 @@ function requireWebsocket () {
 	const { ByteParser } = requireReceiver();
 	const { kEnumerableProperty, isBlobLike } = requireUtil$6();
 	const { getGlobalDispatcher } = requireGlobal();
-	const { types } = require$$1;
+	const { types } = __require$f();
 
 	let experimentalWarned = false;
 
@@ -24173,8 +24225,8 @@ function requireLib$1 () {
 	};
 	Object.defineProperty(lib$1, "__esModule", { value: true });
 	lib$1.HttpClient = lib$1.isHttps = lib$1.HttpClientResponse = lib$1.HttpClientError = lib$1.getProxyUrl = lib$1.MediaTypes = lib$1.Headers = lib$1.HttpCodes = void 0;
-	const http = __importStar(require$$2);
-	const https = __importStar(require$$3);
+	const http = __importStar(__require$l());
+	const https = __importStar(__require$k());
 	const pm = __importStar(requireProxy());
 	const tunnel = __importStar(requireTunnel());
 	const undici_1 = requireUndici();
@@ -24989,8 +25041,8 @@ function requireSummary () {
 		};
 		Object.defineProperty(exports, "__esModule", { value: true });
 		exports.summary = exports.markdownSummary = exports.SUMMARY_DOCS_URL = exports.SUMMARY_ENV_VAR = void 0;
-		const os_1 = require$$0;
-		const fs_1 = require$$0$2;
+		const os_1 = __require$p();
+		const fs_1 = __require$n();
 		const { access, appendFile, writeFile } = fs_1.promises;
 		exports.SUMMARY_ENV_VAR = 'GITHUB_STEP_SUMMARY';
 		exports.SUMMARY_DOCS_URL = 'https://docs.github.com/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary';
@@ -25296,7 +25348,7 @@ function requirePathUtils () {
 	};
 	Object.defineProperty(pathUtils, "__esModule", { value: true });
 	pathUtils.toPlatformPath = pathUtils.toWin32Path = pathUtils.toPosixPath = void 0;
-	const path = __importStar(require$$1$4);
+	const path = __importStar(__require$m());
 	/**
 	 * toPosixPath converts the given path to the posix form. On Windows, \\ will be
 	 * replaced with /.
@@ -25341,6 +25393,9 @@ var exec = {};
 
 var toolrunner = {};
 
+const require$2 = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require$1() { return require$2("node:child_process"); }
+
 var io = {};
 
 var ioUtil = {};
@@ -25382,8 +25437,8 @@ function requireIoUtil () {
 		var _a;
 		Object.defineProperty(exports, "__esModule", { value: true });
 		exports.getCmdPath = exports.tryGetExecutablePath = exports.isRooted = exports.isDirectory = exports.exists = exports.READONLY = exports.UV_FS_O_EXLOCK = exports.IS_WINDOWS = exports.unlink = exports.symlink = exports.stat = exports.rmdir = exports.rm = exports.rename = exports.readlink = exports.readdir = exports.open = exports.mkdir = exports.lstat = exports.copyFile = exports.chmod = void 0;
-		const fs = __importStar(require$$0$2);
-		const path = __importStar(require$$1$4);
+		const fs = __importStar(__require$n());
+		const path = __importStar(__require$m());
 		_a = fs.promises
 		// export const {open} = 'fs'
 		, exports.chmod = _a.chmod, exports.copyFile = _a.copyFile, exports.lstat = _a.lstat, exports.mkdir = _a.mkdir, exports.open = _a.open, exports.readdir = _a.readdir, exports.readlink = _a.readlink, exports.rename = _a.rename, exports.rm = _a.rm, exports.rmdir = _a.rmdir, exports.stat = _a.stat, exports.symlink = _a.symlink, exports.unlink = _a.unlink;
@@ -25572,8 +25627,8 @@ function requireIo () {
 	};
 	Object.defineProperty(io, "__esModule", { value: true });
 	io.findInPath = io.which = io.mkdirP = io.rmRF = io.mv = io.cp = void 0;
-	const assert_1 = require$$0$4;
-	const path = __importStar(require$$1$4);
+	const assert_1 = __require$g();
+	const path = __importStar(__require$m());
 	const ioUtil = __importStar(requireIoUtil());
 	/**
 	 * Copies a file or folder.
@@ -25843,6 +25898,9 @@ function requireIo () {
 	return io;
 }
 
+const require$1 = node_module.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('main.js', document.baseURI).href)));
+function __require() { return require$1("node:timers"); }
+
 var hasRequiredToolrunner;
 
 function requireToolrunner () {
@@ -25878,13 +25936,13 @@ function requireToolrunner () {
 	};
 	Object.defineProperty(toolrunner, "__esModule", { value: true });
 	toolrunner.argStringToArray = toolrunner.ToolRunner = void 0;
-	const os = __importStar(require$$0);
-	const events = __importStar(require$$0$3);
-	const child = __importStar(require$$2$2);
-	const path = __importStar(require$$1$4);
+	const os = __importStar(__require$p());
+	const events = __importStar(__require$h());
+	const child = __importStar(__require$1());
+	const path = __importStar(__require$m());
 	const io = __importStar(requireIo());
 	const ioUtil = __importStar(requireIoUtil());
-	const timers_1 = require$$6$1;
+	const timers_1 = __require();
 	/* eslint-disable @typescript-eslint/unbound-method */
 	const IS_WINDOWS = process.platform === 'win32';
 	/*
@@ -26503,7 +26561,7 @@ function requireExec () {
 	};
 	Object.defineProperty(exec, "__esModule", { value: true });
 	exec.getExecOutput = exec.exec = void 0;
-	const string_decoder_1 = require$$6;
+	const string_decoder_1 = __require$3();
 	const tr = __importStar(requireToolrunner());
 	/**
 	 * Exec a command.
@@ -26621,7 +26679,7 @@ function requirePlatform () {
 		};
 		Object.defineProperty(exports, "__esModule", { value: true });
 		exports.getDetails = exports.isLinux = exports.isMacOS = exports.isWindows = exports.arch = exports.platform = void 0;
-		const os_1 = __importDefault(require$$0);
+		const os_1 = __importDefault(__require$p());
 		const exec = __importStar(requireExec());
 		const getWindowsInfo = () => __awaiter(void 0, void 0, void 0, function* () {
 		    const { stdout: version } = yield exec.getExecOutput('powershell -command "(Get-CimInstance -ClassName Win32_OperatingSystem).Version"', undefined, {
@@ -26724,8 +26782,8 @@ function requireCore () {
 		const command_1 = requireCommand();
 		const file_command_1 = requireFileCommand();
 		const utils_1 = requireUtils$3();
-		const os = __importStar(require$$0);
-		const path = __importStar(require$$1$4);
+		const os = __importStar(__require$p());
+		const path = __importStar(__require$m());
 		const oidc_utils_1 = requireOidcUtils();
 		/**
 		 * The code to exit an action
@@ -27048,8 +27106,8 @@ function requireContext () {
 	hasRequiredContext = 1;
 	Object.defineProperty(context, "__esModule", { value: true });
 	context.Context = void 0;
-	const fs_1 = require$$0$2;
-	const os_1 = require$$0;
+	const fs_1 = __require$n();
+	const os_1 = __require$p();
 	class Context {
 	    /**
 	     * Hydrate the context from the environment
@@ -31329,8 +31387,8 @@ var hasRequiredLib;
 function requireLib () {
 	if (hasRequiredLib) return lib.exports;
 	hasRequiredLib = 1;
-	var fs = require$$0$2,
-	    path = require$$1$4;
+	var fs = __require$n(),
+	    path = __require$m();
 
 	/* istanbul ignore next */
 	var exists = fs.exists || path.exists;
@@ -31845,14 +31903,14 @@ async function main() {
 
 	const octokit = githubExports.getOctokit(token);
 
-	const raw = await require$$0$2.promises.readFile(lcovFile, "utf-8").catch((err) => null);
+	const raw = await node_fs.promises.readFile(lcovFile, "utf-8").catch((err) => null);
 	if (!raw) {
 		console.log(`No coverage report found at '${lcovFile}', exiting...`);
 		return;
 	}
 
 	const baseRaw =
-		baseFile && (await require$$0$2.promises.readFile(baseFile, "utf-8").catch((err) => null));
+		baseFile && (await node_fs.promises.readFile(baseFile, "utf-8").catch((err) => null));
 	if (baseFile && !baseRaw) {
 		console.log(`No coverage report found at '${baseFile}', ignoring...`);
 	}
@@ -31893,7 +31951,7 @@ async function main() {
 	}
 
 	if (outputFile != null && outputFile != "") {
-		await require$$0$2.promises.writeFile(outputFile, body);
+		await node_fs.promises.writeFile(outputFile, body);
 	} else {
 		await new octokit.rest.issues.createComment({
 			repo: githubExports.context.repo.repo,
