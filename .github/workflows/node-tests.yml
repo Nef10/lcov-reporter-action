@@ -52,9 +52,6 @@ jobs:
         with:
           app_id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
-      - name: "Clean up repo"
-        if: ${{ failure() && steps.file-changed.conclusion == 'failure' }}
-        run: cd .. && rm -rf lcov-reporter-action
       - name: "Re-setup repo with token"
         if: ${{ failure() && steps.file-changed.conclusion == 'failure' }}
         uses: actions/checkout@v5
