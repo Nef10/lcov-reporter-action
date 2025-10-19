@@ -17,7 +17,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
-      - run: npm install
+      - run: npm ci
       - run: npm test
   build:
     runs-on: ubuntu-latest
@@ -32,7 +32,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24
-      - run: npm install
+      - run: npm ci
       - run: npm run format
       - run: npm run build
       - name: Fail if files changed
