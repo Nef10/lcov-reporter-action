@@ -7,7 +7,7 @@ export default {
 	input: "src/index.js",
 	output: {
 		file: "dist/main.js",
-		format: "cjs",
+		format: "esm",
 	},
 	treeshake: true,
 	plugins: [
