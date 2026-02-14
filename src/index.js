@@ -23,6 +23,13 @@ async function main() {
 	const hide_branch_coverage = core.getInput("hide-branch-coverage") == "true";
 	const outputFile = core.getInput("output-file");
 
+	if (!prNumber) {
+		core.setFailed(
+			"pr-number is a required input and must not be empty. If you are using github.event.pull_request.number, make sure this action is only run on pull_request events.",
+		);
+		return;
+	}
+
 	const octokit = getOctokit(token);
 
 	const raw = await fs.readFile(lcovFile, "utf-8").catch((err) => null);
