@@ -36,7 +36,7 @@
 		"jest": "^30.5.1",
 		"prettier": "^3.9.6",
 		"regenerator-runtime": "^0.14.1",
-		"rollup": "^4.63.0",
+		"rollup": "^4.63.1",
 		"rollup-plugin-node-externals": "^9.0.1"
 	},
 	"babel": {
