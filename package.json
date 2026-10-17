@@ -34,7 +34,7 @@
 		"babel-plugin-polyfill-corejs3": "^1.0.0",
 		"core-js": "3",
 		"jest": "^30.5.2",
-		"prettier": "^3.9.9",
+		"prettier": "^3.9.10",
 		"regenerator-runtime": "^0.14.1",
 		"rollup": "^4.64.6",
 		"rollup-plugin-node-externals": "^9.0.1"
